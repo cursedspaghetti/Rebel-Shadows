@@ -52,66 +52,27 @@ export function drawPlayer(ctx) {
     const playerSize = 12;
     const ringColor = gameState.selectedRingColor || '#fff';
 
-    // 1. Calculate Rotation & Tilt based on movement
-    // Assuming gameState.velocityX/Y exists; if not, you can use 0
-    const vx = gameState.velocityX || 0;
-    const vy = gameState.velocityY || 0;
-    
-    // Create a time-based rotation plus a lean toward movement direction
-    const time = Date.now() * 0.005; 
-    const movementTilt = vx * 0.05; 
-    const rotationAngle = time + movementTilt;
-
-    // 2. Draw Player Trail
+    // 1. Draw Player Trail
     gameState.playerTrail.forEach((pos, index) => {
         const alpha = index / 25;
         ctx.strokeStyle = ringColor;
         ctx.globalAlpha = alpha * 0.2;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        // Trail slightly flattened for 3D effect
-        ctx.ellipse(pos.x, pos.y, playerSize * (1 + alpha), playerSize * 0.6, movementTilt, 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y, playerSize * (1 + alpha * 0.5), 0, Math.PI * 2);
         ctx.stroke();
     });
 
     ctx.globalAlpha = 1.0;
 
-    // 3. Draw 3D Rotating Ring
-    ctx.save();
-    ctx.translate(gameState.playerX, gameState.playerY);
-    ctx.rotate(movementTilt); // Lean the whole "axis"
-    
-    // Background part of the ring (occluded)
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = ringColor;
-    ctx.globalAlpha = 0.5;
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    // Drawing a thin ellipse to simulate depth
-    ctx.ellipse(0, 0, playerSize * 1.5, playerSize * 0.4 * Math.sin(rotationAngle), 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // Foreground part with Glow
-    ctx.globalAlpha = 1.0;
+    // 2. Draw Main Player Ring with Glow
     ctx.shadowColor = ringColor;
     ctx.shadowBlur = 22;
+    ctx.strokeStyle = ringColor;
     ctx.lineWidth = 8;
     ctx.beginPath();
-    // The "Pulse" - changing the Y-radius creates a spinning coin / 3D ring effect
-    const depthScale = Math.cos(rotationAngle);
-    ctx.ellipse(0, 0, playerSize, playerSize * depthScale, 0, 0, Math.PI * 2);
+    ctx.arc(gameState.playerX, gameState.playerY, playerSize, 0, Math.PI * 2);
     ctx.stroke();
-    
-    ctx.restore();
-
-    // 4. Reset and Draw Outer Border (3D Perspective)
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = 0.5;
-    ctx.beginPath();
-    ctx.ellipse(gameState.playerX, gameState.playerY, playerSize + 8, (playerSize + 8) * 0.5, movementTilt, 0, Math.PI * 2);
-    ctx.stroke();
-}
 
     // 3. Reset and Draw Outer Border
     ctx.shadowBlur = 0;
