@@ -36,6 +36,24 @@ export function updatePlayer() {
     if (!gameState.playerTrail) gameState.playerTrail = [];
     gameState.playerTrail.push({ x: gameState.playerX, y: gameState.playerY });
     if (gameState.playerTrail.length > 25) gameState.playerTrail.shift();
+
+   // Memorizza la posizione precedente per calcolare la velocità
+    const oldX = gameState.playerX;
+    const oldY = gameState.playerY;
+
+    // Logica di movimento esistente
+    if (gameState.keys['ArrowLeft']) gameState.playerX -= gameState.playerSpeed;
+    if (gameState.keys['ArrowRight']) gameState.playerX += gameState.playerSpeed;
+    if (gameState.keys['ArrowUp']) gameState.playerY -= gameState.playerSpeed;
+    if (gameState.keys['ArrowDown']) gameState.playerY += gameState.playerSpeed;
+
+    // CALCOLO DELLA VELOCITÀ (Essenziale per l'effetto 3D)
+    // Usiamo un lerp (linear interpolation) per rendere il ritorno alla posizione piatta più fluido
+    const targetDx = gameState.playerX - oldX;
+    const targetDy = gameState.playerY - oldY;
+    
+    gameState.playerDx = (gameState.playerDx || 0) * 0.8 + targetDx * 0.2;
+    gameState.playerDy = (gameState.playerDy || 0) * 0.8 + targetDy * 0.2; 
 }
 
 // --- COMBAT LOGIC ---
