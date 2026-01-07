@@ -166,5 +166,6 @@ canvas.addEventListener('touchend', () => {
 
 startButton.addEventListener('click', startGame);
 
+
 // Start everything
 init();
