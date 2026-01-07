@@ -5,7 +5,6 @@ import { CONFIG, gameState, playerImg } from './config.js';
  */
 
 export function drawStartScreen(ctx) {
-    // Clear background
     ctx.fillStyle = '#000033';
     ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
@@ -46,9 +45,12 @@ export function drawStartScreen(ctx) {
 
 export function drawPlayer(ctx) {
     const ringColor = gameState.selectedRingColor || '#fff';
-    const size = gameState.playerSize;
+    const size = gameState.playerSize || 40;
 
-    // 1. Draw Player Trail (using circles for a "ghost" effect)
+    // 1. Update Rotation Angle
+    gameState.playerRotation += gameState.rotationSpeed;
+
+    // 2. Draw Player Trail
     gameState.playerTrail.forEach((pos, index) => {
         const alpha = index / 25;
         ctx.strokeStyle = ringColor;
@@ -61,23 +63,32 @@ export function drawPlayer(ctx) {
 
     ctx.globalAlpha = 1.0;
 
-    // 2. Draw the Sprite Image
+    // 3. Draw Rotating Sprite
     if (playerImg.complete) {
         ctx.save();
-        // Add a subtle glow that matches the ring's color
+        
+        // Move canvas origin to player center
+        ctx.translate(gameState.playerX, gameState.playerY);
+        
+        // Rotate the canvas
+        ctx.rotate(gameState.playerRotation);
+        
+        // Glow effect
         ctx.shadowColor = ringColor;
         ctx.shadowBlur = 15;
         
+        // Draw image centered at (0,0) because we translated the canvas
         ctx.drawImage(
             playerImg, 
-            gameState.playerX - size, 
-            gameState.playerY - size, 
+            -size, 
+            -size, 
             size * 2, 
             size * 2
         );
-        ctx.restore();
+        
+        ctx.restore(); // Reset translation/rotation for the rest of the drawing
     } else {
-        // Fallback circle while loading
+        // Fallback circle
         ctx.strokeStyle = ringColor;
         ctx.lineWidth = 5;
         ctx.beginPath();
@@ -85,12 +96,12 @@ export function drawPlayer(ctx) {
         ctx.stroke();
     }
 
-    // 3. Reset and Draw Thin UI Border
+    // 4. UI Border (Optional)
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(gameState.playerX, gameState.playerY, size + 2, 0, Math.PI * 2);
+    ctx.arc(gameState.playerX, gameState.playerY, size + 5, 0, Math.PI * 2);
     ctx.stroke();
 }
 
