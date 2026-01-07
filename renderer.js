@@ -5,6 +5,7 @@ import { CONFIG, gameState, playerImg } from './config.js';
  */
 
 export function drawStartScreen(ctx) {
+    // Clear background
     ctx.fillStyle = '#000033';
     ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
@@ -44,55 +45,52 @@ export function drawStartScreen(ctx) {
 }
 
 export function drawPlayer(ctx) {
-    const playerSize = 20; // Radius for the collision/glow
-    const imgSize = 50;    // Visual size of the GIF
     const ringColor = gameState.selectedRingColor || '#fff';
+    const size = gameState.playerSize;
 
-    // 1. Draw Player Trail
+    // 1. Draw Player Trail (using circles for a "ghost" effect)
     gameState.playerTrail.forEach((pos, index) => {
         const alpha = index / 25;
         ctx.strokeStyle = ringColor;
-        ctx.globalAlpha = alpha * 0.2;
+        ctx.globalAlpha = alpha * 0.15;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, 12 * (1 + alpha * 0.5), 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y, (size / 2) * (1 + alpha * 0.5), 0, Math.PI * 2);
         ctx.stroke();
     });
 
     ctx.globalAlpha = 1.0;
 
-    // 2. Draw Player Image (GIF)
+    // 2. Draw the Sprite Image
     if (playerImg.complete) {
         ctx.save();
+        // Add a subtle glow that matches the ring's color
         ctx.shadowColor = ringColor;
         ctx.shadowBlur = 15;
         
-        // Center the image on the player's X and Y
         ctx.drawImage(
             playerImg, 
-            gameState.playerX - imgSize / 2, 
-            gameState.playerY - imgSize / 2, 
-            imgSize, 
-            imgSize
+            gameState.playerX - size, 
+            gameState.playerY - size, 
+            size * 2, 
+            size * 2
         );
         ctx.restore();
     } else {
-        // Fallback: Draw the original ring if image is still loading
-        ctx.shadowColor = ringColor;
-        ctx.shadowBlur = 22;
+        // Fallback circle while loading
         ctx.strokeStyle = ringColor;
-        ctx.lineWidth = 8;
+        ctx.lineWidth = 5;
         ctx.beginPath();
-        ctx.arc(gameState.playerX, gameState.playerY, 12, 0, Math.PI * 2);
+        ctx.arc(gameState.playerX, gameState.playerY, size / 2, 0, Math.PI * 2);
         ctx.stroke();
     }
 
-    // 3. Reset and Draw Outer Border
+    // 3. Reset and Draw Thin UI Border
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(gameState.playerX, gameState.playerY, playerSize + 8, 0, Math.PI * 2);
+    ctx.arc(gameState.playerX, gameState.playerY, size + 2, 0, Math.PI * 2);
     ctx.stroke();
 }
 
@@ -151,7 +149,7 @@ export function drawSpecialRay(ctx) {
 
 export function drawChargeEffect(ctx) {
     ctx.beginPath();
-    ctx.arc(gameState.playerX, gameState.playerY, 30, 0, Math.PI * 2);
+    ctx.arc(gameState.playerX, gameState.playerY, 45, 0, Math.PI * 2);
     ctx.strokeStyle = "red";
     ctx.lineWidth = 3;
     ctx.stroke();
