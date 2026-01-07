@@ -1,14 +1,16 @@
-import { CONFIG, gameState, playerImg } from './config.js';
+import { CONFIG, gameState } from './config.js';
 
 /**
  * Main Renderer Module
  */
 
 export function drawStartScreen(ctx) {
+    // Clear background
     ctx.fillStyle = '#000033';
     ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
     gameState.rings.forEach(ring => {
+        // 1. Update/Draw Trail
         const maxTrailLength = 25;
         ring.trail.push({ x: ring.x, y: ring.y });
         if (ring.trail.length > maxTrailLength) ring.trail.shift();
@@ -23,16 +25,19 @@ export function drawStartScreen(ctx) {
             ctx.stroke();
         });
 
+        // 2. Glow Effect
         ctx.globalAlpha = 1.0;
         ctx.shadowColor = ring.color;
         ctx.shadowBlur = 20;
         ctx.shadowOffsetY = 10;
+
         ctx.strokeStyle = ring.color;
         ctx.lineWidth = 8;
         ctx.beginPath();
         ctx.arc(ring.x, ring.y, ring.size, 0, Math.PI * 2);
         ctx.stroke();
 
+        // 3. Reset Shadows and Draw Black Border
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
         ctx.strokeStyle = 'black';
@@ -44,64 +49,37 @@ export function drawStartScreen(ctx) {
 }
 
 export function drawPlayer(ctx) {
+    const playerSize = 12;
     const ringColor = gameState.selectedRingColor || '#fff';
-    const size = gameState.playerSize || 40;
 
-    // 1. Update Rotation Angle
-    gameState.playerRotation += gameState.rotationSpeed;
-
-    // 2. Draw Player Trail
+    // 1. Draw Player Trail
     gameState.playerTrail.forEach((pos, index) => {
         const alpha = index / 25;
         ctx.strokeStyle = ringColor;
-        ctx.globalAlpha = alpha * 0.15;
+        ctx.globalAlpha = alpha * 0.2;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, (size / 2) * (1 + alpha * 0.5), 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y, playerSize * (1 + alpha * 0.5), 0, Math.PI * 2);
         ctx.stroke();
     });
 
     ctx.globalAlpha = 1.0;
 
-    // 3. Draw Rotating Sprite
-    if (playerImg.complete) {
-        ctx.save();
-        
-        // Move canvas origin to player center
-        ctx.translate(gameState.playerX, gameState.playerY);
-        
-        // Rotate the canvas
-        ctx.rotate(gameState.playerRotation);
-        
-        // Glow effect
-        ctx.shadowColor = ringColor;
-        ctx.shadowBlur = 15;
-        
-        // Draw image centered at (0,0) because we translated the canvas
-        ctx.drawImage(
-            playerImg, 
-            -size, 
-            -size, 
-            size * 2, 
-            size * 2
-        );
-        
-        ctx.restore(); // Reset translation/rotation for the rest of the drawing
-    } else {
-        // Fallback circle
-        ctx.strokeStyle = ringColor;
-        ctx.lineWidth = 5;
-        ctx.beginPath();
-        ctx.arc(gameState.playerX, gameState.playerY, size / 2, 0, Math.PI * 2);
-        ctx.stroke();
-    }
-
-    // 4. UI Border (Optional)
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-    ctx.lineWidth = 1;
+    // 2. Draw Main Player Ring with Glow
+    ctx.shadowColor = ringColor;
+    ctx.shadowBlur = 22;
+    ctx.strokeStyle = ringColor;
+    ctx.lineWidth = 8;
     ctx.beginPath();
-    ctx.arc(gameState.playerX, gameState.playerY, size + 5, 0, Math.PI * 2);
+    ctx.arc(gameState.playerX, gameState.playerY, playerSize, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 3. Reset and Draw Outer Border
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.arc(gameState.playerX, gameState.playerY, playerSize + 8, 0, Math.PI * 2);
     ctx.stroke();
 }
 
@@ -138,6 +116,7 @@ export function drawSpecialRay(ctx) {
     const drawX = ray.x - (ray.currentWidth / 2);
     const rayHeight = gameState.playerY;
 
+    // 1. Beam Gradient
     let gradient = ctx.createLinearGradient(drawX, 0, drawX + ray.currentWidth, 0);
     gradient.addColorStop(0, 'rgba(139, 0, 0, 0)');
     gradient.addColorStop(0.2, 'rgba(255, 0, 0, 0.8)');
@@ -150,17 +129,19 @@ export function drawSpecialRay(ctx) {
     ctx.fillStyle = gradient;
     ctx.fillRect(drawX, 0, ray.currentWidth, rayHeight);
 
+    // 2. Hot Core
     const coreWidth = ray.currentWidth * 0.2;
     ctx.fillStyle = "white";
     ctx.shadowBlur = 10;
     ctx.shadowColor = "yellow";
     ctx.fillRect(ray.x - (coreWidth / 2), 0, coreWidth, rayHeight);
+    ctx.restore();
     ctx.shadowBlur = 0;
 }
 
 export function drawChargeEffect(ctx) {
     ctx.beginPath();
-    ctx.arc(gameState.playerX, gameState.playerY, 45, 0, Math.PI * 2);
+    ctx.arc(gameState.playerX, gameState.playerY, 30, 0, Math.PI * 2);
     ctx.strokeStyle = "red";
     ctx.lineWidth = 3;
     ctx.stroke();
