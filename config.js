@@ -36,6 +36,7 @@ export let gameState = {
     playerX: 393 / 2, // Initialized with CANVAS_WIDTH / 2
     playerY: 852 - 300, // Initialized with CANVAS_HEIGHT - 300
     playerSpeed: 5,
+    playerSize: 40, // The visual size of the ring on screen
     playerTrail: [],
     
     // Input State
@@ -90,3 +91,7 @@ export function resetGameState() {
     gameState.specialOnCooldown = false;
     gameState.playerTrail = [];
 }
+
+export const playerImg = new Image();
+// Using the direct raw link for the image you provided
+playerImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/White.gif';
