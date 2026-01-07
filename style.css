@@ -1,47 +1,12 @@
-/* 0. RESET GLOBALI */
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
-html, body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden; 
-    width: 100%;
-    height: 100%; 
-    background-color: #1a1a1a;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    /* Font principale */
-    font-family: 'Press Start 2P', cursive;
-}
-
-/* 1. CONTENITORE GIOCO (SIMULAZIONE SMARTPHONE) */
-#game-container {
-    position: relative;
-    width: 393px;
-    height: 852px;
-    background-color: #3f3a66;
-    background-image: 
-    linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
-    url('https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png');
-    background-size: auto; /* Ridimensiona la texture di sfondo per farla sembrare pixel art */
-    background-repeat: repeat;
-    
-    /* Mantiene i bordi dei pixel nitidi quando scalati */
-    image-rendering: -moz-crisp-edges;
-    image-rendering: pixelated;
-    image-rendering: crisp-edges;
-    
-    border: 6px solid #000;
-    box-shadow: 10px 10px 0px rgba(0,0,0,0.2);
-}
+/* ... [Keep your 0. RESET GLOBALI and 1. CONTENITORE GIOCO] ... */
 
 /* 2. IL CANVAS */
 #gameCanvas {
     display: block;
-    width: 100%; /* Si espande per riempire il container */
+    width: 100%;
     height: 100%;
-    image-rendering: pixelated; /* Fondamentale qui */
+    /* Keep the background transparent so the #game-container texture shows through */
+    background: transparent; 
 }
 
 /* 3. SCHERMATA INIZIALE */
@@ -51,7 +16,7 @@ html, body {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.7); /* Slightly darker for better contrast */
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -59,17 +24,54 @@ html, body {
     color: white;
     text-align: center;
     z-index: 10;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
-h1 {
-    font-size: 18px;
-    margin-bottom: 20px;
-    text-shadow: 4px 4px 0px #000;
+/* --- ADDED: RING SELECTION GRID --- */
+#ringChoices {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columns for the colors */
+    gap: 10px;
+    margin: 20px 0;
+    width: 100%;
 }
 
-p {
+.ring-choice {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px;
     font-size: 8px;
-    line-height: 1.5;
+    cursor: pointer;
+    border: 4px solid transparent;
+    text-transform: uppercase;
+    transition: background 0.2s;
+}
+
+.ring-choice:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* --- ADDED: POWER-UP SCREEN --- */
+#powerUpScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    display: none; /* Controlled by JS: .style.display = 'flex' */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    color: gold;
+}
+
+.power-up-options {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 30px;
 }
 
 /* 4. BOTTONE PIXEL ART */
@@ -85,7 +87,15 @@ button {
     transition: transform 0.1s;
 }
 
-button:active {
+button:disabled {
+    background-color: #444;
+    color: #888;
+    border-color: #666;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+button:active:not(:disabled) {
     transform: translate(4px, 4px);
     box-shadow: 0px 0px 0px #000;
 }
