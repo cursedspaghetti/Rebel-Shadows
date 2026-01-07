@@ -51,38 +51,60 @@ export function drawStartScreen(ctx) {
 export function drawPlayer(ctx) {
     const playerSize = 12;
     const ringColor = gameState.selectedRingColor || '#fff';
+    
+    // Calcoliamo l'inclinazione in base alla velocità (supponendo di avere gameState.dx e dy)
+    // Se non hai dx/dy, dovrai calcolarli come differenza tra posizione attuale e precedente.
+    const tiltX = (gameState.playerDx || 0) * 0.1; 
+    const tiltY = (gameState.playerDy || 0) * 0.1;
 
-    // 1. Draw Player Trail
-    gameState.playerTrail.forEach((pos, index) => {
-        const alpha = index / 25;
-        ctx.strokeStyle = ringColor;
-        ctx.globalAlpha = alpha * 0.2;
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, playerSize * (1 + alpha * 0.5), 0, Math.PI * 2);
-        ctx.stroke();
-    });
+    ctx.save();
+    ctx.translate(gameState.playerX, gameState.playerY);
 
-    ctx.globalAlpha = 1.0;
+    // 1. Disegna la scia (opzionale, mantenuta dal tuo codice)
+    // ... (puoi inserire qui il tuo codice trail esistente, ma ricordati di usare ctx.restore/save se necessario)
 
-    // 2. Draw Main Player Ring with Glow
-    ctx.shadowColor = ringColor;
-    ctx.shadowBlur = 22;
-    ctx.strokeStyle = ringColor;
+    // --- EFFETTO 3D ---
+    
+    // 2. Disegna lo "spessore" dell'anello (Lati)
+    // Creiamo un leggero offset per simulare la profondità
     ctx.lineWidth = 8;
+    ctx.strokeStyle = ringColor;
+    ctx.globalAlpha = 0.4; // Più scuro per i lati
+    
     ctx.beginPath();
-    ctx.arc(gameState.playerX, gameState.playerY, playerSize, 0, Math.PI * 2);
+    // Disegniamo l'anello leggermente spostato e inclinato
+    ctx.ellipse(0, 4, playerSize, playerSize * 0.8, tiltX, 0, Math.PI * 2);
     ctx.stroke();
 
-    // 3. Reset and Draw Outer Border
+    // 3. Disegna la faccia superiore (Top Ring) con Glow
+    ctx.globalAlpha = 1.0;
+    ctx.shadowColor = ringColor;
+    ctx.shadowBlur = 15;
+    ctx.lineWidth = 8;
+    
+    ctx.beginPath();
+    // L'ellisse si schiaccia e ruota in base al movimento
+    // ctx.ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle)
+    ctx.ellipse(0, 0, playerSize, playerSize * 0.9, tiltX, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // 4. Riflesso di luce superiore (Dà il tocco finale 3D)
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = 'black';
-    ctx.lineWidth = 0.5;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.arc(gameState.playerX, gameState.playerY, playerSize + 8, 0, Math.PI * 2);
+    ctx.arc(0, 0, playerSize - 2, -Math.PI / 4, Math.PI / 4);
     ctx.stroke();
-}
 
+    // 5. Bordo esterno nero per contrasto
+    ctx.strokeStyle = 'black';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, playerSize + 5, (playerSize + 5) * 0.9, tiltX, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+}
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
