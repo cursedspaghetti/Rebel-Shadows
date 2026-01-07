@@ -3,43 +3,38 @@
 
 <head>
     <meta charset="UTF-8">
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
     <title>Watcher's Rings Ascension</title>
     <link rel="stylesheet" href="style.css">
-
 </head>
 
 <body>
 
     <div id="game-container">
         
+        <canvas id="gameCanvas" width="393" height="852"></canvas>
+        
         <div id="startScreen">
             <div id="title">
                 <h1>WATCHER'S RINGS ASCENSION</h1>
-                <h3>&nbsp;</h3>
                 <h4>CHOOSE YOUR RING:</h4>
             </div>
             
-            <div id="ringChoices"></div>
-            
-            <button id="startButton" disabled>START GAME</button>
+            <div id="ringChoices"></div> <button id="startButton" disabled>START GAME</button>
         </div>
 
-        <canvas id="gameCanvas" width="393" height="852"></canvas>
-        
-        <div id="powerUpScreen" style="display: none;">
+        <div id="powerUpScreen">
             <h1>BOSS DEFEATED!</h1>
             <h2>CHOOSE POWER-UP</h2>
-            <button id="pu-fireRate" class="power-up-btn">IMPROVE FIRE RATE</button>
-            <button id="pu-special" class="power-up-btn">IMPROVE SPECIAL ATTACK</button>
+            <div class="power-up-options">
+                <button id="pu-fireRate" class="power-up-btn">IMPROVE FIRE RATE</button>
+                <button id="pu-special" class="power-up-btn">IMPROVE SPECIAL ATTACK</button>
+            </div>
         </div>
         
     </div>
 
-    <script src="game.js"></script>
+    <script type="module" src="main.js"></script>
 
 </body>
-
 </html>
