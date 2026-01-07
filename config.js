@@ -35,7 +35,7 @@ export let gameState = {
     selectedRingColor: null,
     playerX: 393 / 2, // Initialized with CANVAS_WIDTH / 2
     playerY: 852 - 300, // Initialized with CANVAS_HEIGHT - 300
-    playerSpeed: 5,
+    playerSpeed: 3,
     playerTrail: [],
     
     // Input State
