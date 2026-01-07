@@ -49,55 +49,78 @@ export function drawStartScreen(ctx) {
 }
 
 export function drawPlayer(ctx) {
-    const playerSize = 15;
+    const playerSize = 12;
     const ringColor = gameState.selectedRingColor || '#fff';
     
-    // 1. Calcolo inclinazione più aggressivo
-    // Se dx è 5 (velocità standard), tilt sarà circa 0.5 radianti (molto visibile)
+    // 1. Calcolo dinamico basato sul movimento
     const tiltX = (gameState.playerDx || 0) * 0.1; 
-    const tiltY = (gameState.playerDy || 0) * 0.05;
-
-    // 2. Rotazione automatica costante (asse Z) per dare dinamismo
-    const rotationZ = (Date.now() * 0.005); 
+    const rotationZ = (Date.now() * 0.002); // Velocità di rotazione delle rune
 
     ctx.save();
     ctx.translate(gameState.playerX, gameState.playerY);
-
-    // --- EFFETTO 3D RINFORZATO ---
     
-    // DISEGNA LO SPESSORE (Sotto-anello)
-    ctx.lineWidth = 9;
+    // Applichiamo l'inclinazione prospettica a tutto il contesto del giocatore
+    ctx.rotate(tiltX);
+
+    // --- 2. DISEGNO CORPO ANELLO 3D ---
+    // Spessore laterale (effetto profondità)
+    ctx.lineWidth = 8;
     ctx.strokeStyle = ringColor;
     ctx.globalAlpha = 0.3;
     ctx.beginPath();
-    // Lo "schiacciamento" verticale (0.6) simula la prospettiva dall'alto
-    ctx.ellipse(0, 5, playerSize, playerSize * 0.6, tiltX, 0, Math.PI * 2);
+    ctx.ellipse(0, 4, playerSize, playerSize * 0.7, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // DISEGNA L'ANELLO PRINCIPALE (Top)
+    // Anello Principale
     ctx.globalAlpha = 1.0;
     ctx.shadowColor = ringColor;
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 15;
     ctx.lineWidth = 7;
     ctx.beginPath();
-    // Usiamo tiltX per l'angolo e schiacciamo l'asse Y per l'effetto prospettiva
-    ctx.ellipse(0, 0, playerSize, playerSize * 0.7, tiltX, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, playerSize, playerSize * 0.7, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // RIFLESSO DINAMICO (Si muove con la rotazione Z)
+    // --- 3. SIMBOLI RUNICI ---
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 3;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; // Colore delle rune (bianco brillante)
+    ctx.font = 'bold 6px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const runes = ['ᚩ', 'ᚱ', 'ᚻ', 'ᛃ', 'ᛊ', 'ᛏ']; // Simboli runici semplici
+    const numRunes = runes.length;
+
+    for (let i = 0; i < numRunes; i++) {
+        // Calcoliamo l'angolo di ogni runa aggiungendo la rotazione nel tempo
+        const angle = (i / numRunes) * Math.PI * 2 + rotationZ;
+        
+        // Posizioniamo le rune lungo l'ellisse
+        // Moltiplichiamo il raggio Y per 0.7 per farle stare "sopra" l'anello schiacciato
+        const rx = Math.cos(angle) * playerSize;
+        const ry = Math.sin(angle) * (playerSize * 0.7);
+
+        ctx.save();
+        ctx.translate(rx, ry);
+        // Ruotiamo ogni singola runa per farla puntare verso l'esterno o restare dritta
+        ctx.rotate(angle + Math.PI / 2); 
+        ctx.fillText(runes[i], 0, 0);
+        ctx.restore();
+    }
+
+    // --- 4. DETTAGLI FINALI ---
+    // Riflesso di luce superiore
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    // Questo arco "gira" intorno all'anello
-    ctx.arc(0, 0, playerSize - 2, rotationZ, rotationZ + 1);
+    ctx.ellipse(0, 0, playerSize - 2, (playerSize - 2) * 0.7, 0, -Math.PI/4, Math.PI/4);
     ctx.stroke();
 
-    // BORDO ESTERNO NERO
+    // Bordo esterno protettivo
+    ctx.shadowBlur = 0;
     ctx.strokeStyle = 'black';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.ellipse(0, 0, playerSize + 5, (playerSize + 5) * 0.7, tiltX, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, playerSize + 6, (playerSize + 6) * 0.7, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.restore();
