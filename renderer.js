@@ -49,62 +49,60 @@ export function drawStartScreen(ctx) {
 }
 
 export function drawPlayer(ctx) {
-    const playerSize = 12;
+    const playerSize = 15;
     const ringColor = gameState.selectedRingColor || '#fff';
     
-    // Calcoliamo l'inclinazione in base alla velocità (supponendo di avere gameState.dx e dy)
-    // Se non hai dx/dy, dovrai calcolarli come differenza tra posizione attuale e precedente.
+    // 1. Calcolo inclinazione più aggressivo
+    // Se dx è 5 (velocità standard), tilt sarà circa 0.5 radianti (molto visibile)
     const tiltX = (gameState.playerDx || 0) * 0.1; 
-    const tiltY = (gameState.playerDy || 0) * 0.1;
+    const tiltY = (gameState.playerDy || 0) * 0.05;
+
+    // 2. Rotazione automatica costante (asse Z) per dare dinamismo
+    const rotationZ = (Date.now() * 0.005); 
 
     ctx.save();
     ctx.translate(gameState.playerX, gameState.playerY);
 
-    // 1. Disegna la scia (opzionale, mantenuta dal tuo codice)
-    // ... (puoi inserire qui il tuo codice trail esistente, ma ricordati di usare ctx.restore/save se necessario)
-
-    // --- EFFETTO 3D ---
+    // --- EFFETTO 3D RINFORZATO ---
     
-    // 2. Disegna lo "spessore" dell'anello (Lati)
-    // Creiamo un leggero offset per simulare la profondità
-    ctx.lineWidth = 8;
+    // DISEGNA LO SPESSORE (Sotto-anello)
+    ctx.lineWidth = 9;
     ctx.strokeStyle = ringColor;
-    ctx.globalAlpha = 0.4; // Più scuro per i lati
-    
+    ctx.globalAlpha = 0.3;
     ctx.beginPath();
-    // Disegniamo l'anello leggermente spostato e inclinato
-    ctx.ellipse(0, 4, playerSize, playerSize * 0.8, tiltX, 0, Math.PI * 2);
+    // Lo "schiacciamento" verticale (0.6) simula la prospettiva dall'alto
+    ctx.ellipse(0, 5, playerSize, playerSize * 0.6, tiltX, 0, Math.PI * 2);
     ctx.stroke();
 
-    // 3. Disegna la faccia superiore (Top Ring) con Glow
+    // DISEGNA L'ANELLO PRINCIPALE (Top)
     ctx.globalAlpha = 1.0;
     ctx.shadowColor = ringColor;
-    ctx.shadowBlur = 15;
-    ctx.lineWidth = 8;
-    
+    ctx.shadowBlur = 20;
+    ctx.lineWidth = 7;
     ctx.beginPath();
-    // L'ellisse si schiaccia e ruota in base al movimento
-    // ctx.ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle)
-    ctx.ellipse(0, 0, playerSize, playerSize * 0.9, tiltX, 0, Math.PI * 2);
+    // Usiamo tiltX per l'angolo e schiacciamo l'asse Y per l'effetto prospettiva
+    ctx.ellipse(0, 0, playerSize, playerSize * 0.7, tiltX, 0, Math.PI * 2);
     ctx.stroke();
 
-    // 4. Riflesso di luce superiore (Dà il tocco finale 3D)
+    // RIFLESSO DINAMICO (Si muove con la rotazione Z)
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(0, 0, playerSize - 2, -Math.PI / 4, Math.PI / 4);
+    // Questo arco "gira" intorno all'anello
+    ctx.arc(0, 0, playerSize - 2, rotationZ, rotationZ + 1);
     ctx.stroke();
 
-    // 5. Bordo esterno nero per contrasto
+    // BORDO ESTERNO NERO
     ctx.strokeStyle = 'black';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.ellipse(0, 0, playerSize + 5, (playerSize + 5) * 0.9, tiltX, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, playerSize + 5, (playerSize + 5) * 0.7, tiltX, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.restore();
 }
+
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
