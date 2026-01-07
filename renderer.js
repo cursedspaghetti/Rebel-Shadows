@@ -1,16 +1,14 @@
-import { CONFIG, gameState } from './config.js';
+import { CONFIG, gameState, playerImg } from './config.js';
 
 /**
  * Main Renderer Module
  */
 
 export function drawStartScreen(ctx) {
-    // Clear background
     ctx.fillStyle = '#000033';
     ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
     gameState.rings.forEach(ring => {
-        // 1. Update/Draw Trail
         const maxTrailLength = 25;
         ring.trail.push({ x: ring.x, y: ring.y });
         if (ring.trail.length > maxTrailLength) ring.trail.shift();
@@ -25,19 +23,16 @@ export function drawStartScreen(ctx) {
             ctx.stroke();
         });
 
-        // 2. Glow Effect
         ctx.globalAlpha = 1.0;
         ctx.shadowColor = ring.color;
         ctx.shadowBlur = 20;
         ctx.shadowOffsetY = 10;
-
         ctx.strokeStyle = ring.color;
         ctx.lineWidth = 8;
         ctx.beginPath();
         ctx.arc(ring.x, ring.y, ring.size, 0, Math.PI * 2);
         ctx.stroke();
 
-        // 3. Reset Shadows and Draw Black Border
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
         ctx.strokeStyle = 'black';
@@ -49,7 +44,8 @@ export function drawStartScreen(ctx) {
 }
 
 export function drawPlayer(ctx) {
-    const playerSize = 12;
+    const playerSize = 20; // Radius for the collision/glow
+    const imgSize = 50;    // Visual size of the GIF
     const ringColor = gameState.selectedRingColor || '#fff';
 
     // 1. Draw Player Trail
@@ -59,20 +55,37 @@ export function drawPlayer(ctx) {
         ctx.globalAlpha = alpha * 0.2;
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(pos.x, pos.y, playerSize * (1 + alpha * 0.5), 0, Math.PI * 2);
+        ctx.arc(pos.x, pos.y, 12 * (1 + alpha * 0.5), 0, Math.PI * 2);
         ctx.stroke();
     });
 
     ctx.globalAlpha = 1.0;
 
-    // 2. Draw Main Player Ring with Glow
-    ctx.shadowColor = ringColor;
-    ctx.shadowBlur = 22;
-    ctx.strokeStyle = ringColor;
-    ctx.lineWidth = 8;
-    ctx.beginPath();
-    ctx.arc(gameState.playerX, gameState.playerY, playerSize, 0, Math.PI * 2);
-    ctx.stroke();
+    // 2. Draw Player Image (GIF)
+    if (playerImg.complete) {
+        ctx.save();
+        ctx.shadowColor = ringColor;
+        ctx.shadowBlur = 15;
+        
+        // Center the image on the player's X and Y
+        ctx.drawImage(
+            playerImg, 
+            gameState.playerX - imgSize / 2, 
+            gameState.playerY - imgSize / 2, 
+            imgSize, 
+            imgSize
+        );
+        ctx.restore();
+    } else {
+        // Fallback: Draw the original ring if image is still loading
+        ctx.shadowColor = ringColor;
+        ctx.shadowBlur = 22;
+        ctx.strokeStyle = ringColor;
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.arc(gameState.playerX, gameState.playerY, 12, 0, Math.PI * 2);
+        ctx.stroke();
+    }
 
     // 3. Reset and Draw Outer Border
     ctx.shadowBlur = 0;
@@ -116,7 +129,6 @@ export function drawSpecialRay(ctx) {
     const drawX = ray.x - (ray.currentWidth / 2);
     const rayHeight = gameState.playerY;
 
-    // 1. Beam Gradient
     let gradient = ctx.createLinearGradient(drawX, 0, drawX + ray.currentWidth, 0);
     gradient.addColorStop(0, 'rgba(139, 0, 0, 0)');
     gradient.addColorStop(0.2, 'rgba(255, 0, 0, 0.8)');
@@ -129,13 +141,11 @@ export function drawSpecialRay(ctx) {
     ctx.fillStyle = gradient;
     ctx.fillRect(drawX, 0, ray.currentWidth, rayHeight);
 
-    // 2. Hot Core
     const coreWidth = ray.currentWidth * 0.2;
     ctx.fillStyle = "white";
     ctx.shadowBlur = 10;
     ctx.shadowColor = "yellow";
     ctx.fillRect(ray.x - (coreWidth / 2), 0, coreWidth, rayHeight);
-    ctx.restore();
     ctx.shadowBlur = 0;
 }
 
