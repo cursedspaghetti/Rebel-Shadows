@@ -49,78 +49,81 @@ export function drawStartScreen(ctx) {
 }
 
 export function drawPlayer(ctx) {
-    const playerSize = 12;
+    const playerSize = 18; // Aumentato a 18 come richiesto
     const ringColor = gameState.selectedRingColor || '#fff';
     
-    // 1. Calcolo dinamico basato sul movimento
+    // Calcolo dinamico dell'inclinazione e della rotazione
     const tiltX = (gameState.playerDx || 0) * 0.1; 
-    const rotationZ = (Date.now() * 0.002); // Velocità di rotazione delle rune
+    const rotationZ = (Date.now() * 0.003); 
 
     ctx.save();
     ctx.translate(gameState.playerX, gameState.playerY);
     
-    // Applichiamo l'inclinazione prospettica a tutto il contesto del giocatore
+    // Inclinazione basata sul movimento
     ctx.rotate(tiltX);
 
-    // --- 2. DISEGNO CORPO ANELLO 3D ---
-    // Spessore laterale (effetto profondità)
-    ctx.lineWidth = 8;
+    // --- 1. CORPO ANELLO 3D ---
+    // Spessore (prospettiva laterale)
+    ctx.lineWidth = 10; // Leggermente più spesso per adattarsi alla nuova taglia
     ctx.strokeStyle = ringColor;
     ctx.globalAlpha = 0.3;
     ctx.beginPath();
-    ctx.ellipse(0, 4, playerSize, playerSize * 0.7, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 5, playerSize, playerSize * 0.7, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Anello Principale
+    // Anello Principale (Faccia superiore)
     ctx.globalAlpha = 1.0;
     ctx.shadowColor = ringColor;
-    ctx.shadowBlur = 15;
-    ctx.lineWidth = 7;
+    ctx.shadowBlur = 18; // Bagliore aumentato per le dimensioni maggiori
+    ctx.lineWidth = 9;
     ctx.beginPath();
     ctx.ellipse(0, 0, playerSize, playerSize * 0.7, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // --- 3. SIMBOLI RUNICI ---
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; // Colore delle rune (bianco brillante)
-    ctx.font = 'bold 6px monospace';
+    // --- 2. LETTERE "RUNICHE" (V, X, I, Z) ---
+    ctx.shadowBlur = 5;
+    ctx.shadowColor = 'white';
+    ctx.fillStyle = 'white'; 
+    ctx.font = 'bold 11px "Courier New", monospace'; // Font ingrandito per playerSize 18
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    const runes = ['ᚩ', 'ᚱ', 'ᚻ', 'ᛃ', 'ᛊ', 'ᛏ']; // Simboli runici semplici
-    const numRunes = runes.length;
+    const symbols = ['V', 'X', 'I', 'Z', 'X', 'V'];
+    const numSymbols = symbols.length;
 
-    for (let i = 0; i < numRunes; i++) {
-        // Calcoliamo l'angolo di ogni runa aggiungendo la rotazione nel tempo
-        const angle = (i / numRunes) * Math.PI * 2 + rotationZ;
+    for (let i = 0; i < numSymbols; i++) {
+        const angle = (i / numSymbols) * Math.PI * 2 + rotationZ;
         
-        // Posizioniamo le rune lungo l'ellisse
-        // Moltiplichiamo il raggio Y per 0.7 per farle stare "sopra" l'anello schiacciato
+        // Posizionamento sull'ellisse
         const rx = Math.cos(angle) * playerSize;
         const ry = Math.sin(angle) * (playerSize * 0.7);
 
         ctx.save();
         ctx.translate(rx, ry);
-        // Ruotiamo ogni singola runa per farla puntare verso l'esterno o restare dritta
         ctx.rotate(angle + Math.PI / 2); 
-        ctx.fillText(runes[i], 0, 0);
+        
+        // Pulsazione luminosa
+        ctx.globalAlpha = 0.6 + Math.sin(Date.now() * 0.005 + i) * 0.4;
+        ctx.fillText(symbols[i], 0, 0);
         ctx.restore();
     }
 
-    // --- 4. DETTAGLI FINALI ---
-    // Riflesso di luce superiore
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-    ctx.lineWidth = 2;
+    // --- 3. BORDI E RIFLESSI ---
+    ctx.globalAlpha = 1.0;
+    ctx.shadowBlur = 0;
+
+    // Riflesso superiore
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.ellipse(0, 0, playerSize - 2, (playerSize - 2) * 0.7, 0, -Math.PI/4, Math.PI/4);
+    ctx.ellipse(0, 0, playerSize - 3, (playerSize - 3) * 0.7, 0, -Math.PI/3, 0);
     ctx.stroke();
 
-    // Bordo esterno protettivo
-    ctx.shadowBlur = 0;
+    // Bordo esterno di contrasto nero
     ctx.strokeStyle = 'black';
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.ellipse(0, 0, playerSize + 6, (playerSize + 6) * 0.7, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, playerSize + 7, (playerSize + 7) * 0.7, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.restore();
