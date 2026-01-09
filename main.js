@@ -75,14 +75,14 @@ function gameLoop() {
         Engine.updateSpecialRay();
 
         // --- LOGICA BOSS SHADOW (Trigger 30s) ---
-        if (gameState.gameTimer <= 3 && !gameState.bossActive) {
+        if (gameState.gameTimer <= 58 && !gameState.bossActive) {
             gameState.bossActive = true;
             gameState.enemies = []; // Pulizia nemici minori
             gameState.boss = {
                 x: CONFIG.CANVAS_WIDTH / 2,
                 y: -150,           // Inizia fuori dallo schermo in alto
                 targetY: 150,      // Posizione d'arresto al centro-alto
-                size: 160,         // Dimensione Boss
+                //size: 160,         // Dimensione Boss
                 hp: 1000,          // Salute Boss
                 maxHp: 1000
             };
