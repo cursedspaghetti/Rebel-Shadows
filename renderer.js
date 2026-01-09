@@ -136,11 +136,9 @@ export function drawBossShadow(ctx, boss, img) {
 
     // --- CONFIGURAZIONE ---
     const totalFrames = 9;
-    const frameDuration = 100; // 100ms per frame
-    const originalSize = 400;  // Dimensione originale del frame (400x400)
+    const frameDuration = 100; 
+    const originalSize = 400;  
     
-    // Calcolo del frame con protezione per gli scatti
-    // Usiamo il resto della divisione intera per assicurarci che l'indice sia fluido
     const frameIndex = Math.floor((Date.now() / frameDuration) % totalFrames);
     
     // Oscillazione (Float effect)
@@ -150,51 +148,26 @@ export function drawBossShadow(ctx, boss, img) {
     
     // 1. POSIZIONAMENTO E SCALA
     ctx.translate(boss.x, boss.y + floatOffset);
-    ctx.scale(0.5, 0.5); // Dimezza le dimensioni totali (il boss diventa 200x200)
+    
+    // SCALA PORTATA A 0.8 (Il boss ora è il 80% della dimensione originale)
+    ctx.scale(0.8, 0.8); 
 
-    // 2. OMBRA ALLA BASE
-    ctx.globalAlpha = 0.2;
-    ctx.fillStyle = 'black';
-    ctx.beginPath();
-    ctx.ellipse(0, originalSize / 2.5, 120, 30, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 3. BAGLIORE AURA
-   // ctx.globalAlpha = 1.0;
-   // ctx.shadowColor = '#9d00ff';
-   // ctx.shadowBlur = 40; // Aumentato perché la scala lo ridurrà visivamente
-
-    // 4. DISEGNO DEL FRAME (Rapporto 1:1)
-    // Usiamo Math.floor per le coordinate di ritaglio per evitare flickering
+    // 2. DISEGNO DEL FRAME
     const sx = Math.floor(frameIndex * originalSize);
     
     ctx.drawImage(
         img,
-        sx, 0,                      // Sorgente (X, Y)
-        originalSize, originalSize,  // Dimensioni sorgente (400x400)
-        -originalSize / 2, -originalSize / 2, // Posizione centrata
-        originalSize, originalSize   // Dimensioni destinazione (disegna 400x400, scalato dal ctx)
+        sx, 0,                               
+        originalSize, originalSize,          
+        -originalSize / 2, -originalSize / 2, 
+        originalSize, originalSize           
     );
 
-    // 5. BARRA DELLA VITA
+    // 3. BARRA DELLA VITA
     ctx.shadowBlur = 0;
     drawBossHealthBar(ctx, boss, originalSize);
 
     ctx.restore();
-}
-
-function drawBossHealthBar(ctx, boss, size) {
-    const barWidth = 250; // Leggermente più larga perché siamo in scala 0.5
-    const barHeight = 12;
-    const healthPercent = Math.max(0, boss.hp / boss.maxHp);
-
-    // Posizionata sopra la testa (size / 2 + margine)
-    const yPos = -size / 2 - 40;
-
-    ctx.fillStyle = '#440000';
-    ctx.fillRect(-barWidth / 2, yPos, barWidth, barHeight);
-    ctx.fillStyle = '#cc00ff';
-    ctx.fillRect(-barWidth / 2, yPos, barWidth * healthPercent, barHeight);
 }
 
 export function drawBullets(ctx) {
