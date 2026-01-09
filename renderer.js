@@ -131,71 +131,66 @@ export function drawPlayer(ctx) {
 }
 
 
+// --- FUNZIONE PRINCIPALE ---
 export function drawBossShadow(ctx, boss, img) {
     if (!img.complete) return;
 
-    // --- CONFIGURAZIONE ---
     const totalFrames = 9;
     const frameDuration = 100; 
     const originalSize = 400;  
     
     const frameIndex = Math.floor((Date.now() / frameDuration) % totalFrames);
-    
-    // Oscillazione (Float effect)
     const floatOffset = Math.sin(Date.now() * 0.003) * 10;
 
     ctx.save();
     
-    // 1. POSIZIONAMENTO E SCALA
     ctx.translate(boss.x, boss.y + floatOffset);
-    
-    // SCALA PORTATA A 0.8 (Il boss ora è il 80% della dimensione originale)
     ctx.scale(0.8, 0.8); 
 
-    // 2. DISEGNO DEL FRAME
+    // Disegno Boss
     const sx = Math.floor(frameIndex * originalSize);
-    
     ctx.drawImage(
         img,
-        sx, 0,                               
-        originalSize, originalSize,          
-        -originalSize / 2, -originalSize / 2, 
-        originalSize, originalSize           
+        sx, 0,                                
+        originalSize, originalSize,           
+        -originalSize / 2, -originalSize / 2,  
+        originalSize, originalSize            
     );
 
-    // 3. BARRA DELLA VITA
+    // --- DISEGNO BARRA (Passiamo originalSize) ---
     ctx.shadowBlur = 0;
     drawBossHealthBar(ctx, boss, originalSize);
 
     ctx.restore();
 }
 
-export function drawBossHealthBar(ctx, boss, size) {
-    // Calcoliamo la percentuale di salute
-    const healthPercent = boss.hp / boss.maxHp;
+// --- FUNZIONE BARRA AGGIORNATA ---
+function drawBossHealthBar(ctx, boss, size) {
+    // 1. Verifica che i valori esistano per evitare NaN
+    const healthPercent = Math.max(0, (boss.hp || 0) / (boss.maxHp || 100));
     
-    // Configuriamo dimensioni e posizione della barra
-    // La posizioniamo sopra il boss (size è 400, quindi -200 è il limite superiore)
-    const barWidth = 200;
-    const barHeight = 20;
-    const x = -barWidth / 2; // Centrata rispetto al boss
-    const y = -size / 2 - 30; // 30px sopra la testa del boss
+    const barWidth = 200; // Larghezza barra
+    const barHeight = 12;
+    
+    // Posizionamento:
+    // -size/2 è la cima della testa del boss (-200)
+    // Sottraiamo altri 30 per distanziarla
+    const x = -barWidth / 2;
+    const y = -size / 2 - 30; 
 
-    // 1. Sfondo della barra (Parte vuota/Rossa scura)
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    // Sfondo (Rosso scuro/Nero)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.fillRect(x, y, barWidth, barHeight);
 
-    // 2. Barra della salute effettiva (Verde o Rossa)
-    // Cambia colore se la vita è bassa (opzionale)
-    ctx.fillStyle = healthPercent > 0.3 ? '#2ecc71' : '#e74c3c';
+    // Salute (Viola/Fucsia come il tuo boss)
+    ctx.fillStyle = '#cc00ff';
     ctx.fillRect(x, y, barWidth * healthPercent, barHeight);
 
-    // 3. Bordo della barra
+    // Bordo (Bianco per visibilità)
     ctx.strokeStyle = 'white';
     ctx.lineWidth = 2;
     ctx.strokeRect(x, y, barWidth, barHeight);
 }
-
 
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
