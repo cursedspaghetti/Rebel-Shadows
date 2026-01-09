@@ -15,9 +15,6 @@ const gameContainer = document.getElementById('game-container');
 const shadowImg = new Image();
 shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.gif';
 
-// Variabile per il doppio tocco
-let lastTap = 0;
-
 // --- INITIALIZATION ---
 
 function init() {
@@ -38,7 +35,7 @@ function init() {
         ringChoicesContainer.appendChild(button);
     });
 
-    // 2. Setup Anelli di sfondo
+    // 2. Setup Anelli di sfondo per Start Screen
     for (let i = 0; i < 14; i++) {
         gameState.rings.push({
             x: Math.random() * CONFIG.CANVAS_WIDTH,
@@ -72,31 +69,21 @@ function gameLoop() {
         gameContainer.style.backgroundPosition = `0px ${gameState.backgroundPositionY}px`;
 
         // 2. Logic Updates
-        
-        // --- NUOVA LOGICA MOVIMENTO TOUCH ---
-        if (gameState.touchActive) {
-            const dx = gameState.touchX - gameState.playerX;
-            const dy = gameState.touchY - gameState.playerY;
-            // Inseguimento fluido: il player si sposta verso il dito
-            gameState.playerX += dx * 0.2; 
-            gameState.playerY += dy * 0.2;
-        }
-
-        Engine.updatePlayer(); // Mantiene compatibilità tastiera
+        Engine.updatePlayer();
         Engine.autoFire();
         Engine.updateBullets();
         Engine.updateSpecialRay();
 
-        // --- LOGICA BOSS SHADOW ---
+        // --- LOGICA BOSS SHADOW (Trigger 30s) ---
         if (gameState.gameTimer <= 30 && !gameState.bossActive) {
             gameState.bossActive = true;
-            gameState.enemies = [];
+            gameState.enemies = []; // Pulizia nemici minori
             gameState.boss = {
                 x: CONFIG.CANVAS_WIDTH / 2,
-                y: -150,
-                targetY: 150,
-                size: 160,
-                hp: 1000,
+                y: -150,           // Inizia fuori dallo schermo in alto
+                targetY: 150,      // Posizione d'arresto al centro-alto
+                size: 160,         // Dimensione Boss
+                hp: 1000,          // Salute Boss
                 maxHp: 1000
             };
         }
@@ -105,21 +92,26 @@ function gameLoop() {
         Renderer.drawSpecialRay(ctx);
         if (gameState.isCharging) Renderer.drawChargeEffect(ctx);
 
+        // Disegno Player
         Renderer.drawPlayer(ctx);
 
+        // Gestione Boss o Nemici comuni
         if (gameState.bossActive && gameState.boss) {
+            // Entrata fluida del boss
             if (gameState.boss.y < gameState.boss.targetY) {
                 gameState.boss.y += 2; 
             }
             Renderer.drawBossShadow(ctx, gameState.boss, shadowImg);
             
+            // Logica Vittoria Boss
             if (gameState.boss.hp <= 0) {
                 showPowerUpScreen();
                 return;
             }
         } else {
+            // Disegno nemici normali solo se il boss non è attivo
             gameState.enemies.forEach(enemy => {
-                // Disegno nemici se implementato in Renderer
+                // Se hai ancora una funzione per nemici piccoli, usala qui
             });
         }
 
@@ -141,6 +133,7 @@ function startGame() {
     startScreen.style.display = 'none';
     gameState.currentScreen = 'playing';
     
+    // Timer Decrescente
     gameState.timerInterval = setInterval(() => {
         if (gameState.gameTimer > 0) {
             gameState.gameTimer--;
@@ -149,6 +142,7 @@ function startGame() {
         }
     }, 1000);
 
+    // Spawn iniziale nemici minori
     Engine.spawnEnemies(5);
     gameLoop();
 }
@@ -157,6 +151,18 @@ function showPowerUpScreen() {
     gameState.currentScreen = 'powerup';
     powerUpScreen.style.display = 'flex';
 }
+
+// --- INPUT LISTENERS ---
+
+window.addEventListener('keydown', (e) => {
+    gameState.keys[e.key] = true;
+    if (e.key === ' ' && gameState.currentScreen === 'playing') {
+        e.preventDefault();
+        fireSpecialAttackSequence();
+    }
+});
+
+window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
 
 function fireSpecialAttackSequence() {
     if (gameState.specialOnCooldown || gameState.isCharging) return;
@@ -174,47 +180,14 @@ function fireSpecialAttackSequence() {
     }, 1000);
 }
 
-// --- INPUT LISTENERS (KEYBOARD & TOUCH) ---
-
-window.addEventListener('keydown', (e) => {
-    gameState.keys[e.key] = true;
-    if (e.key === ' ' && gameState.currentScreen === 'playing') {
-        e.preventDefault();
-        fireSpecialAttackSequence();
-    }
-});
-
-window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
-
-// --- TOUCH SUPPORT AGGIORNATO ---
-
-function handleTouchUpdate(e) {
-    if (gameState.currentScreen !== 'playing') return;
+// Touch Support (semplificato)
+canvas.addEventListener('touchstart', (e) => {
     const rect = canvas.getBoundingClientRect();
     const touch = e.touches[0];
     gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
     gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
-    gameState.touchActive = true;
-}
-
-canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    
-    // Logica Doppio Tocco
-    const now = Date.now();
-    if (now - lastTap < 300) {
-        fireSpecialAttackSequence();
-    }
-    lastTap = now;
-
-    handleTouchUpdate(e);
-}, { passive: false });
-
-canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    handleTouchUpdate(e);
-}, { passive: false });
-
-canvas.addEventListener('touchend', () => {
-    gameState.touchActive = false;
 });
+
+startButton.addEventListener('click', startGame);
+
+init();
