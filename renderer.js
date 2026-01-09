@@ -135,27 +135,28 @@ export function drawBossShadow(ctx, boss, img) {
     if (!img.complete) return;
 
     // --- CONFIGURAZIONE FRAME ---
-    const totalFrames = 9;      // Ora impostato a 9 frame
-    const frameDuration = 200;  // Cambio ogni 200ms
+    const totalFrames = 9; 
+    const frameDuration = 100; // Velocità aumentata a 100ms
     
-    // Calcola quale frame disegnare (0, 1, 2... 8)
+    // Calcolo del frame attuale
     const frameIndex = Math.floor(Date.now() / frameDuration) % totalFrames;
     
-    // Calcola le dimensioni di un singolo frame nello sprite sheet
+    // Dimensioni originali del singolo frame nello sprite sheet
     const frameWidth = img.width / totalFrames;
     const frameHeight = img.height;
 
+    // Oscillazione verticale (Floating effect)
     const floatOffset = Math.sin(Date.now() * 0.002) * 15;
     
     ctx.save();
-    // Centra il contesto sulla posizione del boss applicando l'oscillazione verticale
+    // Spostiamo l'origine del contesto sulla posizione del boss
     ctx.translate(boss.x, boss.y + floatOffset);
 
-    // 1. Ombra alla base (statica rispetto al boss)
+    // 1. Ombra alla base (proporzionale al frame)
     ctx.globalAlpha = 0.2;
     ctx.fillStyle = 'black';
     ctx.beginPath();
-    ctx.ellipse(0, boss.size / 1.5, boss.size * 0.8, boss.size * 0.2, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, frameHeight / 2, frameWidth * 0.4, frameHeight * 0.1, 0, 0, Math.PI * 2);
     ctx.fill();
 
     // 2. Bagliore Aura
@@ -163,32 +164,31 @@ export function drawBossShadow(ctx, boss, img) {
     ctx.shadowColor = '#9d00ff';
     ctx.shadowBlur = 30;
 
-    // 3. DISEGNO DEL FRAME ATTUALE
-    // Il ritaglio (source) si sposta orizzontalmente in base al frameIndex
+    // 3. DISEGNO DEL FRAME (Senza resizing)
     ctx.drawImage(
         img, 
-        frameIndex * frameWidth, 0, // Inizio ritaglio (X coordinata)
-        frameWidth, frameHeight,    // Dimensioni del ritaglio
-        -boss.size / 2, -boss.size / 2, // Posizione (centrata)
-        boss.size, boss.size        // Dimensione a schermo
+        frameIndex * frameWidth, 0,     // Sorgente (ritaglio X, Y)
+        frameWidth, frameHeight,        // Sorgente (larghezza, altezza)
+        -frameWidth / 2, -frameHeight / 2, // Destinazione (centratura sul canvas)
+        frameWidth, frameHeight         // Destinazione (dimensioni reali)
     );
 
     // 4. Barra della Vita
     ctx.shadowBlur = 0;
-    drawBossHealthBar(ctx, boss);
+    drawBossHealthBar(ctx, boss, frameWidth, frameHeight);
 
     ctx.restore();
 }
 
-function drawBossHealthBar(ctx, boss) {
-    const barWidth = 100;
+function drawBossHealthBar(ctx, boss, w, h) {
+    const barWidth = w * 0.8; 
     const barHeight = 6;
-    const healthPercent = Math.max(0, boss.hp / boss.maxHp); // Evita valori negativi
+    const healthPercent = Math.max(0, boss.hp / boss.maxHp);
 
     ctx.fillStyle = '#440000';
-    ctx.fillRect(-barWidth / 2, -boss.size / 2 - 20, barWidth, barHeight);
+    ctx.fillRect(-barWidth / 2, -h / 2 - 20, barWidth, barHeight);
     ctx.fillStyle = '#cc00ff';
-    ctx.fillRect(-barWidth / 2, -boss.size / 2 - 20, barWidth * healthPercent, barHeight);
+    ctx.fillRect(-barWidth / 2, -h / 2 - 20, barWidth * healthPercent, barHeight);
 }
 
 export function drawBullets(ctx) {
