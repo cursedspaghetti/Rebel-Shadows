@@ -134,43 +134,58 @@ export function drawPlayer(ctx) {
 export function drawBossShadow(ctx, boss, img) {
     if (!img.complete) return;
 
-    const floatOffset = Math.sin(Date.now() * 0.002) * 15; // Oscillazione più lenta e ampia
+    // --- CONFIGURAZIONE ANIMAZIONE ---
+    const totalFrames = 9; // Cambia in base al tuo file
+    const animationSpeed = 100; // Millisecondi per frame (più basso = più veloce)
+    
+    // Calcola quale frame mostrare basandosi sul tempo attuale
+    const frameIndex = Math.floor(Date.now() / animationSpeed) % totalFrames;
+    
+    // Calcola la larghezza del singolo frame (assumendo siano disposti in orizzontale)
+    const frameWidth = img.width / totalFrames;
+    const frameHeight = img.height;
+
+    const floatOffset = Math.sin(Date.now() * 0.002) * 15;
     
     ctx.save();
     ctx.translate(boss.x, boss.y + floatOffset);
 
-    // 1. Grande Ombra alla base
+    // 1. Ombra alla base
     ctx.globalAlpha = 0.2;
     ctx.fillStyle = 'black';
     ctx.beginPath();
     ctx.ellipse(0, boss.size / 1.5, boss.size * 0.8, boss.size * 0.2, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 2. Bagliore Aura Boss
+    // 2. Bagliore Aura
     ctx.globalAlpha = 1.0;
     ctx.shadowColor = '#9d00ff';
-    ctx.shadowBlur = 30; // Bagliore molto forte
+    ctx.shadowBlur = 30;
 
-    // 3. Disegno Boss (Shadow.gif)
-    ctx.drawImage(img, -boss.size / 2, -boss.size / 2, boss.size, boss.size);
+    // 3. Disegno dello Sprite Animato
+    // drawImage(immagine, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+    ctx.drawImage(
+        img, 
+        frameIndex * frameWidth, 0, // Inizio ritaglio (X, Y)
+        frameWidth, frameHeight,    // Dimensioni ritaglio
+        -boss.size / 2, -boss.size / 2, // Posizione sul canvas
+        boss.size, boss.size        // Dimensione a schermo
+    );
 
-    // 4. Barra della Vita (HP Bar)
+    // 4. Barra della Vita (Reset ombra prima del disegno)
     ctx.shadowBlur = 0;
     const barWidth = 100;
     const barHeight = 6;
     const healthPercent = boss.hp / boss.maxHp;
 
-    // Sfondo barra (rosso scuro)
     ctx.fillStyle = '#440000';
     ctx.fillRect(-barWidth / 2, -boss.size / 2 - 20, barWidth, barHeight);
     
-    // Vita attuale (viola/neon)
     ctx.fillStyle = '#cc00ff';
     ctx.fillRect(-barWidth / 2, -boss.size / 2 - 20, barWidth * healthPercent, barHeight);
 
     ctx.restore();
 }
-
 
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
