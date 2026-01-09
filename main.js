@@ -2,10 +2,6 @@ import { CONFIG, gameState } from './config.js';
 import * as Renderer from './renderer.js';
 import * as Engine from './engine.js';
 
-//const shadowImg = new Image();
-//shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.gif';
-// Usiamo l'URL "raw" per caricare l'immagine direttamente da GitHub
-
 // --- DOM ELEMENTS ---
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -80,7 +76,6 @@ function gameLoop() {
         Renderer.drawPlayer(ctx);
         Renderer.drawBullets(ctx);
         Renderer.drawUI(ctx);
-        Renderer.drawEnemyShadow(ctx);
         
         // 4. Timer/Boss Logic
         if (gameState.bossActive && gameState.enemies.length === 0) {
