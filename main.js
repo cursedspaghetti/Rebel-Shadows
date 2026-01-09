@@ -11,10 +11,14 @@ const startButton = document.getElementById('startButton');
 const ringChoicesContainer = document.getElementById('ringChoices');
 const gameContainer = document.getElementById('game-container');
 
+// --- ASSET LOADING ---
+const shadowImg = new Image();
+shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.gif';
+
 // --- INITIALIZATION ---
 
 function init() {
-    // 1. Setup Ring Selection UI
+    // 1. Setup UI Selezione Anello
     Object.keys(CONFIG.RING_COLORS).forEach(colorName => {
         const button = document.createElement('div');
         button.className = 'ring-choice';
@@ -31,7 +35,7 @@ function init() {
         ringChoicesContainer.appendChild(button);
     });
 
-    // 2. Setup Background Rings for Start Screen
+    // 2. Setup Anelli di sfondo per Start Screen
     for (let i = 0; i < 14; i++) {
         gameState.rings.push({
             x: Math.random() * CONFIG.CANVAS_WIDTH,
@@ -70,19 +74,50 @@ function gameLoop() {
         Engine.updateBullets();
         Engine.updateSpecialRay();
 
+        // --- LOGICA BOSS SHADOW (Trigger 30s) ---
+        if (gameState.gameTimer <= 30 && !gameState.bossActive) {
+            gameState.bossActive = true;
+            gameState.enemies = []; // Pulizia nemici minori
+            gameState.boss = {
+                x: CONFIG.CANVAS_WIDTH / 2,
+                y: -150,           // Inizia fuori dallo schermo in alto
+                targetY: 150,      // Posizione d'arresto al centro-alto
+                size: 160,         // Dimensione Boss
+                hp: 1000,          // Salute Boss
+                maxHp: 1000
+            };
+        }
+
         // 3. Rendering
         Renderer.drawSpecialRay(ctx);
         if (gameState.isCharging) Renderer.drawChargeEffect(ctx);
+
+        // Disegno Player
         Renderer.drawPlayer(ctx);
+
+        // Gestione Boss o Nemici comuni
+        if (gameState.bossActive && gameState.boss) {
+            // Entrata fluida del boss
+            if (gameState.boss.y < gameState.boss.targetY) {
+                gameState.boss.y += 2; 
+            }
+            Renderer.drawBossShadow(ctx, gameState.boss, shadowImg);
+            
+            // Logica Vittoria Boss
+            if (gameState.boss.hp <= 0) {
+                showPowerUpScreen();
+                return;
+            }
+        } else {
+            // Disegno nemici normali solo se il boss non è attivo
+            gameState.enemies.forEach(enemy => {
+                // Se hai ancora una funzione per nemici piccoli, usala qui
+            });
+        }
+
         Renderer.drawBullets(ctx);
         Renderer.drawUI(ctx);
         
-        // 4. Timer/Boss Logic
-        if (gameState.bossActive && gameState.enemies.length === 0) {
-            showPowerUpScreen();
-            return; // Pause loop
-        }
-
         requestAnimationFrame(gameLoop);
     }
 }
@@ -90,18 +125,24 @@ function gameLoop() {
 // --- HANDLERS ---
 
 function startGame() {
+    if (!shadowImg.complete) {
+        setTimeout(startGame, 100);
+        return;
+    }
+
     startScreen.style.display = 'none';
     gameState.currentScreen = 'playing';
     
-    // Timer Logic
+    // Timer Decrescente
     gameState.timerInterval = setInterval(() => {
-        gameState.gameTimer--;
-        if (gameState.gameTimer <= 0) {
+        if (gameState.gameTimer > 0) {
+            gameState.gameTimer--;
+        } else {
             clearInterval(gameState.timerInterval);
-            gameState.bossActive = true;
         }
     }, 1000);
 
+    // Spawn iniziale nemici minori
     Engine.spawnEnemies(5);
     gameLoop();
 }
@@ -123,7 +164,6 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
 
-// Special Attack Sequence
 function fireSpecialAttackSequence() {
     if (gameState.specialOnCooldown || gameState.isCharging) return;
 
@@ -140,32 +180,14 @@ function fireSpecialAttackSequence() {
     }, 1000);
 }
 
-// Touch Support
+// Touch Support (semplificato)
 canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     const touch = e.touches[0];
-    gameState.touchIdentifier = touch.identifier;
     gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
     gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
-}, { passive: false });
-
-canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const touch = Array.from(e.changedTouches).find(t => t.identifier === gameState.touchIdentifier);
-    if (touch) {
-        gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
-        gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
-    }
-}, { passive: false });
-
-canvas.addEventListener('touchend', () => {
-    gameState.touchIdentifier = null;
 });
 
 startButton.addEventListener('click', startGame);
 
-
-// Start everything
 init();
