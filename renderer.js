@@ -52,85 +52,88 @@ export function drawPlayer(ctx) {
     const playerSize = 18; 
     const ringColor = gameState.selectedRingColor || '#fff';
     
-    // Calcolo dinamico dell'inclinazione e della rotazione
-    // playerDx/Dy determinano quanto l'anello si "piega" durante il volo
-    const tiltX = (gameState.playerDx || 0) * 0.1; 
+    // 1. CALCOLO DINAMICO
+    const moveTiltX = (gameState.playerDx || 0) * 0.1; 
     const rotationZ = (Date.now() * 0.002); 
 
     ctx.save();
     ctx.translate(gameState.playerX, gameState.playerY);
     
-    // Applica l'inclinazione basata sul movimento
-    ctx.rotate(tiltX);
+    // Inclinazione basata sul movimento laterale
+    ctx.rotate(moveTiltX);
 
-    // --- 1. STRUTTURA ANELLO 3D ---
-    // Lato/Spessore dell'anello (effetto profondità)
+    // --- 2. STRUTTURA ANELLO 3D ---
+    // Spessore (Base dell'anello)
     ctx.lineWidth = 10;
     ctx.strokeStyle = ringColor;
-    ctx.globalAlpha = 0.3;
+    ctx.globalAlpha = 0.2; // Molto tenue per la profondità
     ctx.beginPath();
-    ctx.ellipse(0, 5, playerSize, playerSize * 0.7, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 7, playerSize, playerSize * 0.5, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Faccia superiore (Anello principale)
+    // Anello Principale (Faccia superiore)
     ctx.globalAlpha = 1.0;
     ctx.shadowColor = ringColor;
-    ctx.shadowBlur = 20; 
+    ctx.shadowBlur = 15; 
     ctx.lineWidth = 8;
+    ctx.strokeStyle = ringColor;
     ctx.beginPath();
-    ctx.ellipse(0, 0, playerSize, playerSize * 0.7, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, playerSize, playerSize * 0.5, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // --- 2. RUNE MAGICHE (Unicode) ---
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = 'white';
-    ctx.fillStyle = 'white'; 
-    // Dimensione font ottimizzata per playerSize 18
+    // --- 3. RUNE MAGICHE (SCURE) ---
+    ctx.shadowBlur = 0; // Togliamo il bagliore esterno per farle sembrare "incise"
+    
+    // Applichiamo un filtro per scurire il colore dell'anello per le rune
+    ctx.save();
+    ctx.globalCompositeOperation = 'multiply'; // Questo scurisce il colore sopra l'anello
+    
+    // Impostiamo il colore delle rune come quello dell'anello
+    ctx.fillStyle = ringColor; 
     ctx.font = 'bold 12px "Courier New", monospace';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    // Set di rune antiche
     const runes = ['ᚩ', 'ᚱ', 'ᚻ', 'ᛃ', 'ᛊ', 'ᛏ']; 
     const numRunes = runes.length;
 
     for (let i = 0; i < numRunes; i++) {
-        // Angolo di ogni runa più rotazione nel tempo
         const angle = (i / numRunes) * Math.PI * 2 + rotationZ;
-        
-        // Posizionamento orbitale lungo l'ellisse 3D
         const rx = Math.cos(angle) * playerSize;
-        const ry = Math.sin(angle) * (playerSize * 0.7);
+        const ry = Math.sin(angle) * (playerSize * 0.5);
 
         ctx.save();
         ctx.translate(rx, ry);
-        
-        // Fa sì che la runa sia perpendicolare alla circonferenza
         ctx.rotate(angle + Math.PI / 2); 
         
-        // Pulsazione: le rune sembrano "respirare" luce
-        ctx.globalAlpha = 0.5 + Math.sin(Date.now() * 0.004 + i) * 0.5;
-        
+        // Disegniamo la runa
+        // Nota: Il CompositeOperation 'multiply' la renderà naturalmente più scura rispetto alla base
         ctx.fillText(runes[i], 0, 0);
+        
+        // Aggiungiamo un secondo passaggio nero con bassa opacità per garantire che sia più scura
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = 'black';
+        ctx.fillText(runes[i], 0, 0);
+        
         ctx.restore();
     }
+    ctx.restore(); // Fine CompositeOperation
 
-    // --- 3. DETTAGLI FINALI ---
+    // --- 4. RIFINITURE ---
     ctx.globalAlpha = 1.0;
-    ctx.shadowBlur = 0;
-
-    // Riflesso di luce superiore per l'effetto metallico
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.lineWidth = 3;
+    
+    // Riflesso di luce (per dare il contrasto con le rune scure)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.ellipse(0, 0, playerSize - 3, (playerSize - 3) * 0.7, 0, -Math.PI / 2, 0);
+    ctx.ellipse(0, -1, playerSize - 4, (playerSize - 4) * 0.4, 0, -Math.PI * 0.8, -Math.PI * 0.2);
     ctx.stroke();
 
-    // Bordo esterno nero per staccare dal fondo
-    ctx.strokeStyle = 'black';
+    // Bordo esterno nero sottile
+    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.ellipse(0, 0, playerSize + 8, (playerSize + 8) * 0.7, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, playerSize + 8, (playerSize + 8) * 0.5, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.restore();
