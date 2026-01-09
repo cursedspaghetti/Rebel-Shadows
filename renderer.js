@@ -134,56 +134,67 @@ export function drawPlayer(ctx) {
 export function drawBossShadow(ctx, boss, img) {
     if (!img.complete) return;
 
-    // --- CONFIGURAZIONE FISSA ---
-    const totalFrames = 9; 
-    const frameDuration = 100;
-    const SIZE = 400; // La dimensione fissa dei tuoi frame
+    // --- CONFIGURAZIONE ---
+    const totalFrames = 9;
+    const frameDuration = 100; // 100ms per frame
+    const originalSize = 400;  // Dimensione originale del frame (400x400)
     
-    const frameIndex = Math.floor(Date.now() / frameDuration) % totalFrames;
+    // Calcolo del frame con protezione per gli scatti
+    // Usiamo il resto della divisione intera per assicurarci che l'indice sia fluido
+    const frameIndex = Math.floor((Date.now() / frameDuration) % totalFrames);
     
-    // Calcoliamo l'oscillazione (float)
-    const floatOffset = Math.sin(Date.now() * 0.002) * 15;
-    
-    ctx.save();
-    // Posizioniamo il boss
-    ctx.translate(Math.round(boss.x), Math.round(boss.y + floatOffset));
+    // Oscillazione (Float effect)
+    const floatOffset = Math.sin(Date.now() * 0.003) * 10;
 
-    // 1. Ombra alla base 
-    // Nota: l'ombra è centrata rispetto ai 400px
-    ctx.globalAlpha = 0.15;
+    ctx.save();
+    
+    // 1. POSIZIONAMENTO E SCALA
+    ctx.translate(boss.x, boss.y + floatOffset);
+    ctx.scale(0.5, 0.5); // Dimezza le dimensioni totali (il boss diventa 200x200)
+
+    // 2. OMBRA ALLA BASE
+    ctx.globalAlpha = 0.2;
     ctx.fillStyle = 'black';
     ctx.beginPath();
-    ctx.ellipse(0, SIZE / 2 - 20, 100, 25, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, originalSize / 2.5, 120, 30, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 2. Aura
+    // 3. BAGLIORE AURA
     ctx.globalAlpha = 1.0;
     ctx.shadowColor = '#9d00ff';
-    ctx.shadowBlur = 20;
+    ctx.shadowBlur = 40; // Aumentato perché la scala lo ridurrà visivamente
 
-    // 3. DISEGNO 400x400 (Rapporto 1:1)
+    // 4. DISEGNO DEL FRAME (Rapporto 1:1)
+    // Usiamo Math.floor per le coordinate di ritaglio per evitare flickering
+    const sx = Math.floor(frameIndex * originalSize);
+    
     ctx.drawImage(
-        img, 
-        frameIndex * SIZE, 0, // Sorgente: si sposta di 400px alla volta
-        SIZE, SIZE,           // Prende un quadrato 400x400
-        -SIZE / 2, -SIZE / 2, // Lo centra (da -200 a +200)
-        SIZE, SIZE            // Lo disegna 400x400 (Nessun ridimensionamento)
+        img,
+        sx, 0,                      // Sorgente (X, Y)
+        originalSize, originalSize,  // Dimensioni sorgente (400x400)
+        -originalSize / 2, -originalSize / 2, // Posizione centrata
+        originalSize, originalSize   // Dimensioni destinazione (disegna 400x400, scalato dal ctx)
     );
 
-    // 4. Barra della Vita
+    // 5. BARRA DELLA VITA
     ctx.shadowBlur = 0;
-    drawBossHealthBar(ctx, SIZE);
+    drawBossHealthBar(ctx, boss, originalSize);
 
     ctx.restore();
 }
 
-function drawBossHealthBar(ctx, size) {
-    const barWidth = 150; 
-    const barHeight = 8;
-    // Assicurati che boss.hp e boss.maxHp siano accessibili qui se necessario
-    // o passali come argomenti
+function drawBossHealthBar(ctx, boss, size) {
+    const barWidth = 250; // Leggermente più larga perché siamo in scala 0.5
+    const barHeight = 12;
+    const healthPercent = Math.max(0, boss.hp / boss.maxHp);
+
+    // Posizionata sopra la testa (size / 2 + margine)
+    const yPos = -size / 2 - 40;
+
     ctx.fillStyle = '#440000';
-    ctx.fillRect(-barWidth / 2, -size / 2 - 30, barWidth, barHeight);
+    ctx.fillRect(-barWidth / 2, yPos, barWidth, barHeight);
+    ctx.fillStyle = '#cc00ff';
+    ctx.fillRect(-barWidth / 2, yPos, barWidth * healthPercent, barHeight);
 }
 
 export function drawBullets(ctx) {
