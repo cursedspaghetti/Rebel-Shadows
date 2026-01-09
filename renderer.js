@@ -131,72 +131,75 @@ export function drawPlayer(ctx) {
 }
 
 
+// Aggiungiamo una variabile fuori dalla funzione per gestire il tempo in modo fluido
+let lastFrameIndex = 0;
+
 export function drawBossShadow(ctx, boss, img) {
     if (!img.complete) return;
 
     // --- CONFIGURAZIONE ---
     const totalFrames = 9;
-    const frameDuration = 100; // 100ms per frame
-    const originalSize = 400;  // Dimensione originale del frame (400x400)
+    const frameDuration = 100; // ms
+    const originalSize = 400;  // Dimensione di ogni frame nello sprite sheet
     
-    // Calcolo del frame con protezione per gli scatti
-    // Usiamo il resto della divisione intera per assicurarci che l'indice sia fluido
+    // CALCOLO FRAME FLUIDO: 
+    // Usiamo una logica basata sul tempo ma arrotondata per difetto
     const frameIndex = Math.floor((Date.now() / frameDuration) % totalFrames);
     
-    // Oscillazione (Float effect)
+    // Oscillazione (Float effect) raddrizzata per evitare scatti nell'ombra
     const floatOffset = Math.sin(Date.now() * 0.003) * 10;
 
     ctx.save();
     
-    // 1. POSIZIONAMENTO E SCALA
-    ctx.translate(boss.x, boss.y + floatOffset);
-    ctx.scale(0.5, 0.5); // Dimezza le dimensioni totali (il boss diventa 200x200)
+    // 1. POSIZIONAMENTO (Usiamo Math.round per evitare che il boss sia tra due pixel)
+    // Se boss.x o boss.y sono decimali, il ritaglio dell'immagine risulterà sfocato o a scatti
+    const drawX = Math.round(boss.x);
+    const drawY = Math.round(boss.y + floatOffset);
+    
+    ctx.translate(drawX, drawY);
+    ctx.scale(0.5, 0.5); // Scala alla metà
 
-    // 2. OMBRA ALLA BASE
+    // 2. OMBRA ALLA BASE (Semplificata e senza bagliore)
     ctx.globalAlpha = 0.2;
     ctx.fillStyle = 'black';
     ctx.beginPath();
-    ctx.ellipse(0, originalSize / 2.5, 120, 30, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, originalSize / 2.2, 110, 25, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 3. BAGLIORE AURA
+    // 3. RIMOZIONE BAGLIORE AURA
     ctx.globalAlpha = 1.0;
-    ctx.shadowColor = '#9d00ff';
-    ctx.shadowBlur = 40; // Aumentato perché la scala lo ridurrà visivamente
+    ctx.shadowBlur = 0; // Assicuriamoci che sia spento
+    ctx.shadowColor = 'transparent';
 
-    // 4. DISEGNO DEL FRAME (Rapporto 1:1)
-    // Usiamo Math.floor per le coordinate di ritaglio per evitare flickering
-    const sx = Math.floor(frameIndex * originalSize);
+    // 4. DISEGNO DEL FRAME (Pixel Perfect)
+    // Il trucco per rimuovere gli scatti è calcolare sx (sorgente X) come numero intero esatto
+    const sx = frameIndex * originalSize;
     
     ctx.drawImage(
         img,
-        sx, 0,                      // Sorgente (X, Y)
-        originalSize, originalSize,  // Dimensioni sorgente (400x400)
-        -originalSize / 2, -originalSize / 2, // Posizione centrata
-        originalSize, originalSize   // Dimensioni destinazione (disegna 400x400, scalato dal ctx)
+        sx, 0,                      // Sorgente X (deve essere un multiplo di 400)
+        originalSize, originalSize,  // Sorgente Larghezza/Altezza
+        -originalSize / 2, -originalSize / 2, // Destinazione (Centrata)
+        originalSize, originalSize   // Destinazione (Dimensione originale, ridotta da scale())
     );
 
     // 5. BARRA DELLA VITA
-    ctx.shadowBlur = 0;
     drawBossHealthBar(ctx, boss, originalSize);
 
     ctx.restore();
 }
 
 function drawBossHealthBar(ctx, boss, size) {
-    const barWidth = 250; // Leggermente più larga perché siamo in scala 0.5
-    const barHeight = 12;
+    const barWidth = 240;
+    const barHeight = 10;
     const healthPercent = Math.max(0, boss.hp / boss.maxHp);
-
-    // Posizionata sopra la testa (size / 2 + margine)
     const yPos = -size / 2 - 40;
 
-    ctx.fillStyle = '#440000';
+    ctx.fillStyle = '#330000';
     ctx.fillRect(-barWidth / 2, yPos, barWidth, barHeight);
     ctx.fillStyle = '#cc00ff';
     ctx.fillRect(-barWidth / 2, yPos, barWidth * healthPercent, barHeight);
 }
-
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
