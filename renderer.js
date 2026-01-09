@@ -170,6 +170,33 @@ export function drawBossShadow(ctx, boss, img) {
     ctx.restore();
 }
 
+export function drawBossHealthBar(ctx, boss, size) {
+    // Calcoliamo la percentuale di salute
+    const healthPercent = boss.hp / boss.maxHp;
+    
+    // Configuriamo dimensioni e posizione della barra
+    // La posizioniamo sopra il boss (size è 400, quindi -200 è il limite superiore)
+    const barWidth = 200;
+    const barHeight = 20;
+    const x = -barWidth / 2; // Centrata rispetto al boss
+    const y = -size / 2 - 30; // 30px sopra la testa del boss
+
+    // 1. Sfondo della barra (Parte vuota/Rossa scura)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(x, y, barWidth, barHeight);
+
+    // 2. Barra della salute effettiva (Verde o Rossa)
+    // Cambia colore se la vita è bassa (opzionale)
+    ctx.fillStyle = healthPercent > 0.3 ? '#2ecc71' : '#e74c3c';
+    ctx.fillRect(x, y, barWidth * healthPercent, barHeight);
+
+    // 3. Bordo della barra
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, barWidth, barHeight);
+}
+
+
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
