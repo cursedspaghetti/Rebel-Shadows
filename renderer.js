@@ -52,26 +52,27 @@ export function drawPlayer(ctx) {
     const playerSize = 18; 
     const ringColor = gameState.selectedRingColor || '#fff';
     
-    // 1. CALCOLO ROTAZIONE (Solo delle rune)
+    // 1. CALCOLO ROTAZIONE RUNE
     const rotationZ = (Date.now() * 0.002); 
-    // Rapporto ellisse per 60 gradi di inclinazione (circa 0.35)
-    const perspectiveY = 0.35;
+    
+    // Rapporto ellisse per 30 gradi di inclinazione (circa 0.85)
+    // Più il valore è vicino a 1, più l'anello sembra visto dall'alto (90°)
+    const perspectiveY = 0.85;
 
     ctx.save();
     ctx.translate(gameState.playerX, gameState.playerY);
-    
-    // Nessuna rotazione di contesto (oscillazione rimossa)
 
     // --- 2. STRUTTURA ANELLO 3D ---
-    // Spessore (Base dell'anello per dare profondità)
+    // Spessore (Base dell'anello)
+    // Con 30° di inclinazione, lo spessore visibile diminuisce
     ctx.lineWidth = 10;
     ctx.strokeStyle = ringColor;
     ctx.globalAlpha = 0.2;
     ctx.beginPath();
-    ctx.ellipse(0, 6, playerSize, playerSize * perspectiveY, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 4, playerSize, playerSize * perspectiveY, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Anello Principale
+    // Anello Principale (Faccia superiore)
     ctx.globalAlpha = 1.0;
     ctx.shadowColor = ringColor;
     ctx.shadowBlur = 15; 
@@ -96,6 +97,8 @@ export function drawPlayer(ctx) {
 
     for (let i = 0; i < numRunes; i++) {
         const angle = (i / numRunes) * Math.PI * 2 + rotationZ;
+        
+        // Posizionamento delle rune sulla nuova ellisse più circolare
         const rx = Math.cos(angle) * playerSize;
         const ry = Math.sin(angle) * (playerSize * perspectiveY);
 
@@ -103,10 +106,10 @@ export function drawPlayer(ctx) {
         ctx.translate(rx, ry);
         ctx.rotate(angle + Math.PI / 2); 
         
-        // Disegno runa (tono scuro)
+        // Disegno runa (colore base scurito)
         ctx.fillText(runes[i], 0, 0);
         
-        // Rinforzo del tono scuro
+        // Rinforzo tono scuro
         ctx.globalAlpha = 0.4;
         ctx.fillStyle = 'black';
         ctx.fillText(runes[i], 0, 0);
@@ -120,11 +123,9 @@ export function drawPlayer(ctx) {
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    // Riflesso adattato alla nuova prospettiva schiacciata
-    ctx.ellipse(0, -1, playerSize - 4, (playerSize - 4) * perspectiveY, 0, -Math.PI * 0.8, -Math.PI * 0.2);
+    // Riflesso più ampio dato che l'anello è più "aperto"
+    ctx.ellipse(0, -1, playerSize - 4, (playerSize - 4) * perspectiveY, 0, -Math.PI * 0.7, -Math.PI * 0.3);
     ctx.stroke();
-
-    // (Il bordo nero esterno è stato rimosso)
 
     ctx.restore();
 }
