@@ -74,6 +74,32 @@ function gameLoop() {
         Engine.updateBullets();
         Engine.updateSpecialRay();
 
+      // 2.1 Gestione Collisioni Boss-Proiettili
+      if (gameState.bossActive && gameState.boss) {
+         gameState.bullets.forEach((bullet, bIndex) => {
+        // Calcolo distanza tra proiettile e centro del boss
+        const dx = bullet.x - gameState.boss.x;
+        const dy = bullet.y - gameState.boss.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        // Se la distanza è minore della dimensione del boss, c'è un colpo
+        if (distance < gameState.boss.size) {
+            gameState.boss.hp -= 10; // Danno per proiettile
+            gameState.bullets.splice(bIndex, 1); // Rimuovi il proiettile
+            
+            // Opzionale: aggiungi un feedback visivo (es. flash bianco) qui
+        }
+    });
+
+    // 2.2 Gestione Collisione con Special Ray (Raggio Speciale)
+    if (gameState.specialRay.active) {
+        // Se il raggio x è vicino alla x del boss (considerando la larghezza del raggio)
+        if (Math.abs(gameState.specialRay.x - gameState.boss.x) < gameState.boss.size) {
+            gameState.boss.hp -= 5; // Danno continuo del raggio
+        }
+    }
+}
+
         // --- LOGICA BOSS SHADOW (Trigger 30s) ---
         if (gameState.gameTimer <= 58 && !gameState.bossActive) {
             gameState.bossActive = true;
