@@ -108,7 +108,7 @@ function gameLoop() {
                 x: CONFIG.CANVAS_WIDTH / 2,
                 y: -150,           // Inizia fuori dallo schermo in alto
                 targetY: 150,      // Posizione d'arresto al centro-alto
-                //size: 160,         // Dimensione Boss
+                size: 160,         // Dimensione Boss
                 hp: 1000,          // Salute Boss
                 maxHp: 1000
             };
