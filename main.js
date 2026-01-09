@@ -80,7 +80,8 @@ function gameLoop() {
         Renderer.drawPlayer(ctx);
         Renderer.drawBullets(ctx);
         Renderer.drawUI(ctx);
-
+        Renderer.drawEnemyShadow(ctx);
+        
         // 4. Timer/Boss Logic
         if (gameState.bossActive && gameState.enemies.length === 0) {
             showPowerUpScreen();
