@@ -160,9 +160,9 @@ export function drawBossShadow(ctx, boss, img) {
     ctx.fill();
 
     // 3. BAGLIORE AURA
-    ctx.globalAlpha = 1.0;
-    ctx.shadowColor = '#9d00ff';
-    ctx.shadowBlur = 40; // Aumentato perché la scala lo ridurrà visivamente
+   // ctx.globalAlpha = 1.0;
+   // ctx.shadowColor = '#9d00ff';
+   // ctx.shadowBlur = 40; // Aumentato perché la scala lo ridurrà visivamente
 
     // 4. DISEGNO DEL FRAME (Rapporto 1:1)
     // Usiamo Math.floor per le coordinate di ritaglio per evitare flickering
