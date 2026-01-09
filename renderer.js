@@ -52,43 +52,40 @@ export function drawPlayer(ctx) {
     const playerSize = 18; 
     const ringColor = gameState.selectedRingColor || '#fff';
     
-    // 1. CALCOLO DINAMICO
-    const moveTiltX = (gameState.playerDx || 0) * 0.1; 
+    // 1. CALCOLO ROTAZIONE (Solo delle rune)
     const rotationZ = (Date.now() * 0.002); 
+    // Rapporto ellisse per 60 gradi di inclinazione (circa 0.35)
+    const perspectiveY = 0.35;
 
     ctx.save();
     ctx.translate(gameState.playerX, gameState.playerY);
     
-    // Inclinazione basata sul movimento laterale
-    ctx.rotate(moveTiltX);
+    // Nessuna rotazione di contesto (oscillazione rimossa)
 
     // --- 2. STRUTTURA ANELLO 3D ---
-    // Spessore (Base dell'anello)
+    // Spessore (Base dell'anello per dare profondità)
     ctx.lineWidth = 10;
     ctx.strokeStyle = ringColor;
-    ctx.globalAlpha = 0.2; // Molto tenue per la profondità
+    ctx.globalAlpha = 0.2;
     ctx.beginPath();
-    ctx.ellipse(0, 7, playerSize, playerSize * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 6, playerSize, playerSize * perspectiveY, 0, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Anello Principale (Faccia superiore)
+    // Anello Principale
     ctx.globalAlpha = 1.0;
     ctx.shadowColor = ringColor;
     ctx.shadowBlur = 15; 
     ctx.lineWidth = 8;
     ctx.strokeStyle = ringColor;
     ctx.beginPath();
-    ctx.ellipse(0, 0, playerSize, playerSize * 0.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, playerSize, playerSize * perspectiveY, 0, 0, Math.PI * 2);
     ctx.stroke();
 
     // --- 3. RUNE MAGICHE (SCURE) ---
-    ctx.shadowBlur = 0; // Togliamo il bagliore esterno per farle sembrare "incise"
-    
-    // Applichiamo un filtro per scurire il colore dell'anello per le rune
+    ctx.shadowBlur = 0;
     ctx.save();
-    ctx.globalCompositeOperation = 'multiply'; // Questo scurisce il colore sopra l'anello
+    ctx.globalCompositeOperation = 'multiply'; 
     
-    // Impostiamo il colore delle rune come quello dell'anello
     ctx.fillStyle = ringColor; 
     ctx.font = 'bold 12px "Courier New", monospace';
     ctx.textAlign = 'center';
@@ -100,41 +97,34 @@ export function drawPlayer(ctx) {
     for (let i = 0; i < numRunes; i++) {
         const angle = (i / numRunes) * Math.PI * 2 + rotationZ;
         const rx = Math.cos(angle) * playerSize;
-        const ry = Math.sin(angle) * (playerSize * 0.5);
+        const ry = Math.sin(angle) * (playerSize * perspectiveY);
 
         ctx.save();
         ctx.translate(rx, ry);
         ctx.rotate(angle + Math.PI / 2); 
         
-        // Disegniamo la runa
-        // Nota: Il CompositeOperation 'multiply' la renderà naturalmente più scura rispetto alla base
+        // Disegno runa (tono scuro)
         ctx.fillText(runes[i], 0, 0);
         
-        // Aggiungiamo un secondo passaggio nero con bassa opacità per garantire che sia più scura
+        // Rinforzo del tono scuro
         ctx.globalAlpha = 0.4;
         ctx.fillStyle = 'black';
         ctx.fillText(runes[i], 0, 0);
         
         ctx.restore();
     }
-    ctx.restore(); // Fine CompositeOperation
+    ctx.restore();
 
-    // --- 4. RIFINITURE ---
+    // --- 4. RIFLESSO SUPERIORE ---
     ctx.globalAlpha = 1.0;
-    
-    // Riflesso di luce (per dare il contrasto con le rune scure)
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.ellipse(0, -1, playerSize - 4, (playerSize - 4) * 0.4, 0, -Math.PI * 0.8, -Math.PI * 0.2);
+    // Riflesso adattato alla nuova prospettiva schiacciata
+    ctx.ellipse(0, -1, playerSize - 4, (playerSize - 4) * perspectiveY, 0, -Math.PI * 0.8, -Math.PI * 0.2);
     ctx.stroke();
 
-    // Bordo esterno nero sottile
-    ctx.strokeStyle = 'rgba(0,0,0,0.8)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, playerSize + 8, (playerSize + 8) * 0.5, 0, 0, Math.PI * 2);
-    ctx.stroke();
+    // (Il bordo nero esterno è stato rimosso)
 
     ctx.restore();
 }
