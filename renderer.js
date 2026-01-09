@@ -176,7 +176,7 @@ function drawBossHealthBar(ctx, boss, size) {
     // -size/2 è la cima della testa del boss (-200)
     // Sottraiamo altri 30 per distanziarla
     const x = -barWidth / 2;
-    const y = -size / 2 - 30; 
+    const y = -size / 2 - 5; 
 
     // Sfondo (Rosso scuro/Nero)
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
