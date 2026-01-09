@@ -135,71 +135,58 @@ export function drawPlayer(ctx) {
 let lastFrameIndex = 0;
 
 export function drawBossShadow(ctx, boss, img) {
-    if (!img.complete) return;
+    if (!img.complete || img.width === 0) return;
 
-    // --- CONFIGURAZIONE ---
-    const totalFrames = 9;
-    const frameDuration = 100; // ms
-    const originalSize = 400;  // Dimensione di ogni frame nello sprite sheet
-    
-    // CALCOLO FRAME FLUIDO: 
-    // Usiamo una logica basata sul tempo ma arrotondata per difetto
+    // --- CONFIGURAZIONE PIXEL ART ---
+    const originalSize = 400; 
+    const totalFrames = Math.floor(img.width / originalSize); // Evita spazi vuoti a fine immagine
+    const frameDuration = 100;
+
+    // Disabilita l'anti-aliasing per mantenere i pixel nitidi
+    ctx.imageSmoothingEnabled = false;
+
+    // Calcolo frame
     const frameIndex = Math.floor((Date.now() / frameDuration) % totalFrames);
-    
-    // Oscillazione (Float effect) raddrizzata per evitare scatti nell'ombra
-    const floatOffset = Math.sin(Date.now() * 0.003) * 10;
+    const floatOffset = Math.floor(Math.sin(Date.now() * 0.003) * 10); // Floor anche qui per la pixel art
 
     ctx.save();
     
-    // 1. POSIZIONAMENTO (Usiamo Math.round per evitare che il boss sia tra due pixel)
-    // Se boss.x o boss.y sono decimali, il ritaglio dell'immagine risulterà sfocato o a scatti
+    // Posizionamento arrotondato al pixel
     const drawX = Math.round(boss.x);
     const drawY = Math.round(boss.y + floatOffset);
     
     ctx.translate(drawX, drawY);
-    ctx.scale(0.5, 0.5); // Scala alla metà
+    ctx.scale(0.5, 0.5); 
 
-    // 2. OMBRA ALLA BASE (Semplificata e senza bagliore)
+    // Ombra (semplice cerchio pixelato)
     ctx.globalAlpha = 0.2;
     ctx.fillStyle = 'black';
     ctx.beginPath();
     ctx.ellipse(0, originalSize / 2.2, 110, 25, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // 3. RIMOZIONE BAGLIORE AURA
     ctx.globalAlpha = 1.0;
-    ctx.shadowBlur = 0; // Assicuriamoci che sia spento
-    ctx.shadowColor = 'transparent';
 
-    // 4. DISEGNO DEL FRAME (Pixel Perfect)
-    // Il trucco per rimuovere gli scatti è calcolare sx (sorgente X) come numero intero esatto
+    // Sorgente X (deve essere un multiplo esatto di 400)
     const sx = frameIndex * originalSize;
     
     ctx.drawImage(
         img,
-        sx, 0,                      // Sorgente X (deve essere un multiplo di 400)
-        originalSize, originalSize,  // Sorgente Larghezza/Altezza
-        -originalSize / 2, -originalSize / 2, // Destinazione (Centrata)
-        originalSize, originalSize   // Destinazione (Dimensione originale, ridotta da scale())
+        sx, 0,                       
+        originalSize, originalSize,  
+        -originalSize / 2, -originalSize / 2, 
+        originalSize, originalSize
     );
 
-    // 5. BARRA DELLA VITA
     drawBossHealthBar(ctx, boss, originalSize);
 
     ctx.restore();
+    
+    // Ripristina per gli altri elementi se necessario
+    ctx.imageSmoothingEnabled = true; 
 }
 
-function drawBossHealthBar(ctx, boss, size) {
-    const barWidth = 240;
-    const barHeight = 10;
-    const healthPercent = Math.max(0, boss.hp / boss.maxHp);
-    const yPos = -size / 2 - 40;
 
-    ctx.fillStyle = '#330000';
-    ctx.fillRect(-barWidth / 2, yPos, barWidth, barHeight);
-    ctx.fillStyle = '#cc00ff';
-    ctx.fillRect(-barWidth / 2, yPos, barWidth * healthPercent, barHeight);
-}
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
