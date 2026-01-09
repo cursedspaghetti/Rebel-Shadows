@@ -130,6 +130,48 @@ export function drawPlayer(ctx) {
     ctx.restore();
 }
 
+
+export function drawBossShadow(ctx, boss, img) {
+    if (!img.complete) return;
+
+    const floatOffset = Math.sin(Date.now() * 0.002) * 15; // Oscillazione più lenta e ampia
+    
+    ctx.save();
+    ctx.translate(boss.x, boss.y + floatOffset);
+
+    // 1. Grande Ombra alla base
+    ctx.globalAlpha = 0.2;
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    ctx.ellipse(0, boss.size / 1.5, boss.size * 0.8, boss.size * 0.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2. Bagliore Aura Boss
+    ctx.globalAlpha = 1.0;
+    ctx.shadowColor = '#9d00ff';
+    ctx.shadowBlur = 30; // Bagliore molto forte
+
+    // 3. Disegno Boss (Shadow.gif)
+    ctx.drawImage(img, -boss.size / 2, -boss.size / 2, boss.size, boss.size);
+
+    // 4. Barra della Vita (HP Bar)
+    ctx.shadowBlur = 0;
+    const barWidth = 100;
+    const barHeight = 6;
+    const healthPercent = boss.hp / boss.maxHp;
+
+    // Sfondo barra (rosso scuro)
+    ctx.fillStyle = '#440000';
+    ctx.fillRect(-barWidth / 2, -boss.size / 2 - 20, barWidth, barHeight);
+    
+    // Vita attuale (viola/neon)
+    ctx.fillStyle = '#cc00ff';
+    ctx.fillRect(-barWidth / 2, -boss.size / 2 - 20, barWidth * healthPercent, barHeight);
+
+    ctx.restore();
+}
+
+
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
