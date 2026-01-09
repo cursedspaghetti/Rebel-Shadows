@@ -75,7 +75,7 @@ function gameLoop() {
         Engine.updateSpecialRay();
 
         // --- LOGICA BOSS SHADOW (Trigger 30s) ---
-        if (gameState.gameTimer <= 30 && !gameState.bossActive) {
+        if (gameState.gameTimer <= 3 && !gameState.bossActive) {
             gameState.bossActive = true;
             gameState.enemies = []; // Pulizia nemici minori
             gameState.boss = {
