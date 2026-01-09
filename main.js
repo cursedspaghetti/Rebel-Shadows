@@ -180,12 +180,28 @@ function fireSpecialAttackSequence() {
     }, 1000);
 }
 
-// Touch Support (semplificato)
+// Touch Support
 canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     const touch = e.touches[0];
+    gameState.touchIdentifier = touch.identifier;
     gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
     gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
+}, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const touch = Array.from(e.changedTouches).find(t => t.identifier === gameState.touchIdentifier);
+    if (touch) {
+        gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
+        gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
+    }
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => {
+    gameState.touchIdentifier = null;
 });
 
 startButton.addEventListener('click', startGame);
