@@ -13,7 +13,7 @@ const gameContainer = document.getElementById('game-container');
 
 // --- ASSET LOADING ---
 const shadowImg = new Image();
-shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.gif';
+shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png';
 
 // --- INITIALIZATION ---
 
