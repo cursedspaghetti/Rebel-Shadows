@@ -122,6 +122,54 @@ export function drawBullets(ctx) {
     });
 }
 
+export function drawEnemyShadow(ctx, enemy) {
+    if (!shadowImg.complete) return; // Non disegnare finché non è caricata
+
+    // 1. Calcolo animazione levitazione (float)
+    // Usiamo il tempo per creare un'oscillazione sinusoidale
+    const floatOffset = Math.sin(Date.now() * 0.003) * 5; 
+    
+    const size = enemy.size || 40; // Dimensione del nemico
+
+    ctx.save();
+    
+    // Posizioniamo il contesto alle coordinate del nemico + l'effetto float
+    ctx.translate(enemy.x, enemy.y + floatOffset);
+
+    // 2. Opzionale: Aggiungi un'ombra sotto il nemico
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = 'black';
+    ctx.beginPath();
+    ctx.ellipse(0, size, size * 0.6, size * 0.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1.0;
+
+    // 3. Disegno della GIF
+    // Poiché è una GIF caricata via URL, il browser proverà a mostrarla animata 
+    // se viene ridisegnata costantemente, ma su molti browser rimarrà statica.
+    // In questo caso, il disegno avviene centrato:
+    ctx.drawImage(
+        shadowImg, 
+        -size / 2, 
+        -size / 2, 
+        size, 
+        size
+    );
+
+    // 4. Effetto bagliore viola (coerente con Shadow)
+    ctx.shadowColor = '#7a2ecc';
+    ctx.shadowBlur = 15;
+    
+    // Disegniamo un cerchio invisibile solo per proiettare il bagliore
+    ctx.beginPath();
+    ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+    
+
 export function drawSpecialRay(ctx) {
     const ray = gameState.specialRay;
     if (!ray || !ray.active) return;
