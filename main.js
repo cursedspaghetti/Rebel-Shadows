@@ -4,8 +4,8 @@ import * as Engine from './engine.js';
 
 // --- CONFIGURAZIONE AGGIUNTIVA ---
 const TOUCH_SETTINGS = {
-    LERP: 0.2,             // Fluidità (più alto = più reattivo)
-    OFFSET_Y: 70,         // Distanza sopra il dito per visibilità mobile
+    LERP: 0.1,             // Fluidità (più alto = più reattivo)
+    OFFSET_Y: 75,         // Distanza sopra il dito per visibilità mobile
     DOUBLE_TAP_DELAY: 300  // Tempo massimo per attivare lo speciale (ms)
 };
 
