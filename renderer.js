@@ -170,32 +170,74 @@ export function drawBullets(ctx) {
 
 export function drawSpecialRay(ctx) {
     const ray = gameState.specialRay;
-    if (!ray || !ray.active) return;
+    if (!ray || !ray.active) {
+        gameState.rayParticles = []; // Pulisce le particelle quando il raggio finisce
+        return;
+    }
 
     const drawX = ray.x - (ray.currentWidth / 2);
     const rayHeight = gameState.playerY;
 
-    // 1. Beam Gradient
-    let gradient = ctx.createLinearGradient(drawX, 0, drawX + ray.currentWidth, 0);
-    gradient.addColorStop(0, 'rgba(139, 0, 0, 0)');
-    gradient.addColorStop(0.2, 'rgba(255, 0, 0, 0.8)');
-    gradient.addColorStop(0.5, 'rgba(255, 255, 0, 0.9)');
-    gradient.addColorStop(0.8, 'rgba(255, 0, 0, 0.8)');
-    gradient.addColorStop(1, 'rgba(139, 0, 0, 0)');
+    // --- LOGICA PARTICELLE ---
+    // Generiamo 2-3 nuove particelle ogni frame mentre il raggio è attivo
+    if (ray.currentWidth > 10) { 
+        for (let i = 0; i < 3; i++) {
+            gameState.rayParticles.push({
+                // Partono dai bordi del raggio o casualmente dentro la sua ampiezza
+                x: (ray.x - ray.currentWidth / 2) + Math.random() * ray.currentWidth,
+                y: Math.random() * rayHeight,
+                size: Math.random() * 4 + 1,
+                speedX: (Math.random() - 0.5) * 4, // Si muovono un po' a destra/sinistra
+                speedY: -Math.random() * 5 - 2,    // Vanno verso l'alto veloci
+                life: 1.0,                         // Opacità iniziale
+                decay: Math.random() * 0.05 + 0.02 // Velocità di sparizione
+            });
+        }
+    }
 
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = "red";
+    // Disegno e aggiornamento particelle
+    ctx.save();
+    gameState.rayParticles.forEach((p, index) => {
+        ctx.fillStyle = `rgba(138, 43, 226, ${p.life})`; // Viola semitrasparente
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = "black";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Update posizione per il prossimo frame
+        p.x += p.speedX;
+        p.y += p.speedY;
+        p.life -= p.decay;
+
+        // Rimuovi particelle "morte"
+        if (p.life <= 0) gameState.rayParticles.splice(index, 1);
+    });
+    ctx.restore();
+
+    // --- DISEGNO DEL RAGGIO (Quello creato prima) ---
+    let gradient = ctx.createLinearGradient(drawX, 0, drawX + ray.currentWidth, 0);
+    gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    gradient.addColorStop(0.2, 'rgba(48, 0, 65, 0.8)');
+    gradient.addColorStop(0.5, 'rgba(10, 0, 20, 0.95)');
+    gradient.addColorStop(0.8, 'rgba(75, 0, 130, 0.8)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    ctx.save();
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = "#4b0082";
     ctx.fillStyle = gradient;
     ctx.fillRect(drawX, 0, ray.currentWidth, rayHeight);
 
-    // 2. Hot Core
-    const coreWidth = ray.currentWidth * 0.2;
-    ctx.fillStyle = "white";
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = "yellow";
+    // Hot Core instabile
+    const jitter = Math.random() * 4; // Effetto vibrazione
+    const coreWidth = (ray.currentWidth * 0.15) + jitter;
+    ctx.fillStyle = "#e0b0ff";
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = "#ff00ff";
     ctx.fillRect(ray.x - (coreWidth / 2), 0, coreWidth, rayHeight);
+    
     ctx.restore();
-    ctx.shadowBlur = 0;
 }
 
 export function drawChargeEffect(ctx, chargeImg) {
