@@ -49,83 +49,40 @@ export function drawStartScreen(ctx) {
 }
 
 export function drawPlayer(ctx) {
-    const playerSize = 18; 
-    const ringColor = gameState.selectedRingColor || '#fff';
+    if (!playerSprite.complete) return; // Non disegnare se l'immagine non è caricata
+
+    // --- CONFIGURAZIONE SPRITE ---
+    const frameWidth = 512;  // Larghezza di un singolo frame nello spritesheet
+    const frameHeight = 349; // Altezza di un singolo frame
+    const scale = 0.5;      // Scala per ingrandire/rimpicciolire il libro nel gioco
     
-    // 1. CALCOLO ROTAZIONE RUNE
-    const rotationZ = (Date.now() * 0.002); 
-    
-    // Rapporto ellisse per 30 gradi di inclinazione (circa 0.85)
-    // Più il valore è vicino a 1, più l'anello sembra visto dall'alto (90°)
-    const perspectiveY = 0.85;
+    // Calcolo dell'animazione (es. 4 frame che cambiano ogni 150ms)
+    const totalFrames = 13; 
+    const animationSpeed = 150;
+    const frameIndex = Math.floor(Date.now() / animationSpeed) % totalFrames;
 
     ctx.save();
+    
+    // Spostiamoci sulle coordinate del giocatore
     ctx.translate(gameState.playerX, gameState.playerY);
 
-    // --- 2. STRUTTURA ANELLO 3D ---
-    // Spessore (Base dell'anello)
-    // Con 30° di inclinazione, lo spessore visibile diminuisce
-    ctx.lineWidth = 10;
-    ctx.strokeStyle = ringColor;
-    ctx.globalAlpha = 0.2;
+    // Se vuoi aggiungere un'ombra sotto il libro
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
-    ctx.ellipse(0, 4, playerSize, playerSize * perspectiveY, 0, 0, Math.PI * 2);
-    ctx.stroke();
+    ctx.ellipse(0, frameHeight / 2, 10, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Anello Principale (Faccia superiore)
-    ctx.globalAlpha = 1.0;
-    ctx.shadowColor = ringColor;
-    ctx.shadowBlur = 15; 
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = ringColor;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, playerSize, playerSize * perspectiveY, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // --- 3. RUNE MAGICHE (SCURE) ---
-    ctx.shadowBlur = 0;
-    ctx.save();
-    ctx.globalCompositeOperation = 'multiply'; 
-    
-    ctx.fillStyle = ringColor; 
-    ctx.font = 'bold 12px "Courier New", monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-
-    const runes = ['ᚩ', 'ᚱ', 'ᚻ', 'ᛃ', 'ᛊ', 'ᛏ']; 
-    const numRunes = runes.length;
-
-    for (let i = 0; i < numRunes; i++) {
-        const angle = (i / numRunes) * Math.PI * 2 + rotationZ;
-        
-        // Posizionamento delle rune sulla nuova ellisse più circolare
-        const rx = Math.cos(angle) * playerSize;
-        const ry = Math.sin(angle) * (playerSize * perspectiveY);
-
-        ctx.save();
-        ctx.translate(rx, ry);
-        ctx.rotate(angle + Math.PI / 2); 
-        
-        // Disegno runa (colore base scurito)
-        ctx.fillText(runes[i], 0, 0);
-        
-        // Rinforzo tono scuro
-        ctx.globalAlpha = 0.4;
-        ctx.fillStyle = 'black';
-        ctx.fillText(runes[i], 0, 0);
-        
-        ctx.restore();
-    }
-    ctx.restore();
-
-    // --- 4. RIFLESSO SUPERIORE ---
-    ctx.globalAlpha = 1.0;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    // Riflesso più ampio dato che l'anello è più "aperto"
-    ctx.ellipse(0, -1, playerSize - 4, (playerSize - 4) * perspectiveY, 0, -Math.PI * 0.7, -Math.PI * 0.3);
-    ctx.stroke();
+    // --- DISEGNO DELLO SPRITE ---
+    // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+    ctx.drawImage(
+        playerSprite,
+        frameIndex * frameWidth, 0, // Origine ritaglio (X, Y) sullo spritesheet
+        frameWidth, frameHeight,    // Dimensioni del ritaglio
+        - (frameWidth * scale) / 2, // Posizione X nel canvas (centrato)
+        - (frameHeight * scale) / 2, // Posizione Y nel canvas (centrato)
+        frameWidth * scale,         // Larghezza finale a schermo
+        frameHeight * scale         // Altezza finale a schermo
+    );
 
     ctx.restore();
 }
