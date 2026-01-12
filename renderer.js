@@ -205,14 +205,24 @@ export function drawSpecialRay(ctx) {
     ctx.shadowBlur = 0;
 }
 
-export function drawChargeEffect(ctx) {
-    ctx.beginPath();
-    ctx.arc(gameState.playerX, gameState.playerY, 30, 0, Math.PI * 2);
-    ctx.strokeStyle = "red";
-    ctx.lineWidth = 3;
-    ctx.stroke();
-}
+export function drawChargeEffect(ctx,chargeImg) {
+    // Verifichiamo che l'immagine sia stata caricata correttamente
+    if (chargeImg.complete && chargeImg.naturalWidth !== 0) {
+        const scale = 0.2;
+        
+        const width = chargeImg.width * scale;
+        const height = chargeImg.height * scale;
 
+        // Disegniamo l'immagine centrata sulle coordinate del giocatore
+        ctx.drawImage(
+            chargeImg, 
+            gameState.playerX - width / 2, 
+            gameState.playerY - height / 2, 
+            width, 
+            height
+        );
+    }
+}
 export function drawUI(ctx) {
     ctx.fillStyle = '#fff';
     ctx.font = '20px Courier New, monospace';
