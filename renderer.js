@@ -241,17 +241,29 @@ export function drawSpecialRay(ctx) {
 }
 
 export function drawChargeEffect(ctx, chargeImg) {
-    // Verifichiamo che l'immagine sia stata caricata correttamente
     if (chargeImg.complete && chargeImg.naturalWidth !== 0) {
         
-        // --- CONFIGURAZIONE SCALA SEPARATA ---
-        const scaleX = 0.13; // Valore ridotto per schiacciare la larghezza
-        const scaleY = 0.13;  // Valore originale per l'altezza
+        const scaleX = 0.13; 
+        const scaleY = 0.13;  
         
         const width = chargeImg.width * scaleX;
         const height = chargeImg.height * scaleY;
 
-        // Disegniamo l'immagine centrata sulle coordinate del giocatore
+        // Salva lo stato del contesto per non influenzare altri disegni
+        ctx.save();
+
+        // --- CONFIGURAZIONE BAGLIORE ---
+        // 'lighter' crea un effetto di fusione additiva (molto luminoso)
+        ctx.globalCompositeOperation = 'lighter';
+        
+        // Colore del bagliore (puoi cambiarlo in base al colore della carica)
+        ctx.shadowColor = 'cyan'; 
+        ctx.shadowBlur = 20; // Intensità della sfumatura
+        
+        // Opzionale: aumenta l'opacità globale se l'immagine è troppo trasparente
+        ctx.globalAlpha = 1.0;
+
+        // Disegniamo l'immagine centrata
         ctx.drawImage(
             chargeImg, 
             gameState.playerX - width / 2, 
@@ -259,6 +271,9 @@ export function drawChargeEffect(ctx, chargeImg) {
             width, 
             height
         );
+
+        // Ripristina lo stato originale del canvas
+        ctx.restore();
     }
 }
 export function drawUI(ctx) {
