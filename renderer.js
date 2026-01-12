@@ -145,25 +145,42 @@ function drawBossHealthBar(ctx, boss, size) {
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
-        const width = bullet.size;
-        const height = bullet.size * 4;
+        
+        // Dimensioni: molto stretto e molto lungo per l'effetto "scia fantasma"
+        const width = bullet.size * 0.8;
+        const height = bullet.size * 10; 
 
-        let gradient = ctx.createRadialGradient(
-            bullet.x, bullet.y, 0,
-            bullet.x, bullet.y, height / 2
+        // Gradiente lineare per l'effetto metallo liquido/ombra
+        let gradient = ctx.createLinearGradient(
+            bullet.x, bullet.y - height / 2, 
+            bullet.x, bullet.y + height / 2
         );
         
-        gradient.addColorStop(0, '#fff');
-        gradient.addColorStop(0.2, '#ff0');
-        gradient.addColorStop(0.5, 'red');
-        gradient.addColorStop(1, 'transparent');
+        // Palette Argento e Ombra
+        gradient.addColorStop(0, '#ffffff');       // Punta: Bianco brillante (bagliore cinetico)
+        gradient.addColorStop(0.1, '#c0c0c0');     // Argento vivo
+        gradient.addColorStop(0.4, 'rgba(105, 105, 105, 0.4)'); // Grigio fumo semitrasparente
+        gradient.addColorStop(1, 'transparent');   // Coda che svanisce nel nulla
 
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = '#f40';
+        // Bagliore (Glow) spettrale grigio
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = '#888'; // Ombra grigia media
+        
+        // Rendering
         ctx.beginPath();
         ctx.fillStyle = gradient;
+        
+        // Disegniamo l'ellisse allungata
         ctx.ellipse(bullet.x, bullet.y, width / 2, height / 2, 0, 0, Math.PI * 2);
+        
         ctx.fill();
+        
+        // Opzionale: un piccolo nucleo centrale più scuro per dare profondità
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.ellipse(bullet.x, bullet.y - height / 4, width / 4, height / 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+
         ctx.restore();
     });
 }
