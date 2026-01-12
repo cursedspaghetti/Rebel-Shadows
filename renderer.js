@@ -54,7 +54,7 @@ export function drawPlayer(ctx, img) {
     // --- CONFIGURAZIONE SPRITE ---
     const frameWidth = 512;  // Larghezza di un singolo frame nello spritesheet
     const frameHeight = 349; // Altezza di un singolo frame
-    const scale = 0.5;      // Scala per ingrandire/rimpicciolire il libro nel gioco
+    const scale = 0.2;      // Scala per ingrandire/rimpicciolire il libro nel gioco
     
     // Calcolo dell'animazione (es. 4 frame che cambiano ogni 150ms)
     const totalFrames = 13; 
@@ -102,7 +102,7 @@ export function drawBossShadow(ctx, boss, img) {
     ctx.save();
     
     ctx.translate(boss.x, boss.y + floatOffset);
-    ctx.scale(0.8, 0.8); 
+    ctx.scale(0.5, 0.5); 
 
     // Disegno Boss
     const sx = Math.floor(frameIndex * originalSize);
