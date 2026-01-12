@@ -56,7 +56,7 @@ export function drawPlayer(ctx, img) {
     const frameHeight = 349; 
     
     // --- NUOVA SCALA SEPARATA ---
-    const scaleX = 0.07;      // Ridotto (era 0.1) per l'effetto schiacciato
+    const scaleX = 0.09;      // Ridotto (era 0.1) per l'effetto schiacciato
     const scaleY = 0.13;       // Mantenuto originale
     
     const totalFrames = 13; 
@@ -198,13 +198,16 @@ export function drawSpecialRay(ctx) {
     ctx.shadowBlur = 0;
 }
 
-export function drawChargeEffect(ctx,chargeImg) {
+export function drawChargeEffect(ctx, chargeImg) {
     // Verifichiamo che l'immagine sia stata caricata correttamente
     if (chargeImg.complete && chargeImg.naturalWidth !== 0) {
-        const scale = 0.1;
         
-        const width = chargeImg.width * scale;
-        const height = chargeImg.height * scale;
+        // --- CONFIGURAZIONE SCALA SEPARATA ---
+        const scaleX = 0.13; // Valore ridotto per schiacciare la larghezza
+        const scaleY = 0.13;  // Valore originale per l'altezza
+        
+        const width = chargeImg.width * scaleX;
+        const height = chargeImg.height * scaleY;
 
         // Disegniamo l'immagine centrata sulle coordinate del giocatore
         ctx.drawImage(
