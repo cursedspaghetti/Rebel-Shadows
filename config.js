@@ -68,7 +68,8 @@ export let gameState = {
         startTime: 0
     },
     isCharging: false,
-
+    rayParticles: [],
+    
     // World & Entities
     enemies: [],
     gameTimer: 60,
