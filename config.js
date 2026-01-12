@@ -14,11 +14,6 @@ export const CONFIG = {
     },
     RING_COLORS: {
         'WHITE': '#fff',
-        'BROWN': '#5d4037',
-        'RED': '#af0000',
-        'BLUE': '#0000ff',
-        'GREEN': '#388e3c',
-        'YELLOW': '#ffeb3b',
         'PURPLE': '#800080'
     }
 };
