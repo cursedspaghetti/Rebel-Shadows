@@ -119,11 +119,8 @@ function gameLoop() {
         }
 
         // 3. Rendering
-        Renderer.drawSpecialRay(ctx);
-        if (gameState.isCharging) Renderer.drawChargeEffect(ctx, chargeImg);
 
         // Disegno Player
-       // Renderer.drawPlayer(ctx);
         Renderer.drawPlayer(ctx, playerSprite);
 
         // Gestione Boss o Nemici comuni
@@ -145,7 +142,9 @@ function gameLoop() {
                 // Se hai ancora una funzione per nemici piccoli, usala qui
             });
         }
-
+        Renderer.drawSpecialRay(ctx);
+        if (gameState.isCharging) Renderer.drawChargeEffect(ctx, chargeImg);
+        
         Renderer.drawBullets(ctx);
         Renderer.drawUI(ctx);
         
