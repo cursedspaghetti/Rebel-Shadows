@@ -2,7 +2,11 @@
  * CONFIGURATION CONSTANTS
  * Static values that define the game rules and dimensions.
  */
+
+
 export const CONFIG = {
+
+    
     CANVAS_WIDTH: 393,
     CANVAS_HEIGHT: 852,
     GAME_TIME: 60, // seconds until boss
@@ -15,6 +19,11 @@ export const CONFIG = {
     RING_COLORS: {
         'WHITE': '#fff',
         'PURPLE': '#800080'
+    },
+    TOUCH: {
+        LERP: 0.2,
+        OFFSET_Y: 70,
+        DOUBLE_TAP_DELAY: 300
     }
 };
 
