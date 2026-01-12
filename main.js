@@ -4,9 +4,9 @@ import * as Engine from './engine.js';
 
 // --- CONFIGURAZIONE AGGIUNTIVA ---
 const TOUCH_SETTINGS = {
-    LERP: 0.5,          // Fluidità del movimento
-    OFFSET_Y: 200,        // Distanza sopra il dito
-    DOUBLE_TAP_DELAY: 300 // Tempo massimo per il doppio tocco (ms)
+    LERP: 0.2,             // Fluidità (più alto = più reattivo)
+    OFFSET_Y: 70,         // Distanza sopra il dito per visibilità mobile
+    DOUBLE_TAP_DELAY: 300  // Tempo massimo per attivare lo speciale (ms)
 };
 
 gameState.isTouchActive = false;
@@ -78,27 +78,36 @@ function gameLoop() {
         gameState.backgroundPositionY += CONFIG.SCROLL_SPEED;
         gameContainer.style.backgroundPosition = `0px ${gameState.backgroundPositionY}px`;
 
-        // 2. MOVIMENTO FLUIDO (TOUCH)
+        // 2. LOGICA MOVIMENTO (Sostituisce Engine.updatePlayer)
         if (gameState.isTouchActive) {
             const targetX = gameState.touchX;
             const targetY = gameState.touchY - TOUCH_SETTINGS.OFFSET_Y;
 
-            // Il player insegue il target con Lerp
+            // Inseguimento fluido con Lerp e Offset
             gameState.playerX += (targetX - gameState.playerX) * TOUCH_SETTINGS.LERP;
             gameState.playerY += (targetY - gameState.playerY) * TOUCH_SETTINGS.LERP;
-
-            // Limiti bordi canvas
-            gameState.playerX = Math.max(0, Math.min(CONFIG.CANVAS_WIDTH, gameState.playerX));
-            gameState.playerY = Math.max(0, Math.min(CONFIG.CANVAS_HEIGHT, gameState.playerY));
+        } else {
+            // Supporto tastiera se il touch non è attivo
+            if (gameState.keys['ArrowLeft']) gameState.playerX -= gameState.playerSpeed;
+            if (gameState.keys['ArrowRight']) gameState.playerX += gameState.playerSpeed;
+            if (gameState.keys['ArrowUp']) gameState.playerY -= gameState.playerSpeed;
+            if (gameState.keys['ArrowDown']) gameState.playerY += gameState.playerSpeed;
         }
 
+        // 2.1 Limiti bordi obbligatori
+        gameState.playerX = Math.max(10, Math.min(CONFIG.CANVAS_WIDTH - 10, gameState.playerX));
+        gameState.playerY = Math.max(10, Math.min(CONFIG.CANVAS_HEIGHT - 10, gameState.playerY));
+
+        // 2.2 Reset Inclinazione (Forza il player a stare dritto)
+        gameState.playerDx = 0;
+        gameState.playerDy = 0;
+
         // 3. Logic Updates
-        Engine.updatePlayer(); // Gestisce tastiera e inerzia
         Engine.autoFire();
         Engine.updateBullets();
         Engine.updateSpecialRay();
 
-        // 4. Boss Collision & Logic
+        // 4. Boss Logic
         if (gameState.bossActive && gameState.boss) {
             gameState.bullets.forEach((bullet, bIndex) => {
                 const dx = bullet.x - gameState.boss.x;
@@ -200,7 +209,6 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
 
-// Supporto Touch con Double Tap e Movimento Fluido
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
