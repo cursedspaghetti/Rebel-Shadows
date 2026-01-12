@@ -4,8 +4,8 @@ import * as Engine from './engine.js';
 
 // --- CONFIGURAZIONE AGGIUNTIVA ---
 const TOUCH_SETTINGS = {
-    LERP: 0.15,          // Fluidità del movimento
-    OFFSET_Y: 70,        // Distanza sopra il dito
+    LERP: 0.5,          // Fluidità del movimento
+    OFFSET_Y: 200,        // Distanza sopra il dito
     DOUBLE_TAP_DELAY: 300 // Tempo massimo per il doppio tocco (ms)
 };
 
