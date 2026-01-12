@@ -49,7 +49,7 @@ export function drawStartScreen(ctx) {
 }
 
 export function drawPlayer(ctx, img) {
-    if (!playerSprite.complete) return; // Non disegnare se l'immagine non è caricata
+    if (!img.complete) return; // Non disegnare se l'immagine non è caricata
 
     // --- CONFIGURAZIONE SPRITE ---
     const frameWidth = 512;  // Larghezza di un singolo frame nello spritesheet
