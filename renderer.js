@@ -48,7 +48,7 @@ export function drawStartScreen(ctx) {
     });
 }
 
-export function drawPlayer(ctx) {
+export function drawPlayer(ctx, img) {
     if (!playerSprite.complete) return; // Non disegnare se l'immagine non è caricata
 
     // --- CONFIGURAZIONE SPRITE ---
@@ -75,7 +75,7 @@ export function drawPlayer(ctx) {
     // --- DISEGNO DELLO SPRITE ---
     // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
     ctx.drawImage(
-        playerSprite,
+        img,
         frameIndex * frameWidth, 0, // Origine ritaglio (X, Y) sullo spritesheet
         frameWidth, frameHeight,    // Dimensioni del ritaglio
         - (frameWidth * scale) / 2, // Posizione X nel canvas (centrato)
