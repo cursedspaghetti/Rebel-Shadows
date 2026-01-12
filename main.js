@@ -12,6 +12,9 @@ const ringChoicesContainer = document.getElementById('ringChoices');
 const gameContainer = document.getElementById('game-container');
 
 // --- ASSET LOADING ---
+const playerSprite = new Image();
+playerSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/booksprite.png';
+
 const shadowImg = new Image();
 shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png';
 
