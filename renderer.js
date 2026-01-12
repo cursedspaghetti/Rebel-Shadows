@@ -56,8 +56,8 @@ export function drawPlayer(ctx, img) {
     const frameHeight = 349; 
     
     // --- NUOVA SCALA SEPARATA ---
-    const scaleX = 0.1;      // Ridotto (era 0.1) per l'effetto schiacciato
-    const scaleY = 0.15;       // Mantenuto originale
+    const scaleX = 0.07;      // Ridotto (era 0.1) per l'effetto schiacciato
+    const scaleY = 0.13;       // Mantenuto originale
     
     const totalFrames = 13; 
     const animationSpeed = 150;
