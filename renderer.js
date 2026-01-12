@@ -49,44 +49,37 @@ export function drawStartScreen(ctx) {
 }
 
 export function drawPlayer(ctx, img) {
-    if (!img.complete) return; // Non disegnare se l'immagine non è caricata
+    if (!img.complete) return; 
 
     // --- CONFIGURAZIONE SPRITE ---
-    const frameWidth = 512;  // Larghezza di un singolo frame nello spritesheet
-    const frameHeight = 349; // Altezza di un singolo frame
-    const scale = 0.1;      // Scala per ingrandire/rimpicciolire il libro nel gioco
+    const frameWidth = 512;  
+    const frameHeight = 349; 
     
-    // Calcolo dell'animazione (es. 4 frame che cambiano ogni 150ms)
+    // --- NUOVA SCALA SEPARATA ---
+    const scaleX = 0.1;      // Ridotto (era 0.1) per l'effetto schiacciato
+    const scaleY = 0.15;       // Mantenuto originale
+    
     const totalFrames = 13; 
     const animationSpeed = 150;
     const frameIndex = Math.floor(Date.now() / animationSpeed) % totalFrames;
 
     ctx.save();
     
-    // Spostiamoci sulle coordinate del giocatore
     ctx.translate(gameState.playerX, gameState.playerY);
 
-    // Se vuoi aggiungere un'ombra sotto il libro
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.beginPath();
-    ctx.ellipse(0, frameHeight / 2, 10, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-
     // --- DISEGNO DELLO SPRITE ---
-    // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
     ctx.drawImage(
         img,
-        frameIndex * frameWidth, 0, // Origine ritaglio (X, Y) sullo spritesheet
-        frameWidth, frameHeight,    // Dimensioni del ritaglio
-        - (frameWidth * scale) / 2, // Posizione X nel canvas (centrato)
-        - (frameHeight * scale) / 2, // Posizione Y nel canvas (centrato)
-        frameWidth * scale,         // Larghezza finale a schermo
-        frameHeight * scale         // Altezza finale a schermo
+        frameIndex * frameWidth, 0, 
+        frameWidth, frameHeight,    
+        - (frameWidth * scaleX) / 2, // Centratura con scaleX
+        - (frameHeight * scaleY) / 2, // Centratura con scaleY
+        frameWidth * scaleX,         // Larghezza schiacciata
+        frameHeight * scaleY         // Altezza normale
     );
 
     ctx.restore();
 }
-
 
 // --- FUNZIONE PRINCIPALE ---
 export function drawBossShadow(ctx, boss, img) {
