@@ -5,57 +5,6 @@ import { CONFIG, gameState } from './config.js';
  * Handles physics, movement, and game logic updates.
  */
 
-// --- MOVEMENT & INPUT ---
-
-export function updatePlayer() {
-    // 1. Touch Movement (Mobile)
-    if (gameState.touchIdentifier !== null) {
-        if (gameState.touchX !== null && gameState.touchY !== null) {
-            // Direct follow logic
-            gameState.playerX = Math.max(10, Math.min(CONFIG.CANVAS_WIDTH - 10, gameState.touchX));
-            gameState.playerY = Math.max(CONFIG.CANVAS_HEIGHT / 2, Math.min(CONFIG.CANVAS_HEIGHT - 10, gameState.touchY));
-        }
-    } 
-    // 2. Keyboard Movement (Desktop Fallback)
-    else {
-        if (gameState.keys['ArrowLeft'] && gameState.playerX > 10) {
-            gameState.playerX -= gameState.playerSpeed;
-        }
-        if (gameState.keys['ArrowRight'] && gameState.playerX < CONFIG.CANVAS_WIDTH - 10) {
-            gameState.playerX += gameState.playerSpeed;
-        }
-        if (gameState.keys['ArrowUp'] && gameState.playerY > CONFIG.CANVAS_HEIGHT / 2) {
-            gameState.playerY -= gameState.playerSpeed;
-        }
-        if (gameState.keys['ArrowDown'] && gameState.playerY < CONFIG.CANVAS_HEIGHT - 10) {
-            gameState.playerY += gameState.playerSpeed;
-        }
-    }
-
-    // 3. Update Player Trail Logic
-    if (!gameState.playerTrail) gameState.playerTrail = [];
-    gameState.playerTrail.push({ x: gameState.playerX, y: gameState.playerY });
-    if (gameState.playerTrail.length > 25) gameState.playerTrail.shift();
-
-   // Memorizza la posizione precedente per calcolare la velocità
-    const oldX = gameState.playerX;
-    const oldY = gameState.playerY;
-
-    // Logica di movimento esistente
-    if (gameState.keys['ArrowLeft']) gameState.playerX -= gameState.playerSpeed;
-    if (gameState.keys['ArrowRight']) gameState.playerX += gameState.playerSpeed;
-    if (gameState.keys['ArrowUp']) gameState.playerY -= gameState.playerSpeed;
-    if (gameState.keys['ArrowDown']) gameState.playerY += gameState.playerSpeed;
-
-    // CALCOLO DELLA VELOCITÀ (Essenziale per l'effetto 3D)
-    // Usiamo un lerp (linear interpolation) per rendere il ritorno alla posizione piatta più fluido
-    const targetDx = gameState.playerX - oldX;
-    const targetDy = gameState.playerY - oldY;
-    
-    gameState.playerDx = (gameState.playerDx || 0) * 0.8 + targetDx * 0.2;
-    gameState.playerDy = (gameState.playerDy || 0) * 0.8 + targetDy * 0.2; 
-}
-
 // --- COMBAT LOGIC ---
 
 export function autoFire() {
