@@ -122,7 +122,8 @@ function gameLoop() {
         if (gameState.isCharging) Renderer.drawChargeEffect(ctx);
 
         // Disegno Player
-        Renderer.drawPlayer(ctx);
+       // Renderer.drawPlayer(ctx);
+        Renderer.drawPlayer(ctx, playerSprite);
 
         // Gestione Boss o Nemici comuni
         if (gameState.bossActive && gameState.boss) {
