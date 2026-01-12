@@ -14,7 +14,8 @@ const gameContainer = document.getElementById('game-container');
 // --- ASSET LOADING ---
 const playerSprite = new Image();
 playerSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/booksprite.png';
-
+export const chargeImg = new Image();
+chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bookfull.png";
 const shadowImg = new Image();
 shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png';
 
@@ -119,7 +120,7 @@ function gameLoop() {
 
         // 3. Rendering
         Renderer.drawSpecialRay(ctx);
-        if (gameState.isCharging) Renderer.drawChargeEffect(ctx);
+        if (gameState.isCharging) Renderer.drawChargeEffect(ctx, chargeImg);
 
         // Disegno Player
        // Renderer.drawPlayer(ctx);
