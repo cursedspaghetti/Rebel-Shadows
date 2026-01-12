@@ -54,7 +54,7 @@ export function drawPlayer(ctx, img) {
     // --- CONFIGURAZIONE SPRITE ---
     const frameWidth = 512;  // Larghezza di un singolo frame nello spritesheet
     const frameHeight = 349; // Altezza di un singolo frame
-    const scale = 0.2;      // Scala per ingrandire/rimpicciolire il libro nel gioco
+    const scale = 0.1;      // Scala per ingrandire/rimpicciolire il libro nel gioco
     
     // Calcolo dell'animazione (es. 4 frame che cambiano ogni 150ms)
     const totalFrames = 13; 
@@ -208,7 +208,7 @@ export function drawSpecialRay(ctx) {
 export function drawChargeEffect(ctx,chargeImg) {
     // Verifichiamo che l'immagine sia stata caricata correttamente
     if (chargeImg.complete && chargeImg.naturalWidth !== 0) {
-        const scale = 0.2;
+        const scale = 0.1;
         
         const width = chargeImg.width * scale;
         const height = chargeImg.height * scale;
