@@ -60,7 +60,7 @@ export function updateSpecialRay() {
 }
 
 export function updateSpecialRay2() {
-    if (!gameState.specialRay2.active) return;
+    if (!gameState.specialRay2.active2) return;
 
     const ray = gameState.specialRay2;
     const now = Date.now() / 1000;
