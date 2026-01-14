@@ -153,6 +153,72 @@ export function drawBullets(ctx) {
     });
 }
 
+export function drawBullets_special(ctx) {
+    gameState.bullets.forEach(bullet => {
+        // 1. Gestione della scia (Trail)
+        // Aggiungiamo la posizione attuale all'inizio dell'array
+        bullet.trail.unshift({ x: bullet.x, y: bullet.y });
+        
+        // Limitiamo la lunghezza della scia (es. 15 segmenti)
+        if (bullet.trail.length > 15) {
+            bullet.trail.pop();
+        }
+
+        ctx.save();
+
+        // 2. Disegno della Scia Dinamica
+        if (bullet.trail.length > 1) {
+            ctx.beginPath();
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            for (let i = 0; i < bullet.trail.length - 1; i++) {
+                const start = bullet.trail[i];
+                const end = bullet.trail[i + 1];
+                
+                // L'opacità diminuisce man mano che ci allontaniamo dalla punta
+                const alpha = 1 - (i / bullet.trail.length);
+                const thickness = (bullet.size * 0.8) * alpha;
+
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(192, 192, 192, ${alpha * 0.5})`; // Argento sfumato
+                ctx.lineWidth = thickness;
+                
+                ctx.moveTo(start.x, start.y);
+                ctx.lineTo(end.x, end.y);
+                ctx.stroke();
+            }
+        }
+
+        // 3. Disegno della Testa (il Bullet vero e proprio)
+        // Calcoliamo l'angolo di rotazione basandoci sul movimento
+        const angle = Math.atan2(
+            bullet.y - (bullet.trail[1]?.y || bullet.y),
+            bullet.x - (bullet.trail[1]?.x || bullet.x)
+        ) + Math.PI / 2;
+
+        ctx.translate(bullet.x, bullet.y);
+        ctx.rotate(angle);
+
+        // Effetto bagliore sulla punta
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+
+        // Gradiente per la testa ellittica
+        let headGradient = ctx.createLinearGradient(0, -bullet.size, 0, bullet.size);
+        headGradient.addColorStop(0, '#ffffff'); // Punta bianca
+        headGradient.addColorStop(1, '#696969'); // Base grigia
+
+        ctx.fillStyle = headGradient;
+        ctx.beginPath();
+        // Disegniamo una piccola ellisse che punta nella direzione del movimento
+        ctx.ellipse(0, 0, bullet.size / 2, bullet.size, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    });
+}
+
 export function drawSpecialRay(ctx) {
     const ray = gameState.specialRay;
     if (!ray || !ray.active) {
