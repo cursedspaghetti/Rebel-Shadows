@@ -28,6 +28,9 @@ export const chargeImg = new Image();
 chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bookfull.png";
 const shadowImg = new Image();
 shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png';
+const introImage = new Image();
+introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png/shadow_intro.jpg';
+
 
 // --- INITIALIZATION ---
 function init() {
