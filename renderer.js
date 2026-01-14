@@ -153,72 +153,6 @@ export function drawBullets(ctx) {
     });
 }
 
-export function drawBullets_special(ctx) {
-    gameState.bullets.forEach(bullet => {
-        // 1. Gestione della scia (Trail)
-        // Aggiungiamo la posizione attuale all'inizio dell'array
-        bullet.trail.unshift({ x: bullet.x, y: bullet.y });
-        
-        // Limitiamo la lunghezza della scia (es. 15 segmenti)
-        if (bullet.trail.length > 15) {
-            bullet.trail.pop();
-        }
-
-        ctx.save();
-
-        // 2. Disegno della Scia Dinamica
-        if (bullet.trail.length > 1) {
-            ctx.beginPath();
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-
-            for (let i = 0; i < bullet.trail.length - 1; i++) {
-                const start = bullet.trail[i];
-                const end = bullet.trail[i + 1];
-                
-                // L'opacità diminuisce man mano che ci allontaniamo dalla punta
-                const alpha = 1 - (i / bullet.trail.length);
-                const thickness = (bullet.size * 0.8) * alpha;
-
-                ctx.beginPath();
-                ctx.strokeStyle = `rgba(192, 192, 192, ${alpha * 0.5})`; // Argento sfumato
-                ctx.lineWidth = thickness;
-                
-                ctx.moveTo(start.x, start.y);
-                ctx.lineTo(end.x, end.y);
-                ctx.stroke();
-            }
-        }
-
-        // 3. Disegno della Testa (il Bullet vero e proprio)
-        // Calcoliamo l'angolo di rotazione basandoci sul movimento
-        const angle = Math.atan2(
-            bullet.y - (bullet.trail[1]?.y || bullet.y),
-            bullet.x - (bullet.trail[1]?.x || bullet.x)
-        ) + Math.PI / 2;
-
-        ctx.translate(bullet.x, bullet.y);
-        ctx.rotate(angle);
-
-        // Effetto bagliore sulla punta
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
-
-        // Gradiente per la testa ellittica
-        let headGradient = ctx.createLinearGradient(0, -bullet.size, 0, bullet.size);
-        headGradient.addColorStop(0, '#ffffff'); // Punta bianca
-        headGradient.addColorStop(1, '#696969'); // Base grigia
-
-        ctx.fillStyle = headGradient;
-        ctx.beginPath();
-        // Disegniamo una piccola ellisse che punta nella direzione del movimento
-        ctx.ellipse(0, 0, bullet.size / 2, bullet.size, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
-    });
-}
-
 export function drawSpecialRay(ctx) {
     const ray = gameState.specialRay;
     if (!ray || !ray.active) {
@@ -290,6 +224,93 @@ export function drawSpecialRay(ctx) {
     
     ctx.restore();
 }
+
+export function drawSpecialRay2(ctx) {
+    const ray = gameState.specialRay2;
+    if (!ray || !ray.active) {
+        gameState.rayParticles2 = []; // Pulisce le particelle quando il raggio finisce
+        return;
+    }
+
+    const drawX = ray.x - (ray.currentWidth / 2);
+    const rayHeight = gameState.playerY;
+
+    // --- LOGICA PARTICELLE ---
+    // Generiamo 2-3 nuove particelle ogni frame mentre il raggio è attivo
+    if (ray.currentWidth > 10) { 
+        for (let i = 0; i < 3; i++) {
+            gameState.rayParticles2.push({
+                // Partono dai bordi del raggio o casualmente dentro la sua ampiezza
+                x: (ray.x - ray.currentWidth / 2) + Math.random() * ray.currentWidth,
+                y: Math.random() * rayHeight,
+                size: Math.random() * 4 + 1,
+                speedX: (Math.random() - 0.5) * 4, // Si muovono un po' a destra/sinistra
+                speedY: -Math.random() * 5 - 2,    // Vanno verso l'alto veloci
+                life: 1.0,                         // Opacità iniziale
+                decay: Math.random() * 0.05 + 0.02 // Velocità di sparizione
+            });
+        }
+    }
+
+    // Disegno e aggiornamento particelle
+    ctx.save();
+    gameState.rayParticles2.forEach((p, index) => {
+        ctx.fillStyle = `rgba(138, 43, 226, ${p.life})`; // Viola semitrasparente
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = "black";
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Update posizione per il prossimo frame
+        p.x += p.speedX;
+        p.y += p.speedY;
+        p.life -= p.decay;
+
+        // Rimuovi particelle "morte"
+        if (p.life <= 0) gameState.rayParticles2.splice(index, 1);
+    });
+    ctx.restore();
+
+    // --- DISEGNO DEL RAGGIO (Quello creato prima) ---
+    // Colori spettrali: Verde pallido, Turchese e Bianco ghiaccio
+let gradient = ctx.createLinearGradient(drawX, 0, drawX + ray.currentWidth, 0);
+    gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    gradient.addColorStop(0.2, 'rgba(0, 128, 128, 0.3)');  // Teal profondo ma trasparente
+    gradient.addColorStop(0.5, 'rgba(150, 255, 200, 0.6)'); // Cuore verde acido spettrale
+    gradient.addColorStop(0.8, 'rgba(0, 100, 80, 0.3)');   // Ritorno al verde scuro
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+    ctx.save();
+    
+    // Bagliore esterno più soffuso (Glow spettrale)
+    ctx.shadowBlur = 40;
+    ctx.shadowColor = "rgba(0, 255, 150, 0.5)";
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(drawX, 0, ray.currentWidth, rayHeight);
+
+    // Hot Core "Anomalia"
+    // Usiamo il bianco puro con un tocco di azzurro per l'effetto "anima"
+    const jitter = Math.random() * 6; // Aumentato il jitter per instabilità psichica
+    const coreWidth = (ray.currentWidth * 0.1) + jitter;
+    
+    ctx.fillStyle = "rgba(230, 255, 255, 0.9)"; // Bianco freddo quasi solido
+    ctx.shadowBlur = 25;
+    ctx.shadowColor = "#00ffcc"; // Neon turchese
+    
+    // Disegniamo il core leggermente sfalsato per un effetto glitch
+    ctx.fillRect(ray.x - (coreWidth / 2), 0, coreWidth, rayHeight);
+    
+    // Opzionale: Aggiungi un secondo strato sottilissimo per il "filo" dell'anima
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(ray.x - 1, 0, 2, rayHeight);
+    
+    ctx.restore();
+}
+
+
+
 
 export function drawChargeEffect(ctx, chargeImg) {
     if (chargeImg.complete && chargeImg.naturalWidth !== 0) {
