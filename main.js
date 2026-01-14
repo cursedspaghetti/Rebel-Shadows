@@ -67,7 +67,6 @@ function init() {
 
 function startScreenLoop() {
     if (gameState.currentScreen === 'start') {
-        Engine.updateRings();
         Renderer.drawStartScreen(ctx,introImage);
         requestAnimationFrame(startScreenLoop);
     }
