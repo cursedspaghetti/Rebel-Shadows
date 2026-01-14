@@ -227,21 +227,21 @@ export function drawSpecialRay(ctx) {
 
 export function drawSpecialRay2(ctx) {
     const ray = gameState.specialRay2;
-    if (!ray || !ray.active) {
+    if (!ray || !ray.active2) {
         gameState.rayParticles2 = []; // Pulisce le particelle quando il raggio finisce
         return;
     }
 
-    const drawX = ray.x - (ray.currentWidth / 2);
+    const drawX = ray.x2 - (ray.currentWidth2 / 2);
     const rayHeight = gameState.playerY;
 
     // --- LOGICA PARTICELLE ---
     // Generiamo 2-3 nuove particelle ogni frame mentre il raggio è attivo
-    if (ray.currentWidth > 10) { 
+    if (ray.currentWidth2 > 10) { 
         for (let i = 0; i < 3; i++) {
             gameState.rayParticles2.push({
                 // Partono dai bordi del raggio o casualmente dentro la sua ampiezza
-                x: (ray.x - ray.currentWidth / 2) + Math.random() * ray.currentWidth,
+                x: (ray.x2 - ray.currentWidth2 / 2) + Math.random() * ray.currentWidth2,
                 y: Math.random() * rayHeight,
                 size: Math.random() * 4 + 1,
                 speedX: (Math.random() - 0.5) * 4, // Si muovono un po' a destra/sinistra
@@ -274,7 +274,7 @@ export function drawSpecialRay2(ctx) {
 
     // --- DISEGNO DEL RAGGIO (Quello creato prima) ---
     // Colori spettrali: Verde pallido, Turchese e Bianco ghiaccio
-let gradient = ctx.createLinearGradient(drawX, 0, drawX + ray.currentWidth, 0);
+let gradient = ctx.createLinearGradient(drawX, 0, drawX + ray.currentWidth2, 0);
     gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
     gradient.addColorStop(0.2, 'rgba(0, 128, 128, 0.3)');  // Teal profondo ma trasparente
     gradient.addColorStop(0.5, 'rgba(150, 255, 200, 0.6)'); // Cuore verde acido spettrale
@@ -293,18 +293,18 @@ let gradient = ctx.createLinearGradient(drawX, 0, drawX + ray.currentWidth, 0);
     // Hot Core "Anomalia"
     // Usiamo il bianco puro con un tocco di azzurro per l'effetto "anima"
     const jitter = Math.random() * 6; // Aumentato il jitter per instabilità psichica
-    const coreWidth = (ray.currentWidth * 0.1) + jitter;
+    const coreWidth = (ray.currentWidth2 * 0.1) + jitter;
     
     ctx.fillStyle = "rgba(230, 255, 255, 0.9)"; // Bianco freddo quasi solido
     ctx.shadowBlur = 25;
     ctx.shadowColor = "#00ffcc"; // Neon turchese
     
     // Disegniamo il core leggermente sfalsato per un effetto glitch
-    ctx.fillRect(ray.x - (coreWidth / 2), 0, coreWidth, rayHeight);
+    ctx.fillRect(ray.x2 - (coreWidth / 2), 0, coreWidth, rayHeight);
     
     // Opzionale: Aggiungi un secondo strato sottilissimo per il "filo" dell'anima
     ctx.fillStyle = "#ffffff";
-    ctx.fillRect(ray.x - 1, 0, 2, rayHeight);
+    ctx.fillRect(ray.x2 - 1, 0, 2, rayHeight);
     
     ctx.restore();
 }
