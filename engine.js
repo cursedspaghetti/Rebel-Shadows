@@ -59,6 +59,24 @@ export function updateSpecialRay() {
     }
 }
 
+export function updateSpecialRay2() {
+    if (!gameState.specialRay2.active) return;
+
+    const ray = gameState.specialRay2;
+    const now = Date.now() / 1000;
+    const elapsed = now - ray.startTime2;
+
+    if (elapsed < ray.duration2) {
+        const lifeLeft = 1 - (elapsed / ray.duration2);
+        ray.currentWidth2 = ray.maxWidth2 * lifeLeft;
+        ray.x2 = gameState.playerX; 
+    } else {
+        ray.active2 = false;
+    }
+}
+
+
+
 // --- WORLD LOGIC ---
 
 export function spawnEnemies(count) {
@@ -72,7 +90,7 @@ export function spawnEnemies(count) {
     }
 }
 
-
+/*
 export function checkCollision(rect1, rect2) {
     return rect1.x < rect2.x + rect2.width &&
            rect1.x + rect1.width > rect2.x &&
@@ -80,3 +98,4 @@ export function checkCollision(rect1, rect2) {
            rect1.y + rect1.height > rect2.y;
 } 
 
+*/
