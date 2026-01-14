@@ -119,7 +119,7 @@ function gameLoop() {
             if (gameState.specialRay.active && Math.abs(gameState.specialRay.x - gameState.boss.x) < gameState.boss.size) {
                 gameState.boss.hp -= 5;
             }
-            if (gameState.specialRay2.active && Math.abs(gameState.specialRay2.x - gameState.boss.x) < gameState.boss.size) {
+            if (gameState.specialRay2.active2 && Math.abs(gameState.specialRay2.x2 - gameState.boss.x) < gameState.boss.size) {
                 gameState.boss.hp -= 5;
             }
         }
