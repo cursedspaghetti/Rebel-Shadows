@@ -228,21 +228,16 @@ export function drawSpecialRay(ctx) {
 export function drawChargeEffect(ctx, chargeImg) {
     if (chargeImg.complete && chargeImg.naturalWidth !== 0) {
         
-        // --- LOGICA DELLA SCALA ---
-        // Calcoliamo un fattore da 0 a 1 che si completa in 1 secondo (1000ms)
-        const progress = (performance.now() % 1000) / 1000; 
-        
-        // Scala X: parte da 0.09 e arriva a 0.13
-        const scaleX = 0.09 + (0.13 - 0.09) * progress;
-        // Scala Y: fissa come richiesto
+        // --- SCALE FINALI FISSE ---
+        const scaleX = 0.09; 
         const scaleY = 0.13; 
-
+        
         const width = chargeImg.width * scaleX;
         const height = chargeImg.height * scaleY;
 
         ctx.save();
 
-        // Disegno dell'immagine (senza effetti luminosi)
+        // Disegno semplice senza bagliori o trasparenze particolari
         ctx.drawImage(
             chargeImg, 
             gameState.playerX - width / 2, 
