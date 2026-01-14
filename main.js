@@ -2,15 +2,17 @@ import { CONFIG, gameState } from './config.js';
 import * as Renderer from './renderer.js';
 import * as Engine from './engine.js';
 
-// --- CONFIGURAZIONE AGGIUNTIVA ---
+// --- CONFIGURAZIONE TOUCH ---
 const TOUCH_SETTINGS = {
-    LERP: 0.1,             // Fluidità (più alto = più reattivo)
-    OFFSET_Y: 75,         // Distanza sopra il dito per visibilità mobile
-    DOUBLE_TAP_DELAY: 300  // Tempo massimo per attivare lo speciale (ms)
+    LERP: 0.1,             // Fluidità inseguimento
+    OFFSET_Y: 75,          // Distanza sopra il dito
+    TAP_DELAY: 250         // Tempo di attesa per distinguere Single/Double Tap (ms)
 };
 
+// Variabili di stato locali per l'input
+let secondFingerTimer = null;
 gameState.isTouchActive = false;
-gameState.lastTouchTime = 0;
+gameState.touchIdentifier = null;
 
 // --- DOM ELEMENTS ---
 const canvas = document.getElementById('gameCanvas');
@@ -30,7 +32,6 @@ const shadowImg = new Image();
 shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png';
 const introImage = new Image();
 introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/shadow_intro.jpg';
-
 
 // --- INITIALIZATION ---
 function init() {
@@ -64,10 +65,9 @@ function init() {
 }
 
 // --- GAME LOOPS ---
-
 function startScreenLoop() {
     if (gameState.currentScreen === 'start') {
-        Renderer.drawStartScreen(ctx,introImage);
+        Renderer.drawStartScreen(ctx, introImage);
         requestAnimationFrame(startScreenLoop);
     }
 }
@@ -80,27 +80,22 @@ function gameLoop() {
         gameState.backgroundPositionY += CONFIG.SCROLL_SPEED;
         gameContainer.style.backgroundPosition = `0px ${gameState.backgroundPositionY}px`;
 
-        // 2. LOGICA MOVIMENTO (Sostituisce Engine.updatePlayer)
+        // 2. Logica Movimento
         if (gameState.isTouchActive) {
             const targetX = gameState.touchX;
             const targetY = gameState.touchY - TOUCH_SETTINGS.OFFSET_Y;
-
-            // Inseguimento fluido con Lerp e Offset
             gameState.playerX += (targetX - gameState.playerX) * TOUCH_SETTINGS.LERP;
             gameState.playerY += (targetY - gameState.playerY) * TOUCH_SETTINGS.LERP;
         } else {
-            // Supporto tastiera se il touch non è attivo
             if (gameState.keys['ArrowLeft']) gameState.playerX -= gameState.playerSpeed;
             if (gameState.keys['ArrowRight']) gameState.playerX += gameState.playerSpeed;
             if (gameState.keys['ArrowUp']) gameState.playerY -= gameState.playerSpeed;
             if (gameState.keys['ArrowDown']) gameState.playerY += gameState.playerSpeed;
         }
 
-        // 2.1 Limiti bordi obbligatori
+        // Limiti bordi
         gameState.playerX = Math.max(10, Math.min(CONFIG.CANVAS_WIDTH - 10, gameState.playerX));
         gameState.playerY = Math.max(10, Math.min(CONFIG.CANVAS_HEIGHT - 10, gameState.playerY));
-
-        // 2.2 Reset Inclinazione (Forza il player a stare dritto)
         gameState.playerDx = 0;
         gameState.playerDy = 0;
 
@@ -108,23 +103,24 @@ function gameLoop() {
         Engine.autoFire();
         Engine.updateBullets();
         Engine.updateSpecialRay();
+        Engine.updateSpecialRay2();
 
-        // 4. Boss Logic
+        // 4. Boss Logic & Collisions
         if (gameState.bossActive && gameState.boss) {
             gameState.bullets.forEach((bullet, bIndex) => {
                 const dx = bullet.x - gameState.boss.x;
                 const dy = bullet.y - gameState.boss.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                if (distance < gameState.boss.size) {
+                if (Math.sqrt(dx * dx + dy * dy) < gameState.boss.size) {
                     gameState.boss.hp -= 10;
                     gameState.bullets.splice(bIndex, 1);
                 }
             });
 
-            if (gameState.specialRay.active) {
-                if (Math.abs(gameState.specialRay.x - gameState.boss.x) < gameState.boss.size) {
-                    gameState.boss.hp -= 5;
-                }
+            if (gameState.specialRay.active && Math.abs(gameState.specialRay.x - gameState.boss.x) < gameState.boss.size) {
+                gameState.boss.hp -= 5;
+            }
+            if (gameState.specialRay2.active && Math.abs(gameState.specialRay2.x - gameState.boss.x) < gameState.boss.size) {
+                gameState.boss.hp -= 5;
             }
         }
 
@@ -132,29 +128,23 @@ function gameLoop() {
             gameState.bossActive = true;
             gameState.enemies = [];
             gameState.boss = {
-                x: CONFIG.CANVAS_WIDTH / 2,
-                y: -150,
-                targetY: 300,
-                size: 140,
-                hp: 5000,
-                maxHp: 5000
+                x: CONFIG.CANVAS_WIDTH / 2, y: -150, targetY: 300,
+                size: 140, hp: 5000, maxHp: 5000
             };
         }
 
         // 5. Rendering
         Renderer.drawPlayer(ctx, playerSprite);
-
         if (gameState.bossActive && gameState.boss) {
             if (gameState.boss.y < gameState.boss.targetY) gameState.boss.y += 2;
             Renderer.drawBossShadow(ctx, gameState.boss, shadowImg);
-            if (gameState.boss.hp <= 0) {
-                showPowerUpScreen();
-                return;
-            }
+            if (gameState.boss.hp <= 0) { showPowerUpScreen(); return; }
         }
-
         Renderer.drawSpecialRay(ctx);
+        Renderer.drawSpecialRay2(ctx);
         if (gameState.isCharging) Renderer.drawChargeEffect(ctx, chargeImg);
+        if (gameState.isCharging2) Renderer.drawChargeEffect(ctx, chargeImg);
+
         Renderer.drawBullets(ctx);
         Renderer.drawUI(ctx);
         
@@ -164,10 +154,7 @@ function gameLoop() {
 
 // --- HANDLERS ---
 function startGame() {
-    if (!shadowImg.complete) {
-        setTimeout(startGame, 100);
-        return;
-    }
+    if (!shadowImg.complete) { setTimeout(startGame, 100); return; }
     startScreen.style.display = 'none';
     gameState.currentScreen = 'playing';
     gameState.timerInterval = setInterval(() => {
@@ -185,65 +172,91 @@ function showPowerUpScreen() {
 
 function fireSpecialAttackSequence() {
     if (gameState.specialOnCooldown || gameState.isCharging) return;
-
     gameState.isCharging = true;
     setTimeout(() => {
         gameState.isCharging = false;
         gameState.specialRay.active = true;
         gameState.specialRay.startTime = Date.now() / 1000;
         gameState.specialRay.x = gameState.playerX;
-        
         gameState.specialOnCooldown = true;
-        gameState.specialLastUsed = Date.now() / 1000;
         setTimeout(() => gameState.specialOnCooldown = false, gameState.specialCooldown * 1000);
     }, 1000);
 }
 
-// --- INPUT LISTENERS (KEYBOARD & TOUCH) ---
+function fireSpecialAttackSequence2() {
+    if (gameState.specialOnCooldown2 || gameState.isCharging2) return;
+    gameState.isCharging2 = true;
+    setTimeout(() => {
+        gameState.isCharging2 = false;
+        gameState.specialRay2.active2 = true;
+        gameState.specialRay2.startTime2 = Date.now() / 1000;
+        gameState.specialRay2.x = gameState.playerX;
+        gameState.specialOnCooldown2 = true;
+        setTimeout(() => gameState.specialOnCooldown2 = false, gameState.specialCooldown2 * 1000);
+    }, 1000);
+}
 
-window.addEventListener('keydown', (e) => {
-    gameState.keys[e.key] = true;
-    if (e.key === ' ' && gameState.currentScreen === 'playing') {
-        e.preventDefault();
-        fireSpecialAttackSequence();
-    }
-});
-
-window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
-
+// --- INPUT LISTENERS (MULTITOUCH) ---
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
-    const touch = e.touches[0];
-    const currentTime = Date.now();
-
-    // Logica Double Tap
-    if (currentTime - gameState.lastTouchTime < TOUCH_SETTINGS.DOUBLE_TAP_DELAY) {
-        if (gameState.currentScreen === 'playing') fireSpecialAttackSequence();
+    
+    // Gestione Dito 1: Movimento
+    if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        gameState.touchIdentifier = touch.identifier;
+        gameState.isTouchActive = true;
+        updateCoords(touch, rect);
     }
-    gameState.lastTouchTime = currentTime;
 
-    gameState.touchIdentifier = touch.identifier;
-    gameState.isTouchActive = true;
-    gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
-    gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
+    // Gestione Dito 2+: Speciali
+    if (e.touches.length >= 2 && gameState.currentScreen === 'playing') {
+        if (secondFingerTimer) {
+            // Se tocchi di nuovo prima del timeout -> Double Tap
+            clearTimeout(secondFingerTimer);
+            secondFingerTimer = null;
+            fireSpecialAttackSequence2();
+        } else {
+            // Primo tocco del secondo dito -> Aspetta per vedere se è Single o Double
+            secondFingerTimer = setTimeout(() => {
+                fireSpecialAttackSequence();
+                secondFingerTimer = null;
+            }, TOUCH_SETTINGS.TAP_DELAY);
+        }
+    }
 }, { passive: false });
 
 canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
-    const touch = Array.from(e.changedTouches).find(t => t.identifier === gameState.touchIdentifier);
-    if (touch) {
-        gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
-        gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
-    }
+    const touch = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
+    if (touch) updateCoords(touch, rect);
 }, { passive: false });
 
-canvas.addEventListener('touchend', () => {
-    gameState.touchIdentifier = null;
-    gameState.isTouchActive = false;
+canvas.addEventListener('touchend', (e) => {
+    if (e.touches.length === 0) {
+        gameState.isTouchActive = false;
+        gameState.touchIdentifier = null;
+    } else {
+        const stillDragging = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
+        if (!stillDragging) gameState.isTouchActive = false;
+    }
 });
 
-startButton.addEventListener('click', startGame);
+function updateCoords(touch, rect) {
+    gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
+    gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
+}
 
+// Tastiera
+window.addEventListener('keydown', (e) => {
+    gameState.keys[e.key] = true;
+    if (e.key === ' ' && gameState.currentScreen === 'playing') {
+        fireSpecialAttackSequence();
+        fireSpecialAttackSequence2();
+    }
+});
+window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
+
+startButton.addEventListener('click', startGame);
 init();
