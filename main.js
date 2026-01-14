@@ -29,7 +29,7 @@ chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-W
 const shadowImg = new Image();
 shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png';
 const introImage = new Image();
-introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png/shadow_intro.jpg';
+introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/shadow_intro.jpg';
 
 
 // --- INITIALIZATION ---
