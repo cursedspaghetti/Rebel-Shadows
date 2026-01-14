@@ -72,16 +72,6 @@ export function spawnEnemies(count) {
     }
 }
 
-export function updateRings() {
-    gameState.rings.forEach(ring => {
-        ring.y -= ring.speed;
-        if (ring.y < 0) {
-            ring.y = CONFIG.CANVAS_HEIGHT;
-            ring.x = Math.random() * CONFIG.CANVAS_WIDTH;
-            ring.trail = [];
-        }
-    });
-}
 
 export function checkCollision(rect1, rect2) {
     return rect1.x < rect2.x + rect2.width &&
