@@ -55,7 +55,7 @@ export let gameState = {
     lastShotTime: 0,
     bullets: [],
 
-    // Special Attack State
+    // Special Attack State 1
     specialCooldown: 10,
     specialLastUsed: 0,
     specialOnCooldown: false,
@@ -69,6 +69,21 @@ export let gameState = {
     },
     isCharging: false,
     rayParticles: [],
+
+    // Special Attack State 2
+    specialCooldown2: 10,
+    specialLastUsed2: 0,
+    specialOnCooldown2: false,
+    specialRay2: { 
+        active2: false,
+        x2: 0,
+        maxWidth2: 250,
+        currentWidth2: 0,
+        duration2: 0.8,
+        startTime2: 0
+    },
+    isCharging2: false,
+    rayParticles2: [],
     
     // World & Entities
     enemies: [],
@@ -76,9 +91,6 @@ export let gameState = {
     timerInterval: null,
     bossActive: false,
     
-    // Background Rings (Start Screen)
-    rings: [],
-    backgroundPositionY: 0
 };
 
 /**
@@ -93,5 +105,6 @@ export function resetGameState() {
     gameState.gameTimer = CONFIG.GAME_TIME;
     gameState.bossActive = false;
     gameState.specialOnCooldown = false;
-    gameState.playerTrail = [];
+    gameState.specialOnCooldown2 = false;
+
 }
