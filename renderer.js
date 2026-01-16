@@ -338,7 +338,7 @@ export function drawChargeEffect(ctx, chargeImg) {
 }
 
 export function drawUI(ctx) {
-    // 1. DISEGNO DEL TIMER (Alto a sinistra)
+    // 1. Timer originale (sempre visibile)
     ctx.save();
     ctx.fillStyle = '#fff';
     ctx.font = '20px "Courier New", monospace';
@@ -346,53 +346,47 @@ export function drawUI(ctx) {
     ctx.fillText(`TIME: ${gameState.gameTimer}`, 10, 30);
     ctx.restore();
 
-    // 2. LOGICA DI CALCOLO COOLDOWN (In millisecondi)
-    const now = Date.now();
+    // 2. Calcolo dei tempi in SECONDI
+    const now = Date.now() / 1000;
     
-    // Parametri Special 1
-    const cd1Ms = gameState.specialCooldown * 1000;
+    // Calcolo Special 1
     const elapsed1 = now - gameState.specialLastUsed;
-    const perc1 = Math.min(1, elapsed1 / cd1Ms);
+    const perc1 = Math.min(1, elapsed1 / gameState.specialCooldown);
 
-    // Parametri Special 2
+    // Calcolo Special 2 (Usa specialLastUsed2 se lo hai, altrimenti usa specialLastUsed)
     const lastUsed2 = gameState.specialLastUsed2 || gameState.specialLastUsed;
-    const cd2Ms = (gameState.specialCooldown2 || gameState.specialCooldown) * 1000;
+    const cooldown2 = gameState.specialCooldown2 || gameState.specialCooldown;
     const elapsed2 = now - lastUsed2;
-    const perc2 = Math.min(1, elapsed2 / cd2Ms);
+    const perc2 = Math.min(1, elapsed2 / cooldown2);
 
-    // 3. DISEGNO DELLE BARRETTE SOTTO IL PLAYER
+    // 3. Posizionamento barre sotto il player
     const barWidth = 40;
     const barHeight = 4;
     const x = gameState.playerX - barWidth / 2;
-    const y = gameState.playerY + 28; // Posizionamento verticale sotto lo sprite
+    const y = gameState.playerY + 28;
 
     ctx.save();
 
-    // --- BARRA 1 (Raggio Viola) ---
-    // Sfondo barra
+    // Barra 1 (Viola)
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillRect(x, y, barWidth, barHeight);
-    
+    ctx.fillRect(x, y, barWidth, barHeight); // Sfondo
     if (perc1 < 1) {
-        ctx.fillStyle = '#8a2be2'; // Colore viola mentre carica
-        ctx.fillRect(x, y, barWidth * perc1, barHeight);
+        ctx.fillStyle = '#8a2be2'; 
+        ctx.fillRect(x, y, barWidth * perc1, barHeight); // Si riempie
     } else {
-        ctx.fillStyle = '#ffffff'; // Bianco quando è pronta
+        ctx.fillStyle = '#ffffff'; // Bianca quando pronta
         ctx.fillRect(x, y, barWidth, barHeight);
     }
 
-    // --- BARRA 2 (Raggio Verde/Azzurro) ---
-    const y2 = y + barHeight + 3; // 3 pixel di spazio tra le due barre
-    
-    // Sfondo barra
+    // Barra 2 (Turchese)
+    const y2 = y + barHeight + 3;
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillRect(x, y2, barWidth, barHeight);
-    
+    ctx.fillRect(x, y2, barWidth, barHeight); // Sfondo
     if (perc2 < 1) {
-        ctx.fillStyle = '#00ffcc'; // Colore turchese mentre carica
-        ctx.fillRect(x, y2, barWidth * perc2, barHeight);
+        ctx.fillStyle = '#00ffcc';
+        ctx.fillRect(x, y2, barWidth * perc2, barHeight); // Si riempie
     } else {
-        ctx.fillStyle = '#ffffff'; // Bianco quando è pronta
+        ctx.fillStyle = '#ffffff'; // Bianca quando pronta
         ctx.fillRect(x, y2, barWidth, barHeight);
     }
 
