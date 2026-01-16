@@ -338,14 +338,67 @@ export function drawChargeEffect(ctx, chargeImg) {
 }
 
 export function drawUI(ctx) {
+    // 1. Disegna il Timer in alto a sinistra come prima
+    ctx.save();
     ctx.fillStyle = '#fff';
-    ctx.font = '20px Courier New, monospace';
+    ctx.font = '20px "Courier New", monospace';
     ctx.textAlign = 'left';
     ctx.fillText(`TIME: ${gameState.gameTimer}`, 10, 30);
+    ctx.restore();
 
+    // 2. Disegna le barrette di Cooldown sotto il Player
+    drawPlayerCooldownBars(ctx);
+}
+
+function drawPlayerCooldownBars(ctx) {
     const now = Date.now() / 1000;
-    let remainingCooldown = Math.max(0, (gameState.specialLastUsed + gameState.specialCooldown) - now);
-    ctx.textAlign = 'right';
-    ctx.fillText(`SPECIAL: ${remainingCooldown > 0 ? remainingCooldown.toFixed(1) + 's' : 'READY'}`,
-        CONFIG.CANVAS_WIDTH - 10, 30);
+    
+    // Calcolo percentuali (0 = pronto, 1 = in ricarica totale)
+    // Assumiamo che gameState.specialLastUsed e specialCooldown esistano per entrambi i raggi
+    // Se hai nomi variabili diversi (es. special2LastUsed), adattali qui sotto:
+    
+    const cd1 = Math.max(0, (gameState.specialLastUsed + gameState.specialCooldown) - now);
+    const perc1 = cd1 > 0 ? (cd1 / gameState.specialCooldown) : 0;
+
+    const cd2 = Math.max(0, (gameState.specialLastUsed2 + gameState.specialCooldown2) - now);
+    const perc2 = cd2 > 0 ? (cd2 / gameState.specialCooldown2) : 0;
+
+    const barWidth = 40;  // Larghezza delle barrette
+    const barHeight = 4;   // Spessore delle barrette
+    const spacing = 2;    // Spazio tra le due barrette
+    
+    // Posizionamento sotto il giocatore (offset rispetto a playerX/Y)
+    const startX = gameState.playerX - barWidth / 2;
+    const startY = gameState.playerY + 25; // 25px sotto il centro del player
+
+    ctx.save();
+    
+    // --- BARRA SPECIAL 1 (Viola) ---
+    // Sfondo barra 1
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(startX, startY, barWidth, barHeight);
+    // Progresso (si riempie o si svuota - qui si svuota mentre ricarica per feedback visivo)
+    if (perc1 > 0) {
+        ctx.fillStyle = '#8a2be2'; // Viola raggio 1
+        ctx.fillRect(startX, startY, barWidth * (1 - perc1), barHeight);
+    } else {
+        ctx.fillStyle = '#fff'; // Bianca quando è pronta
+        ctx.fillRect(startX, startY, barWidth, barHeight);
+    }
+
+    // --- BARRA SPECIAL 2 (Verde/Azzurro) ---
+    const secondBarY = startY + barHeight + spacing;
+    // Sfondo barra 2
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(startX, secondBarY, barWidth, barHeight);
+    // Progresso
+    if (perc2 > 0) {
+        ctx.fillStyle = '#00ffcc'; // Turchese raggio 2
+        ctx.fillRect(startX, secondBarY, barWidth * (1 - perc2), barHeight);
+    } else {
+        ctx.fillStyle = '#fff'; // Bianca quando è pronta
+        ctx.fillRect(startX, secondBarY, barWidth, barHeight);
+    }
+
+    ctx.restore();
 }
