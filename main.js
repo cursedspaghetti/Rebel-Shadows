@@ -163,13 +163,13 @@ function fireSpecialAttackSequence() {
     if (gameState.specialOnCooldown || gameState.isCharging) return;
     gameState.isCharging = true;
     setTimeout(() => {
-        gameState.isCharging = false;
         gameState.specialRay.active = true;
         gameState.specialRay.startTime = Date.now() / 1000;
         gameState.specialRay.x = gameState.playerX;
         gameState.specialOnCooldown = true;
         gameState.specialLastUsed = Date.now() / 1000;
         setTimeout(() => gameState.specialOnCooldown = false, gameState.specialCooldown * 1000);
+        setTimeout(() => gameState.isCharging = false, gameState.specialRay.duration * 1000);
     }, 1000);
 }
 
