@@ -315,7 +315,7 @@ export function drawChargeEffect(ctx, chargeImg) {
 }
 
 export function drawUI(ctx) {
-    // 1. Timer originale (sempre visibile)
+    // 1. Timer originale
     ctx.save();
     ctx.fillStyle = '#fff';
     ctx.font = '20px "Courier New", monospace';
@@ -323,20 +323,18 @@ export function drawUI(ctx) {
     ctx.fillText(`TIME: ${gameState.gameTimer}`, 10, 30);
     ctx.restore();
 
-    // 2. Calcolo dei tempi in SECONDI
     const now = Date.now() / 1000;
     
-    // Calcolo Special 1
+    // Calcolo percentuali
     const elapsed1 = now - gameState.specialLastUsed;
     const perc1 = Math.min(1, elapsed1 / gameState.specialCooldown);
 
-    // Calcolo Special 2 (Usa specialLastUsed2 se lo hai, altrimenti usa specialLastUsed)
     const lastUsed2 = gameState.specialLastUsed2 || gameState.specialLastUsed;
     const cooldown2 = gameState.specialCooldown2 || gameState.specialCooldown;
     const elapsed2 = now - lastUsed2;
     const perc2 = Math.min(1, elapsed2 / cooldown2);
 
-    // 3. Posizionamento barre sotto il player
+    // Configurazione barre
     const barWidth = 40;
     const barHeight = 4;
     const x = gameState.playerX - barWidth / 2;
@@ -344,26 +342,42 @@ export function drawUI(ctx) {
 
     ctx.save();
 
-    // Barra 1 (Viola)
+    // --- BARRA 1 (Viola con sfumatura) ---
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.fillRect(x, y, barWidth, barHeight); // Sfondo
+
     if (perc1 < 1) {
-        ctx.fillStyle = '#8a2be2'; 
-        ctx.fillRect(x, y, barWidth * perc1, barHeight); // Si riempie
+        // Sfumatura durante il caricamento (Viola scuro -> Viola acceso)
+        const grad1 = ctx.createLinearGradient(x, y, x + barWidth, y);
+        grad1.addColorStop(0, '#4b0082'); // Indigo
+        grad1.addColorStop(1, '#8a2be2'); // BlueViolet
+        ctx.fillStyle = grad1;
+        ctx.fillRect(x, y, barWidth * perc1, barHeight);
     } else {
-        ctx.fillStyle = '#ffffff'; // Bianca quando pronta
+        // Effetto "Pronto": Viola elettrico brillante
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = '#bf00ff';
+        ctx.fillStyle = '#bf00ff'; 
         ctx.fillRect(x, y, barWidth, barHeight);
     }
 
-    // Barra 2 (Turchese)
+    // --- BARRA 2 (Verdino/Turchese con sfumatura) ---
     const y2 = y + barHeight + 3;
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
     ctx.fillRect(x, y2, barWidth, barHeight); // Sfondo
+
     if (perc2 < 1) {
-        ctx.fillStyle = '#00ffcc';
-        ctx.fillRect(x, y2, barWidth * perc2, barHeight); // Si riempie
+        // Sfumatura durante il caricamento (Verde acqua -> Turchese)
+        const grad2 = ctx.createLinearGradient(x, y2, x + barWidth, y2);
+        grad2.addColorStop(0, '#008b8b'); // DarkCyan
+        grad2.addColorStop(1, '#00ffcc'); // Turchese
+        ctx.fillStyle = grad2;
+        ctx.fillRect(x, y2, barWidth * perc2, barHeight);
     } else {
-        ctx.fillStyle = '#ffffff'; // Bianca quando pronta
+        // Effetto "Pronto": Verde Neon brillante
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = '#33ff33';
+        ctx.fillStyle = '#33ff33'; 
         ctx.fillRect(x, y2, barWidth, barHeight);
     }
 
