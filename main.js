@@ -168,6 +168,7 @@ function fireSpecialAttackSequence() {
         gameState.specialRay.startTime = Date.now() / 1000;
         gameState.specialRay.x = gameState.playerX;
         gameState.specialOnCooldown = true;
+        gameState.specialLastUsed = Date.now() / 1000;
         setTimeout(() => gameState.specialOnCooldown = false, gameState.specialCooldown * 1000);
     }, 1000);
 }
@@ -181,6 +182,7 @@ function fireSpecialAttackSequence2() {
         gameState.specialRay2.startTime2 = Date.now() / 1000;
         gameState.specialRay2.x = gameState.playerX;
         gameState.specialOnCooldown2 = true;
+        gameState.specialLastUsed2 = Date.now() / 1000;
         setTimeout(() => gameState.specialOnCooldown2 = false, gameState.specialCooldown2 * 1000);
     }, 1000);
 }
