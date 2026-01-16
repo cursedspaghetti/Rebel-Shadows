@@ -50,17 +50,6 @@ function init() {
         };
         ringChoicesContainer.appendChild(button);
     });
-
-    for (let i = 0; i < 14; i++) {
-        gameState.rings.push({
-            x: Math.random() * CONFIG.CANVAS_WIDTH,
-            y: Math.random() * CONFIG.CANVAS_HEIGHT,
-            size: Math.random() * 25 + 8,
-            speed: Math.random() * 1.5 + 2.5,
-            color: Object.values(CONFIG.RING_COLORS)[Math.floor(Math.random() * 7)],
-            trail: []
-        });
-    }
     requestAnimationFrame(startScreenLoop);
 }
 
