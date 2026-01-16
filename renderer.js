@@ -350,54 +350,63 @@ export function drawUI(ctx) {
     drawPlayerCooldownBars(ctx);
 }
 
-function drawPlayerCooldownBars(ctx) {
-    const now = Date.now() / 1000;
-    
-    // Calcolo percentuali (0 = pronto, 1 = in ricarica totale)
-    // Assumiamo che gameState.specialLastUsed e specialCooldown esistano per entrambi i raggi
-    // Se hai nomi variabili diversi (es. special2LastUsed), adattali qui sotto:
-    
-    const cd1 = Math.max(0, (gameState.specialLastUsed + gameState.specialCooldown) - now);
-    const perc1 = cd1 > 0 ? (cd1 / gameState.specialCooldown) : 0;
+export function drawUI(ctx) {
+    // 1. DISEGNO DEL TIMER (Alto a sinistra)
+    ctx.save();
+    ctx.fillStyle = '#fff';
+    ctx.font = '20px "Courier New", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(`TIME: ${gameState.gameTimer}`, 10, 30);
+    ctx.restore();
 
-    const cd2 = Math.max(0, (gameState.specialLastUsed2 + gameState.specialCooldown2) - now);
-    const perc2 = cd2 > 0 ? (cd2 / gameState.specialCooldown2) : 0;
-
-    const barWidth = 40;  // Larghezza delle barrette
-    const barHeight = 4;   // Spessore delle barrette
-    const spacing = 2;    // Spazio tra le due barrette
+    // 2. LOGICA DI CALCOLO COOLDOWN (In millisecondi)
+    const now = Date.now();
     
-    // Posizionamento sotto il giocatore (offset rispetto a playerX/Y)
-    const startX = gameState.playerX - barWidth / 2;
-    const startY = gameState.playerY + 25; // 25px sotto il centro del player
+    // Parametri Special 1
+    const cd1Ms = gameState.specialCooldown * 1000;
+    const elapsed1 = now - gameState.specialLastUsed;
+    const perc1 = Math.min(1, elapsed1 / cd1Ms);
+
+    // Parametri Special 2
+    const lastUsed2 = gameState.specialLastUsed2 || gameState.specialLastUsed;
+    const cd2Ms = (gameState.specialCooldown2 || gameState.specialCooldown) * 1000;
+    const elapsed2 = now - lastUsed2;
+    const perc2 = Math.min(1, elapsed2 / cd2Ms);
+
+    // 3. DISEGNO DELLE BARRETTE SOTTO IL PLAYER
+    const barWidth = 40;
+    const barHeight = 4;
+    const x = gameState.playerX - barWidth / 2;
+    const y = gameState.playerY + 28; // Posizionamento verticale sotto lo sprite
 
     ctx.save();
-    
-    // --- BARRA SPECIAL 1 (Viola) ---
-    // Sfondo barra 1
+
+    // --- BARRA 1 (Raggio Viola) ---
+    // Sfondo barra
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillRect(startX, startY, barWidth, barHeight);
-    // Progresso (si riempie o si svuota - qui si svuota mentre ricarica per feedback visivo)
-    if (perc1 > 0) {
-        ctx.fillStyle = '#8a2be2'; // Viola raggio 1
-        ctx.fillRect(startX, startY, barWidth * (1 - perc1), barHeight);
+    ctx.fillRect(x, y, barWidth, barHeight);
+    
+    if (perc1 < 1) {
+        ctx.fillStyle = '#8a2be2'; // Colore viola mentre carica
+        ctx.fillRect(x, y, barWidth * perc1, barHeight);
     } else {
-        ctx.fillStyle = '#fff'; // Bianca quando è pronta
-        ctx.fillRect(startX, startY, barWidth, barHeight);
+        ctx.fillStyle = '#ffffff'; // Bianco quando è pronta
+        ctx.fillRect(x, y, barWidth, barHeight);
     }
 
-    // --- BARRA SPECIAL 2 (Verde/Azzurro) ---
-    const secondBarY = startY + barHeight + spacing;
-    // Sfondo barra 2
+    // --- BARRA 2 (Raggio Verde/Azzurro) ---
+    const y2 = y + barHeight + 3; // 3 pixel di spazio tra le due barre
+    
+    // Sfondo barra
     ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    ctx.fillRect(startX, secondBarY, barWidth, barHeight);
-    // Progresso
-    if (perc2 > 0) {
-        ctx.fillStyle = '#00ffcc'; // Turchese raggio 2
-        ctx.fillRect(startX, secondBarY, barWidth * (1 - perc2), barHeight);
+    ctx.fillRect(x, y2, barWidth, barHeight);
+    
+    if (perc2 < 1) {
+        ctx.fillStyle = '#00ffcc'; // Colore turchese mentre carica
+        ctx.fillRect(x, y2, barWidth * perc2, barHeight);
     } else {
-        ctx.fillStyle = '#fff'; // Bianca quando è pronta
-        ctx.fillRect(startX, secondBarY, barWidth, barHeight);
+        ctx.fillStyle = '#ffffff'; // Bianco quando è pronta
+        ctx.fillRect(x, y2, barWidth, barHeight);
     }
 
     ctx.restore();
