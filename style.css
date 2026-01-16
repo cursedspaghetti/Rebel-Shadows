@@ -23,9 +23,9 @@ body {
     height: 852px;
     background-color: #3f3a66;
     background-image:
-   /*     linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
+       linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
         url('https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png');
-    background-size: auto;  */
+    background-size: auto; 
     /* Ridimensiona la texture di sfondo per farla sembrare pixel art */
     background-repeat: repeat;
 
