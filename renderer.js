@@ -227,89 +227,66 @@ export function drawSpecialRay(ctx) {
 
 export function drawSpecialRay2(ctx) {
     const ray = gameState.specialRay2;
+    
+    // Se il raggio non è attivo, continuiamo comunque a disegnare le particelle residue
+    // ma smettiamo di generarne di nuove.
     if (!ray || !ray.active2) {
-        gameState.rayParticles2 = []; // Pulisce le particelle quando il raggio finisce
-        return;
+        if (gameState.rayParticles2.length === 0) return;
     }
 
-    const drawX = ray.x2 - (ray.currentWidth2 / 2);
-    const rayHeight = gameState.playerY;
-
-    // --- LOGICA PARTICELLE ---
-    // Generiamo 2-3 nuove particelle ogni frame mentre il raggio è attivo
-    if (ray.currentWidth2 > 10) { 
-        for (let i = 0; i < 3; i++) {
+    // --- LOGICA GENERAZIONE (Solo se il raggio è attivo) ---
+    if (ray && ray.active2 && ray.currentWidth2 > 5) { 
+        // Generiamo più particelle per dare l'idea di un flusso consistente
+        for (let i = 0; i < 5; i++) {
             gameState.rayParticles2.push({
-                // Partono dai bordi del raggio o casualmente dentro la sua ampiezza
-                x: (ray.x2 - ray.currentWidth2 / 2) + Math.random() * ray.currentWidth2,
-                y: Math.random() * rayHeight,
-                size: Math.random() * 4 + 1,
-                speedX: (Math.random() - 0.5) * 4, // Si muovono un po' a destra/sinistra
-                speedY: -Math.random() * 5 - 2,    // Vanno verso l'alto veloci
-                life: 1.0,                         // Opacità iniziale
-                decay: Math.random() * 0.05 + 0.02 // Velocità di sparizione
+                // Partono dalla posizione X del giocatore (o del raggio)
+                x: ray.x2 + (Math.random() - 0.5) * ray.currentWidth2,
+                // Partono dal basso (posizione del giocatore)
+                y: gameState.playerY, 
+                size: Math.random() * 5 + 2,
+                // Velocità leggermente divergente
+                speedX: (Math.random() - 0.5) * 6, 
+                // Velocità verso l'alto (negativa)
+                speedY: -Math.random() * 10 - 5,    
+                life: 1.0,
+                decay: Math.random() * 0.02 + 0.01, // Durano più a lungo per attraversare lo schermo
+                color: Math.random() > 0.5 ? "#00ffcc" : "#8A2BE2" // Mix tra turchese e viola
             });
         }
     }
 
-    // Disegno e aggiornamento particelle
+    // --- DISEGNO E AGGIORNAMENTO PARTICELLE ---
     ctx.save();
-    gameState.rayParticles2.forEach((p, index) => {
-        ctx.fillStyle = `rgba(138, 43, 226, ${p.life})`; // Viola semitrasparente
-        ctx.shadowBlur = 5;
-        ctx.shadowColor = "black";
+    for (let i = gameState.rayParticles2.length - 1; i >= 0; i--) {
+        const p = gameState.rayParticles2[i];
+
+        // Effetto grafico particella
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = p.color;
+        
         ctx.beginPath();
+        // Disegniamo piccole "fiammelle" o cerchi
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
 
-        // Update posizione per il prossimo frame
+        // Update posizione
         p.x += p.speedX;
         p.y += p.speedY;
         p.life -= p.decay;
 
-        // Rimuovi particelle "morte"
-        if (p.life <= 0) gameState.rayParticles2.splice(index, 1);
-    });
-    ctx.restore();
+        // Rilevamento Collisione (Esempio logico)
+        // Se hai una lista di nemici, potresti controllare qui se p.x/p.y tocca un nemico
+        // if (checkCollision(p, enemies)) { p.life = 0; spawnExplosion(p.x, p.y); }
 
-    // --- DISEGNO DEL RAGGIO (Quello creato prima) ---
-    // Colori spettrali: Verde pallido, Turchese e Bianco ghiaccio
-let gradient = ctx.createLinearGradient(drawX, 0, drawX + ray.currentWidth2, 0);
-    gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    gradient.addColorStop(0.2, 'rgba(0, 128, 128, 0.3)');  // Teal profondo ma trasparente
-    gradient.addColorStop(0.5, 'rgba(150, 255, 200, 0.6)'); // Cuore verde acido spettrale
-    gradient.addColorStop(0.8, 'rgba(0, 100, 80, 0.3)');   // Ritorno al verde scuro
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
-    ctx.save();
-    
-    // Bagliore esterno più soffuso (Glow spettrale)
-    ctx.shadowBlur = 40;
-    ctx.shadowColor = "rgba(0, 255, 150, 0.5)";
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(drawX, 0, ray.currentWidth, rayHeight);
-
-    // Hot Core "Anomalia"
-    // Usiamo il bianco puro con un tocco di azzurro per l'effetto "anima"
-    const jitter = Math.random() * 6; // Aumentato il jitter per instabilità psichica
-    const coreWidth = (ray.currentWidth2 * 0.1) + jitter;
-    
-    ctx.fillStyle = "rgba(230, 255, 255, 0.9)"; // Bianco freddo quasi solido
-    ctx.shadowBlur = 25;
-    ctx.shadowColor = "#00ffcc"; // Neon turchese
-    
-    // Disegniamo il core leggermente sfalsato per un effetto glitch
-    ctx.fillRect(ray.x2 - (coreWidth / 2), 0, coreWidth, rayHeight);
-    
-    // Opzionale: Aggiungi un secondo strato sottilissimo per il "filo" dell'anima
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(ray.x2 - 1, 0, 2, rayHeight);
-    
+        // Rimuovi particelle morte o fuori schermo
+        if (p.life <= 0 || p.y < -50) {
+            gameState.rayParticles2.splice(i, 1);
+        }
+    }
     ctx.restore();
 }
-
-
 
 
 export function drawChargeEffect(ctx, chargeImg) {
