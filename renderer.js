@@ -338,19 +338,6 @@ export function drawChargeEffect(ctx, chargeImg) {
 }
 
 export function drawUI(ctx) {
-    // 1. Disegna il Timer in alto a sinistra come prima
-    ctx.save();
-    ctx.fillStyle = '#fff';
-    ctx.font = '20px "Courier New", monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText(`TIME: ${gameState.gameTimer}`, 10, 30);
-    ctx.restore();
-
-    // 2. Disegna le barrette di Cooldown sotto il Player
-    drawPlayerCooldownBars(ctx);
-}
-
-export function drawUI(ctx) {
     // 1. DISEGNO DEL TIMER (Alto a sinistra)
     ctx.save();
     ctx.fillStyle = '#fff';
