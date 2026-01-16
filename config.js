@@ -21,7 +21,7 @@ export const CONFIG = {
         'PURPLE': '#800080'
     },
     TOUCH: {
-        LERP: 0.2,
+        LERP: 0.05,
         OFFSET_Y: 70,
         DOUBLE_TAP_DELAY: 300
     }
