@@ -153,7 +153,7 @@ function gameLoop() {
         }
 
         // Trigger Boss (quando mancano meno di 58 secondi)
-        if (gameState.gameTimer <= 58 && !gameState.bossActive) {
+        if (gameState.gameTimer <= 40 && !gameState.bossActive) {
             gameState.bossActive = true;
             gameState.enemies = []; // Pulisce i nemici comuni quando arriva il boss
             gameState.boss = {
