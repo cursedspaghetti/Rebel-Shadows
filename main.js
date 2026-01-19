@@ -66,26 +66,27 @@ function startScreenLoop() {
 }
 
 function gameLoop() {
-    if (gameState.currentScreen === 'playing') {
-        // Pulizia Canvas
+   if (gameState.currentScreen === 'playing') {
+        // 1. Pulisci il canvas
         ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
-        // --- 1. LOGICA SCROLLING SFONDO (SUL CANVAS) ---
-        // Incrementiamo la posizione Y
+        // 2. LOGICA SCROLLING SFONDO
+        // Aumentiamo la posizione per farlo scorrere verso il basso
         gameState.backgroundPositionY += CONFIG.SCROLL_SPEED;
 
-        // Se l'immagine ha superato l'altezza del canvas, resetta
+        // Se la posizione supera l'altezza del canvas, resettiamo al modulo
+        // Questo permette un loop infinito fluido
         if (gameState.backgroundPositionY >= CONFIG.CANVAS_HEIGHT) {
             gameState.backgroundPositionY = 0;
         }
 
-        // Disegna il primo frame dello sfondo (si sposta verso il basso)
-        // bgImage deve essere caricata precedentemente (es. come playerSprite)
-        ctx.drawImage(bgImage, 0, gameState.backgroundPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-        
-        // Disegna il secondo frame dello sfondo sopra il primo
-        ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-        // -----------------------------------------------
+        // DISEGNO DELLO SFONDO (Sotto tutto il resto)
+        if (bgImage.complete) {
+            // Primo pezzo di sfondo
+            ctx.drawImage(bgImage, 0, gameState.backgroundPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+            // Secondo pezzo di sfondo che "segue" sopra il primo per riempire il vuoto
+            ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        }
 
         // 2. Logica Movimento (rimane invariata)
         if (gameState.isTouchActive) {
