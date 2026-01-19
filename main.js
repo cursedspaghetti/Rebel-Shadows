@@ -1,5 +1,7 @@
 import { CONFIG, gameState } from './config.js';
 import * as Renderer from './renderer.js';
+import * as Boss1 from './Boss1.js';
+import * as SpcialAttacks from './SpecialAttacks.js';
 
 // --- CONFIGURAZIONE TOUCH ---
 const TOUCH_SETTINGS = {
