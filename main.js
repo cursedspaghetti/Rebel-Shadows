@@ -116,7 +116,6 @@ if (bgParallax.complete) {
         Renderer.updateBullets();
         SpecialAttacks.updateSpecialRay();
         SpecialAttacks.updateSpecialRay2();
-        Renderer.spawnEnemies()
        
         // 4. Boss Logic & Collisions
         if (gameState.bossActive && gameState.boss) {
