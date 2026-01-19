@@ -114,45 +114,50 @@ export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
         
-        // DIMENSIONI: Molto più sottile (0.4 invece di 0.8) 
-        // e lunghezza ridotta per essere più "vicino" al punto di impatto
-        const width = bullet.size * 0.4; 
-        const height = bullet.size * 6; // Accorciato da 10 a 6 per densità
+        // Parametri per l'effetto "Double Needle"
+        const filamentWidth = bullet.size * 0.2; // Molto sottili
+        const height = bullet.size * 8;         // Slanciati
+        const horizontalGap = 3;                // Distanza tra i due filamenti
 
-        // Gradiente lineare: i punti di stop sono più vicini tra loro
-        let gradient = ctx.createLinearGradient(
-            bullet.x, bullet.y - height / 2, 
-            bullet.x, bullet.y + height / 2
-        );
-        
-        // Palette: Transizione più rapida per un effetto più solido
-        gradient.addColorStop(0, '#ffffff');      // Punta brillante
-        gradient.addColorStop(0.2, '#c0c0c0');    // Corpo argento
-        gradient.addColorStop(0.6, 'rgba(80, 80, 80, 0.6)'); // Coda più densa
-        gradient.addColorStop(1, 'transparent');   // Svanisce
+        // Funzione interna per disegnare un singolo filamento
+        const drawFilament = (offsetX) => {
+            const posX = bullet.x + offsetX;
+            
+            let gradient = ctx.createLinearGradient(
+                posX, bullet.y - height / 2, 
+                posX, bullet.y + height / 2
+            );
+            
+            // Colore metallico/elettrico
+            gradient.addColorStop(0, '#ffffff');      // Punta
+            gradient.addColorStop(0.2, '#e0e0e0');    // Nucleo argento
+            gradient.addColorStop(0.7, 'rgba(100, 100, 100, 0.3)'); // Scia
+            gradient.addColorStop(1, 'transparent');
 
-        // Bagliore ridotto per non "allargare" visivamente il proiettile
-        ctx.shadowBlur = 4; 
-        ctx.shadowColor = 'rgba(136, 136, 136, 0.5)';
-        
-        // Rendering
+            ctx.fillStyle = gradient;
+            
+            ctx.beginPath();
+            ctx.ellipse(posX, bullet.y, filamentWidth / 2, height / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+        };
+
+        // Riduciamo l'ombra globale per non farli "fondere" troppo
+        ctx.shadowBlur = 3;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+
+        // Disegniamo i due filamenti vicini
+        drawFilament(-horizontalGap / 2); // Sinistro
+        drawFilament(horizontalGap / 2);  // Destro
+
+        // Opzionale: un piccolo bagliore di connessione tra i due in punta
         ctx.beginPath();
-        ctx.fillStyle = gradient;
-        
-        // Disegno dell'ellisse (ora molto più stretta)
-        ctx.ellipse(bullet.x, bullet.y, width / 2, height / 2, 0, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Nucleo centrale: rimpicciolito per coerenza
-        ctx.beginPath();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.ellipse(bullet.x, bullet.y - height / 5, width / 3, height / 10, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.arc(bullet.x, bullet.y - height / 2.2, filamentWidth, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.restore();
     });
 }
-
 export function drawSpecialRay(ctx) {
     const ray = gameState.specialRay;
     if (!ray || !ray.active) {
