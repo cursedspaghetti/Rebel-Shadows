@@ -23,15 +23,19 @@ const startButton = document.getElementById('startButton');
 const ringChoicesContainer = document.getElementById('ringChoices');
 const gameContainer = document.getElementById('game-container');
 
-// --- ASSET LOADING ---
+// --- background images LOADING ---
+const introImage = new Image();
+introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/shadow_intro.jpg';
+const bgImage = new Image();
+bgImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png';
+// asset loading 
 const playerSprite = new Image();
 playerSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/booksprite.png';
 export const chargeImg = new Image();
 chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bookfull.png";
 const shadowImg = new Image();
 shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png';
-const introImage = new Image();
-introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/shadow_intro.jpg';
+
 
 // --- INITIALIZATION ---
 function init() {
@@ -63,13 +67,27 @@ function startScreenLoop() {
 
 function gameLoop() {
     if (gameState.currentScreen === 'playing') {
+        // Pulizia Canvas
         ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
-        // 1. Background Scrolling
+        // --- 1. LOGICA SCROLLING SFONDO (SUL CANVAS) ---
+        // Incrementiamo la posizione Y
         gameState.backgroundPositionY += CONFIG.SCROLL_SPEED;
-        gameContainer.style.backgroundPosition = `0px ${gameState.backgroundPositionY}px`;
 
-        // 2. Logica Movimento
+        // Se l'immagine ha superato l'altezza del canvas, resetta
+        if (gameState.backgroundPositionY >= CONFIG.CANVAS_HEIGHT) {
+            gameState.backgroundPositionY = 0;
+        }
+
+        // Disegna il primo frame dello sfondo (si sposta verso il basso)
+        // bgImage deve essere caricata precedentemente (es. come playerSprite)
+        ctx.drawImage(bgImage, 0, gameState.backgroundPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        
+        // Disegna il secondo frame dello sfondo sopra il primo
+        ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        // -----------------------------------------------
+
+        // 2. Logica Movimento (rimane invariata)
         if (gameState.isTouchActive) {
             const targetX = gameState.touchX;
             const targetY = gameState.touchY - TOUCH_SETTINGS.OFFSET_Y;
@@ -85,8 +103,6 @@ function gameLoop() {
         // Limiti bordi
         gameState.playerX = Math.max(10, Math.min(CONFIG.CANVAS_WIDTH - 10, gameState.playerX));
         gameState.playerY = Math.max(10, Math.min(CONFIG.CANVAS_HEIGHT - 10, gameState.playerY));
-        gameState.playerDx = 0;
-        gameState.playerDy = 0;
 
         // 3. Logic Updates
         Engine.autoFire();
