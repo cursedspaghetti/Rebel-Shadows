@@ -1,3 +1,5 @@
+import { CONFIG, gameState } from './config.js';
+
 export function drawSpecialRay(ctx) {
     const ray = gameState.specialRay;
     if (!ray || !ray.active) {
