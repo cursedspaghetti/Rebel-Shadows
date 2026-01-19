@@ -16,28 +16,24 @@ body {
     font-family: 'Press Start 2P', cursive;
 }
 
-/* 1. CONTENITORE GIOCO (SIMULAZIONE SMARTPHONE) */
+/* 1. CONTENITORE GIOCO */
 #game-container {
     position: relative;
     width: 393px;
     height: 852px;
-    background-color: #3f3a66;
-    background-image:
-       linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)),
-        url('https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png');
-    background-size: auto; 
-    /* Ridimensiona la texture di sfondo per farla sembrare pixel art */
-    background-repeat: repeat;
+    background-color: #000; /* Nero o un colore scuro di base */
+    overflow: hidden;
 
-    /* Mantiene i bordi dei pixel nitidi quando scalati */
-    image-rendering: -moz-crisp-edges;
+    /* Mantiene i bordi dei pixel nitidi */
     image-rendering: pixelated;
     image-rendering: crisp-edges;
-
-   /* border: 6px solid #000; */
-   /* box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.2); */
 }
-/* ... [Keep your 0. RESET GLOBALI and 1. CONTENITORE GIOCO] ... */
+
+/* Assicurati che il canvas sia trasparente se vuoi vedere il colore del container */
+canvas {
+    display: block;
+    background: transparent;
+}
 
 /* 2. IL CANVAS */
 #gameCanvas {
