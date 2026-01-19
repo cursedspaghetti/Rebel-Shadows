@@ -82,9 +82,12 @@ export function updateSpecialRay2() {
 export function spawnEnemies(count) {
     for (let i = 0; i < count; i++) {
         gameState.enemies.push({
-            x: Math.random() * (CONFIG.CANVAS_WIDTH - 20) + 10,
-            y: 50 + Math.random() * 100,
+            // X casuale all'interno della larghezza del canvas
+            x: Math.random() * (CONFIG.CANVAS_WIDTH - 20) + 10, 
+            // Partono sopra il bordo superiore (es. tra -100 e -20)
+            y: -(Math.random() * 100 + 20), 
             size: 20,
+            speed: 2 + Math.random() * 2, // Aggiungiamo una velocità casuale
             color: '#a00'
         });
     }
