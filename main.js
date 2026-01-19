@@ -69,32 +69,34 @@ function startScreenLoop() {
     }
 }
 
+// Aggiungi questa variabile fuori dal gameLoop (o in gameState) se non esiste già
+// let lastEnemySpawn = 0; 
+
 function gameLoop() {
-   if (gameState.currentScreen === 'playing') {
+    if (gameState.currentScreen === 'playing') {
+        const now = Date.now();
+
         // 1. Pulizia totale del frame
-ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
-// 2. LIVELLO LONTANO (Parallasse) - Viene disegnato per PRIMO
-if (bgParallax.complete) {
-    gameState.parallaxPositionY += CONFIG.PARALLAX_SPEED;
-    if (gameState.parallaxPositionY >= CONFIG.CANVAS_HEIGHT) gameState.parallaxPositionY = 0;
-    
-    ctx.globalAlpha = 0.6; // Leggera trasparenza per profondità
-    ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-    ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-    ctx.globalAlpha = 1.0; 
-}
+        // 2. SFONDI (Parallasse e Principale)
+        if (bgParallax.complete) {
+            gameState.parallaxPositionY += CONFIG.PARALLAX_SPEED;
+            if (gameState.parallaxPositionY >= CONFIG.CANVAS_HEIGHT) gameState.parallaxPositionY = 0;
+            ctx.globalAlpha = 0.6;
+            ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+            ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+            ctx.globalAlpha = 1.0; 
+        }
 
-// 3. LIVELLO VICINO (Sfondo principale trasparente) - Viene disegnato SOPRA
-    if (bgImage.complete) {
-    gameState.backgroundPositionY += CONFIG.SCROLL_SPEED;
-    if (gameState.backgroundPositionY >= CONFIG.CANVAS_HEIGHT) gameState.backgroundPositionY = 0;
-
-    ctx.drawImage(bgImage, 0, gameState.backgroundPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-    ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-}
-       
-        // 2. Logica Movimento (rimane invariata)
+        if (bgImage.complete) {
+            gameState.backgroundPositionY += CONFIG.SCROLL_SPEED;
+            if (gameState.backgroundPositionY >= CONFIG.CANVAS_HEIGHT) gameState.backgroundPositionY = 0;
+            ctx.drawImage(bgImage, 0, gameState.backgroundPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+            ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        }
+        
+        // 2. Logica Movimento Giocatore
         if (gameState.isTouchActive) {
             const targetX = gameState.touchX;
             const targetY = gameState.touchY - TOUCH_SETTINGS.OFFSET_Y;
@@ -111,14 +113,27 @@ if (bgParallax.complete) {
         gameState.playerX = Math.max(10, Math.min(CONFIG.CANVAS_WIDTH - 10, gameState.playerX));
         gameState.playerY = Math.max(10, Math.min(CONFIG.CANVAS_HEIGHT - 10, gameState.playerY));
 
-        // 3. Logic Updates
+        // 3. Logic Updates (Proiettili e Nemici)
         Renderer.autoFire();
         Renderer.updateBullets();
+        
+        // --- LOGICA NEMICI ---
+        if (!gameState.bossActive) {
+            // Genera nemici ogni 2000ms (2 secondi)
+            if (now - (gameState.lastEnemySpawn || 0) > 2000) {
+                Renderer.spawnEnemies(3); // Genera 3 nemici alla volta
+                gameState.lastEnemySpawn = now;
+            }
+        }
+        Renderer.updateEnemies(); // Muove i nemici esistenti verso il basso
+        // ---------------------
+
         SpecialAttacks.updateSpecialRay();
         SpecialAttacks.updateSpecialRay2();
-       
+        
         // 4. Boss Logic & Collisions
         if (gameState.bossActive && gameState.boss) {
+            // Collisioni Bullets -> Boss
             gameState.bullets.forEach((bullet, bIndex) => {
                 const dx = bullet.x - gameState.boss.x;
                 const dy = bullet.y - gameState.boss.y;
@@ -128,6 +143,7 @@ if (bgParallax.complete) {
                 }
             });
 
+            // Collisioni Raggi Speciali -> Boss
             if (gameState.specialRay.active && Math.abs(gameState.specialRay.x - gameState.boss.x) < gameState.boss.size) {
                 gameState.boss.hp -= 5;
             }
@@ -136,9 +152,10 @@ if (bgParallax.complete) {
             }
         }
 
+        // Trigger Boss (quando mancano meno di 58 secondi)
         if (gameState.gameTimer <= 58 && !gameState.bossActive) {
             gameState.bossActive = true;
-            gameState.enemies = [];
+            gameState.enemies = []; // Pulisce i nemici comuni quando arriva il boss
             gameState.boss = {
                 x: CONFIG.CANVAS_WIDTH / 2, y: -150, targetY: 300,
                 size: 140, hp: 5000, maxHp: 5000
@@ -147,11 +164,16 @@ if (bgParallax.complete) {
 
         // 5. Rendering
         Renderer.drawPlayer(ctx, playerSprite);
+        
+        // Disegna i nemici (solo se non c'è il boss o se vuoi che restino quelli vecchi)
+        Renderer.drawEnemies(ctx);
+
         if (gameState.bossActive && gameState.boss) {
             if (gameState.boss.y < gameState.boss.targetY) gameState.boss.y += 2;
             Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
             if (gameState.boss.hp <= 0) { showPowerUpScreen(); return; }
         }
+
         SpecialAttacks.drawSpecialRay(ctx);
         SpecialAttacks.drawSpecialRay2(ctx);
         if (gameState.isCharging) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
