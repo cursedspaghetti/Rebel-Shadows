@@ -160,3 +160,35 @@ export function drawChargeEffect(ctx, chargeImg) {
         ctx.restore();
     }
 }
+
+export function updateSpecialRay() {
+    if (!gameState.specialRay.active) return;
+
+    const ray = gameState.specialRay;
+    const now = Date.now() / 1000;
+    const elapsed = now - ray.startTime;
+
+    if (elapsed < ray.duration) {
+        const lifeLeft = 1 - (elapsed / ray.duration);
+        ray.currentWidth = ray.maxWidth * lifeLeft;
+        ray.x = gameState.playerX; 
+    } else {
+        ray.active = false;
+    }
+}
+
+export function updateSpecialRay2() {
+    if (!gameState.specialRay2.active2) return;
+
+    const ray = gameState.specialRay2;
+    const now = Date.now() / 1000;
+    const elapsed = now - ray.startTime2;
+
+    if (elapsed < ray.duration2) {
+        const lifeLeft = 1 - (elapsed / ray.duration2);
+        ray.currentWidth2 = ray.maxWidth2 * lifeLeft;
+        ray.x2 = gameState.playerX; 
+    } else {
+        ray.active2 = false;
+    }
+}
