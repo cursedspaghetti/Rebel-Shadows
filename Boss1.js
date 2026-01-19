@@ -1,3 +1,5 @@
+import { CONFIG, gameState } from './config.js';
+
 // --- FUNZIONE PRINCIPALE ---
 export function drawBossShadow(ctx, boss, img) {
     if (!img.complete) return;
