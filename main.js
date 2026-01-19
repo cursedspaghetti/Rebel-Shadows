@@ -27,7 +27,7 @@ const gameContainer = document.getElementById('game-container');
 const introImage = new Image();
 introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/shadow_intro.jpg';
 const bgImage = new Image();
-bgImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png';
+bgImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpaceVoid.png';
 const bgParallax = new Image();
 bgParallax.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png'; 
 // Nota: idealmente qui useresti un'immagine diversa con solo puntini bianchi
