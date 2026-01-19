@@ -1,7 +1,7 @@
 import { CONFIG, gameState } from './config.js';
 import * as Renderer from './renderer.js';
 import * as Boss1 from './Boss1.js';
-import * as SpecialAttacks from './SpecialAttacks.js';
+import * as SpecialAttacks from './Special Attacks.js';
 
 // --- CONFIGURAZIONE TOUCH ---
 const TOUCH_SETTINGS = {
@@ -113,8 +113,8 @@ function gameLoop() {
         // 3. Logic Updates
         Renderer.autoFire();
         Renderer.updateBullets();
-        Renderer.updateSpecialRay();
-        Renderer.updateSpecialRay2();
+        SpecialAttacks.updateSpecialRay();
+        SpecialAttacks.updateSpecialRay2();
         Renderer.spawnEnemies()
        
         // 4. Boss Logic & Collisions
@@ -152,10 +152,10 @@ function gameLoop() {
             Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
             if (gameState.boss.hp <= 0) { showPowerUpScreen(); return; }
         }
-        Special Attacks.drawSpecialRay(ctx);
-        Special Attacks.drawSpecialRay2(ctx);
-        if (gameState.isCharging) Special Attacks.drawChargeEffect(ctx, chargeImg);
-        if (gameState.isCharging2) Special Attacks.drawChargeEffect(ctx, chargeImg);
+        SpecialAttacks.drawSpecialRay(ctx);
+        SpecialAttacks.drawSpecialRay2(ctx);
+        if (gameState.isCharging) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
+        if (gameState.isCharging2) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
 
         Renderer.drawBullets(ctx);
         Renderer.drawUI(ctx);
