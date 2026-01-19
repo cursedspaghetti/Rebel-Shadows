@@ -114,7 +114,8 @@ function gameLoop() {
         Engine.updateBullets();
         Engine.updateSpecialRay();
         Engine.updateSpecialRay2();
-
+        Engine.spawnEnemies()
+       
         // 4. Boss Logic & Collisions
         if (gameState.bossActive && gameState.boss) {
             gameState.bullets.forEach((bullet, bIndex) => {
