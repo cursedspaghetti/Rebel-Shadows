@@ -10,7 +10,7 @@ export const CONFIG = {
     CANVAS_WIDTH: 393,
     CANVAS_HEIGHT: 852,
     GAME_TIME: 60, // seconds until boss
-    SCROLL_SPEED: 1,
+    SCROLL_SPEED: 2,
     PARALLAX_SPEED: 0.3,      // Velocità delle stelle lontane (lento)
     
     FIRE_RATE_LEVELS: {
