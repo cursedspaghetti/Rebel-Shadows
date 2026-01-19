@@ -92,7 +92,8 @@ export let gameState = {
     gameTimer: 60,
     timerInterval: null,
     bossActive: false,
-
+    lastEnemySpawn: 0,
+    
     //backgroudposition
     backgroundPositionY: 0,   // Per il livello principale
     parallaxPositionY: 0      // Per il livello lontano
