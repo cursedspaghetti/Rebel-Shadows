@@ -8,7 +8,7 @@ import { CONFIG, gameState } from './config.js';
 // --- COMBAT LOGIC ---
 
 export function autoFire() {
-    if (gameState.currentScreen !== 'playing' || gameState.isCharging) return;
+    if (gameState.currentScreen !== 'playing' || gameState.isCharging || gameState.isCharging2) return;
 
     const now = Date.now();
     const currentFireRate = CONFIG.FIRE_RATE_LEVELS[gameState.fireRateLevel] || 200;
