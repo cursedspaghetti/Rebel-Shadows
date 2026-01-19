@@ -1,6 +1,5 @@
 import { CONFIG, gameState } from './config.js';
 import * as Renderer from './renderer.js';
-import * as Engine from './engine.js';
 
 // --- CONFIGURAZIONE TOUCH ---
 const TOUCH_SETTINGS = {
@@ -110,11 +109,11 @@ function gameLoop() {
         gameState.playerY = Math.max(10, Math.min(CONFIG.CANVAS_HEIGHT - 10, gameState.playerY));
 
         // 3. Logic Updates
-        Engine.autoFire();
-        Engine.updateBullets();
-        Engine.updateSpecialRay();
-        Engine.updateSpecialRay2();
-        Engine.spawnEnemies()
+        Renderer.autoFire();
+        Renderer.updateBullets();
+        Renderer.updateSpecialRay();
+        Renderer.updateSpecialRay2();
+        Renderer.spawnEnemies()
        
         // 4. Boss Logic & Collisions
         if (gameState.bossActive && gameState.boss) {
@@ -148,13 +147,13 @@ function gameLoop() {
         Renderer.drawPlayer(ctx, playerSprite);
         if (gameState.bossActive && gameState.boss) {
             if (gameState.boss.y < gameState.boss.targetY) gameState.boss.y += 2;
-            Renderer.drawBossShadow(ctx, gameState.boss, shadowImg);
+            Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
             if (gameState.boss.hp <= 0) { showPowerUpScreen(); return; }
         }
-        Renderer.drawSpecialRay(ctx);
-        Renderer.drawSpecialRay2(ctx);
-        if (gameState.isCharging) Renderer.drawChargeEffect(ctx, chargeImg);
-        if (gameState.isCharging2) Renderer.drawChargeEffect(ctx, chargeImg);
+        Special Attacks.drawSpecialRay(ctx);
+        Special Attacks.drawSpecialRay2(ctx);
+        if (gameState.isCharging) Special Attacks.drawChargeEffect(ctx, chargeImg);
+        if (gameState.isCharging2) Special Attacks.drawChargeEffect(ctx, chargeImg);
 
         Renderer.drawBullets(ctx);
         Renderer.drawUI(ctx);
@@ -172,7 +171,6 @@ function startGame() {
         if (gameState.gameTimer > 0) gameState.gameTimer--;
         else clearInterval(gameState.timerInterval);
     }, 1000);
-    Engine.spawnEnemies(5);
     gameLoop();
 }
 
