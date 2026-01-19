@@ -28,6 +28,9 @@ const introImage = new Image();
 introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/shadow_intro.jpg';
 const bgImage = new Image();
 bgImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png';
+const bgParallax = new Image();
+bgParallax.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png'; 
+// Nota: idealmente qui useresti un'immagine diversa con solo puntini bianchi
 // asset loading 
 const playerSprite = new Image();
 playerSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/booksprite.png';
@@ -67,27 +70,28 @@ function startScreenLoop() {
 
 function gameLoop() {
    if (gameState.currentScreen === 'playing') {
-        // 1. Pulisci il canvas
         ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
-        // 2. LOGICA SCROLLING SFONDO
-        // Aumentiamo la posizione per farlo scorrere verso il basso
-        gameState.backgroundPositionY += CONFIG.SCROLL_SPEED;
+        // --- LIVELLO 1: PARALLASSE (LONTANO - PIÙ LENTO) ---
+        gameState.parallaxPositionY += CONFIG.PARALLAX_SPEED;
+        if (gameState.parallaxPositionY >= CONFIG.CANVAS_HEIGHT) gameState.parallaxPositionY = 0;
 
-        // Se la posizione supera l'altezza del canvas, resettiamo al modulo
-        // Questo permette un loop infinito fluido
-        if (gameState.backgroundPositionY >= CONFIG.CANVAS_HEIGHT) {
-            gameState.backgroundPositionY = 0;
+        ctx.globalAlpha = 0.5; // Rendiamo lo sfondo lontano più soffuso
+        if (bgParallax.complete) {
+            ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+            ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
         }
+        ctx.globalAlpha = 1.0; // Resettiamo l'opacità
 
-        // DISEGNO DELLO SFONDO (Sotto tutto il resto)
+        // --- LIVELLO 2: SFONDO PRINCIPALE (PIÙ VELOCE) ---
+        gameState.backgroundPositionY += CONFIG.SCROLL_SPEED;
+        if (gameState.backgroundPositionY >= CONFIG.CANVAS_HEIGHT) gameState.backgroundPositionY = 0;
+
         if (bgImage.complete) {
-            // Primo pezzo di sfondo
             ctx.drawImage(bgImage, 0, gameState.backgroundPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-            // Secondo pezzo di sfondo che "segue" sopra il primo per riempire il vuoto
             ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
         }
-
+       
         // 2. Logica Movimento (rimane invariata)
         if (gameState.isTouchActive) {
             const targetX = gameState.touchX;
