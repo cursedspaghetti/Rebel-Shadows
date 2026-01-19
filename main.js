@@ -5,8 +5,8 @@ import * as SpecialAttacks from './Special Attacks.js';
 
 // --- CONFIGURAZIONE TOUCH ---
 const TOUCH_SETTINGS = {
-    LERP: 0.1,             // Fluidità inseguimento
-    OFFSET_Y: 75,          // Distanza sopra il dito
+    LERP: 0.05,             // Fluidità inseguimento
+    OFFSET_Y: 80,          // Distanza sopra il dito
     TAP_DELAY: 250         // Tempo di attesa per distinguere Single/Double Tap (ms)
 };
 
@@ -71,27 +71,28 @@ function startScreenLoop() {
 
 function gameLoop() {
    if (gameState.currentScreen === 'playing') {
-        ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+        // 1. Pulizia totale del frame
+ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
-        // --- LIVELLO 1: PARALLASSE (LONTANO - PIÙ LENTO) ---
-        gameState.parallaxPositionY += CONFIG.PARALLAX_SPEED;
-        if (gameState.parallaxPositionY >= CONFIG.CANVAS_HEIGHT) gameState.parallaxPositionY = 0;
+// 2. LIVELLO LONTANO (Parallasse) - Viene disegnato per PRIMO
+if (bgParallax.complete) {
+    gameState.parallaxPositionY += CONFIG.PARALLAX_SPEED;
+    if (gameState.parallaxPositionY >= CONFIG.CANVAS_HEIGHT) gameState.parallaxPositionY = 0;
+    
+    ctx.globalAlpha = 0.6; // Leggera trasparenza per profondità
+    ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    ctx.globalAlpha = 1.0; 
+}
 
-        ctx.globalAlpha = 0.5; // Rendiamo lo sfondo lontano più soffuso
-        if (bgParallax.complete) {
-            ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-            ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-        }
-        ctx.globalAlpha = 1.0; // Resettiamo l'opacità
+// 3. LIVELLO VICINO (Sfondo principale trasparente) - Viene disegnato SOPRA
+    if (bgImage.complete) {
+    gameState.backgroundPositionY += CONFIG.SCROLL_SPEED;
+    if (gameState.backgroundPositionY >= CONFIG.CANVAS_HEIGHT) gameState.backgroundPositionY = 0;
 
-        // --- LIVELLO 2: SFONDO PRINCIPALE (PIÙ VELOCE) ---
-        gameState.backgroundPositionY += CONFIG.SCROLL_SPEED;
-        if (gameState.backgroundPositionY >= CONFIG.CANVAS_HEIGHT) gameState.backgroundPositionY = 0;
-
-        if (bgImage.complete) {
-            ctx.drawImage(bgImage, 0, gameState.backgroundPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-            ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-        }
+    ctx.drawImage(bgImage, 0, gameState.backgroundPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+}
        
         // 2. Logica Movimento (rimane invariata)
         if (gameState.isTouchActive) {
