@@ -1,68 +1,6 @@
 import { CONFIG, gameState } from './config.js';
 
-/**
- * UNIFIED RENDER & ENGINE MODULE
- * Gestisce sia la logica di gioco (movimento, collisioni) che il rendering (disegno).
- */
-
-// ==========================================
-// --- SEZIONE ENGINE (Logica di Gioco) ---
-// ==========================================
-
-export function autoFire() {
-    if (gameState.currentScreen !== 'playing' || gameState.isCharging || gameState.isCharging2) return;
-
-    const now = Date.now();
-    const currentFireRate = CONFIG.FIRE_RATE_LEVELS[gameState.fireRateLevel] || 200;
-
-    if (now - gameState.lastShotTime >= currentFireRate) {
-        const missileCount = gameState.bulletLevel === 1 ? 1 : (gameState.bulletLevel === 2 ? 3 : 5);
-        const spacing = 18;
-        const verticalStagger = 12;
-        const totalWidth = (missileCount - 1) * spacing;
-        let startX = gameState.playerX - (totalWidth / 2);
-        const centerIndex = Math.floor(missileCount / 2);
-
-        for (let i = 0; i < missileCount; i++) {
-            const distFromCenter = Math.abs(i - centerIndex);
-            gameState.bullets.push({
-                x: startX + i * spacing,
-                y: (gameState.playerY - 20) + (distFromCenter * verticalStagger),
-                speed: 10,
-                size: 12,
-                color: gameState.selectedRingColor,
-                isSpecial: false
-            });
-        }
-        gameState.lastShotTime = now;
-    }
-}
-
-export function updateBullets() {
-    gameState.bullets = gameState.bullets.filter(bullet => {
-        bullet.y -= bullet.speed;
-        return bullet.y > 0;
-    });
-}
-
-
-
-export function spawnEnemies(count) {
-    for (let i = 0; i < count; i++) {
-        gameState.enemies.push({
-            x: Math.random() * (CONFIG.CANVAS_WIDTH - 20) + 10, 
-            y: -(Math.random() * 100 + 20), 
-            size: 20,
-            speed: 2 + Math.random() * 2,
-            color: '#a00'
-        });
-    }
-}
-
-// ==========================================
-// --- SEZIONE RENDER (Grafica e UI) ---
-// ==========================================
-
+// START SCREEN
 export function drawStartScreen(ctx, introImage) {
     if (introImage.complete) {
         ctx.drawImage(introImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
@@ -71,6 +9,8 @@ export function drawStartScreen(ctx, introImage) {
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 }
+
+// PLAYERS
 
 export function drawPlayer(ctx, img) {
     if (!img.complete) return; 
@@ -100,6 +40,9 @@ export function drawPlayer(ctx, img) {
 
     ctx.restore();
 }
+
+
+// BULLETS
 
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
@@ -141,6 +84,94 @@ export function drawBullets(ctx) {
         ctx.restore();
     });
 }
+
+export function autoFire() {
+    if (gameState.currentScreen !== 'playing' || gameState.isCharging || gameState.isCharging2) return;
+
+    const now = Date.now();
+    const currentFireRate = CONFIG.FIRE_RATE_LEVELS[gameState.fireRateLevel] || 200;
+
+    if (now - gameState.lastShotTime >= currentFireRate) {
+        const missileCount = gameState.bulletLevel === 1 ? 1 : (gameState.bulletLevel === 2 ? 3 : 5);
+        const spacing = 18;
+        const verticalStagger = 12;
+        const totalWidth = (missileCount - 1) * spacing;
+        let startX = gameState.playerX - (totalWidth / 2);
+        const centerIndex = Math.floor(missileCount / 2);
+
+        for (let i = 0; i < missileCount; i++) {
+            const distFromCenter = Math.abs(i - centerIndex);
+            gameState.bullets.push({
+                x: startX + i * spacing,
+                y: (gameState.playerY - 20) + (distFromCenter * verticalStagger),
+                speed: 10,
+                size: 12,
+                color: gameState.selectedRingColor,
+                isSpecial: false
+            });
+        }
+        gameState.lastShotTime = now;
+    }
+}
+
+export function updateBullets() {
+    gameState.bullets = gameState.bullets.filter(bullet => {
+        bullet.y -= bullet.speed;
+        return bullet.y > 0;
+    });
+}
+
+// ENEMIES
+
+export function drawEnemies(ctx) {
+    gameState.enemies.forEach(enemy => {
+        ctx.save();
+        
+        // Esempio di disegno: un triangolo o un rombo rivolto verso il basso
+        ctx.fillStyle = enemy.color;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = enemy.color;
+        
+        ctx.beginPath();
+        ctx.moveTo(enemy.x, enemy.y + enemy.size); // Punta
+        ctx.lineTo(enemy.x - enemy.size / 2, enemy.y - enemy.size / 2);
+        ctx.lineTo(enemy.x + enemy.size / 2, enemy.y - enemy.size / 2);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.restore();
+    });
+}
+
+export function spawnEnemies(count) {
+    for (let i = 0; i < count; i++) {
+        gameState.enemies.push({
+            // Posizione X casuale entro i bordi
+            x: Math.random() * (CONFIG.CANVAS_WIDTH - 40) + 20, 
+            // Parte da sopra lo schermo per un ingresso fluido
+            y: -50 - (Math.random() * 200), 
+            size: 25,
+            speed: 1.5 + Math.random() * 2, // Velocità variabile
+            color: '#ff4444'
+        });
+    }
+}
+
+export function updateEnemies() {
+    gameState.enemies = gameState.enemies.filter(enemy => {
+        // Muove il nemico verso il basso in base alla sua velocità
+        enemy.y += enemy.speed;
+        
+        // Mantieni il nemico solo se è ancora dentro l'area di gioco
+        // (Aggiungiamo un margine di 50px oltre il fondo del canvas)
+        return enemy.y < CONFIG.CANVAS_HEIGHT + 50;
+    });
+}
+
+
+
+
+//UI
 
 export function drawUI(ctx) {
     ctx.save();
