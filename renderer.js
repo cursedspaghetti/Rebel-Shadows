@@ -114,39 +114,39 @@ export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
         
-        // Dimensioni: molto stretto e molto lungo per l'effetto "scia fantasma"
-        const width = bullet.size * 0.8;
-        const height = bullet.size * 10; 
+        // DIMENSIONI: Molto più sottile (0.4 invece di 0.8) 
+        // e lunghezza ridotta per essere più "vicino" al punto di impatto
+        const width = bullet.size * 0.4; 
+        const height = bullet.size * 6; // Accorciato da 10 a 6 per densità
 
-        // Gradiente lineare per l'effetto metallo liquido/ombra
+        // Gradiente lineare: i punti di stop sono più vicini tra loro
         let gradient = ctx.createLinearGradient(
             bullet.x, bullet.y - height / 2, 
             bullet.x, bullet.y + height / 2
         );
         
-        // Palette Argento e Ombra
-        gradient.addColorStop(0, '#ffffff');       // Punta: Bianco brillante (bagliore cinetico)
-        gradient.addColorStop(0.1, '#c0c0c0');     // Argento vivo
-        gradient.addColorStop(0.4, 'rgba(105, 105, 105, 0.4)'); // Grigio fumo semitrasparente
-        gradient.addColorStop(1, 'transparent');   // Coda che svanisce nel nulla
+        // Palette: Transizione più rapida per un effetto più solido
+        gradient.addColorStop(0, '#ffffff');      // Punta brillante
+        gradient.addColorStop(0.2, '#c0c0c0');    // Corpo argento
+        gradient.addColorStop(0.6, 'rgba(80, 80, 80, 0.6)'); // Coda più densa
+        gradient.addColorStop(1, 'transparent');   // Svanisce
 
-        // Bagliore (Glow) spettrale grigio
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = '#888'; // Ombra grigia media
+        // Bagliore ridotto per non "allargare" visivamente il proiettile
+        ctx.shadowBlur = 4; 
+        ctx.shadowColor = 'rgba(136, 136, 136, 0.5)';
         
         // Rendering
         ctx.beginPath();
         ctx.fillStyle = gradient;
         
-        // Disegniamo l'ellisse allungata
+        // Disegno dell'ellisse (ora molto più stretta)
         ctx.ellipse(bullet.x, bullet.y, width / 2, height / 2, 0, 0, Math.PI * 2);
-        
         ctx.fill();
         
-        // Opzionale: un piccolo nucleo centrale più scuro per dare profondità
+        // Nucleo centrale: rimpicciolito per coerenza
         ctx.beginPath();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.ellipse(bullet.x, bullet.y - height / 4, width / 4, height / 8, 0, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.ellipse(bullet.x, bullet.y - height / 5, width / 3, height / 10, 0, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.restore();
