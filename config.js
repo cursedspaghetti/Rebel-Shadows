@@ -90,7 +90,9 @@ export let gameState = {
     gameTimer: 60,
     timerInterval: null,
     bossActive: false,
-    
+
+    //backgroudposition
+    backgroundPositionY: 0
 };
 
 /**
