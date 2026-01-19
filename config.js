@@ -94,7 +94,8 @@ export let gameState = {
     bossActive: false,
 
     //backgroudposition
-    backgroundPositionY: 0
+    backgroundPositionY: 0,   // Per il livello principale
+    parallaxPositionY: 0      // Per il livello lontano
 };
 
 /**
