@@ -81,7 +81,7 @@ export function drawSpecialRay2(ctx) {
 
     const rayHeight = gameState.playerY;
     const bottomWidth = ray.currentWidth2; // Larghezza alla base (giocatore)
-    const topWidth = ray.currentWidth2 * 0.2; // Più stretto in cima (effetto prospettiva)
+    const topWidth = ray.currentWidth2 * 4; // Più stretto in cima (effetto prospettiva)
 
     // --- LOGICA PARTICELLE (Adattata al cono) ---
     if (ray.currentWidth2 > 10) { 
