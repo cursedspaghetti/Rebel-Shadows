@@ -65,7 +65,6 @@ function startScreenLoop() {
     }
 }
 
-
 // --- GAME LOOP ---
 function gameLoop() {
     if (gameState.currentScreen === 'playing') {
@@ -99,11 +98,11 @@ function gameLoop() {
         gameState.playerX = Math.max(10, Math.min(CONFIG.CANVAS_WIDTH - 10, gameState.playerX));
         gameState.playerY = Math.max(10, Math.min(CONFIG.CANVAS_HEIGHT - 10, gameState.playerY));
 
-        // 3. AGGIORNAMENTO LOGICA
+        // 3. AGGIORNAMENTO LOGICA (da Renderer e SpecialAttacks)
         Renderer.autoFire();
         Renderer.updateBullets();
         Renderer.updateEnemies();
-        Renderer.updateExplosions();
+        Renderer.updateExplosions(); // Chiamata alla funzione in renderer.js
         SpecialAttacks.updateSpecialRay();
         SpecialAttacks.updateSpecialRay2();
 
@@ -116,7 +115,7 @@ function gameLoop() {
 
         // --- GESTIONE COLLISIONI ---
         
-        // Collisioni Proiettili -> Nemici
+        // Collisioni Proiettili -> Nemici (Ciclo inverso per sicurezza rimozione)
         for (let b = gameState.bullets.length - 1; b >= 0; b--) {
             let bullet = gameState.bullets[b];
             for (let e = gameState.enemies.length - 1; e >= 0; e--) {
@@ -125,11 +124,11 @@ function gameLoop() {
                 let dy = bullet.y - enemy.y;
                 let dist = Math.sqrt(dx*dx + dy*dy);
                 
-                if (dist < enemy.size) {
+                if (dist < (enemy.size / 2 + bullet.size)) {
                     Renderer.createExplosion(enemy.x, enemy.y, enemy.color);
                     gameState.enemies.splice(e, 1);
                     gameState.bullets.splice(b, 1);
-                    break; 
+                    break; // Esci dal ciclo proiettili perché il proiettile è distrutto
                 }
             }
         }
@@ -156,9 +155,15 @@ function gameLoop() {
                     gameState.bullets.splice(bIndex, 1);
                 }
             });
+
             if (gameState.boss.y < gameState.boss.targetY) gameState.boss.y += 2;
             Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
-            if (gameState.boss.hp <= 0) { showPowerUpScreen(); return; }
+            
+            if (gameState.boss.hp <= 0) {
+                Renderer.createExplosion(gameState.boss.x, gameState.boss.y, '#ff0000');
+                showPowerUpScreen(); 
+                return; 
+            }
         }
 
         if (gameState.gameTimer <= 40 && !gameState.bossActive) {
@@ -172,10 +177,11 @@ function gameLoop() {
         Renderer.drawEnemies(ctx);
         SpecialAttacks.drawSpecialRay(ctx);
         SpecialAttacks.drawSpecialRay2(ctx);
+        
         if (gameState.isCharging || gameState.isCharging2) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
         
         Renderer.drawBullets(ctx);
-        Renderer.drawExplosions(ctx);
+        Renderer.drawExplosions(ctx); // Chiamata alla funzione in renderer.js
         Renderer.drawUI(ctx);
         
         requestAnimationFrame(gameLoop);
@@ -219,7 +225,7 @@ function fireSpecialAttackSequence2() {
     setTimeout(() => {
         gameState.specialRay2.active2 = true;
         gameState.specialRay2.startTime2 = Date.now() / 1000;
-        gameState.specialRay2.x2 = gameState.playerX; // Corretto x2
+        gameState.specialRay2.x2 = gameState.playerX;
         gameState.specialOnCooldown2 = true;
         gameState.specialLastUsed2 = Date.now() / 1000;
         setTimeout(() => gameState.specialOnCooldown2 = false, gameState.specialCooldown2 * 1000);
@@ -227,7 +233,7 @@ function fireSpecialAttackSequence2() {
     }, 1000);
 }
 
-// --- INPUT LISTENERS ---
+// --- INPUT LISTENERS (MULTITOUCH) ---
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
@@ -262,6 +268,9 @@ canvas.addEventListener('touchend', (e) => {
     if (e.touches.length === 0) {
         gameState.isTouchActive = false;
         gameState.touchIdentifier = null;
+    } else {
+        const stillDragging = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
+        if (!stillDragging) gameState.isTouchActive = false;
     }
 });
 
@@ -274,6 +283,7 @@ window.addEventListener('keydown', (e) => {
     gameState.keys[e.key] = true;
     if (e.key === ' ' && gameState.currentScreen === 'playing') {
         fireSpecialAttackSequence();
+        fireSpecialAttackSequence2();
     }
 });
 window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
