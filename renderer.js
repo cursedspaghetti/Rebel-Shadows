@@ -37,7 +37,6 @@ export function drawPlayer(ctx, img) {
         frameWidth * scaleX,         
         frameHeight * scaleY         
     );
-
     ctx.restore();
 }
 
