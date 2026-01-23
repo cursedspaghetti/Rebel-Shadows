@@ -137,28 +137,34 @@ function gameLoop() {
             }
         }
 
-        // Collisioni Raggi Speciali -> Nemici
-        if (gameState.specialRay.active || gameState.specialRay2.active2) {
-            let rayX = gameState.specialRay.active ? gameState.specialRay.x : gameState.specialRay2.x2;
-            for (let e = gameState.enemies.length - 1; e >= 0; e--) {
-                if (Math.abs(gameState.enemies[e].x - rayX) < 40) {
-                    Renderer.createExplosion(gameState.enemies[e].x, gameState.enemies[e].y, '#ffffff');
-                    gameState.enemies.splice(e, 1);
-                }
+        // --- Collisioni Raggi Speciali (Nemici + Boss) ---
+    if (gameState.specialRay.active || gameState.specialRay2.active2) {
+    // Determiniamo la X del raggio attivo (o di entrambi se vuoi sommarli)
+    let rayX = gameState.specialRay.active ? gameState.specialRay.x : gameState.specialRay2.x2;
+    let rayDamage = 20; // Imposta il danno per frame o per tick del raggio
+
+    // 1. Collisione con Nemici Comuni (esistente)
+    for (let e = gameState.enemies.length - 1; e >= 0; e--) {
+        if (Math.abs(gameState.enemies[e].x - rayX) < 40) {
+            Renderer.createExplosion(gameState.enemies[e].x, gameState.enemies[e].y, '#ffffff');
+            gameState.enemies.splice(e, 1);
+        }
+    }
+
+    // 2. NUOVO: Collisione con il Boss
+    if (gameState.bossActive && gameState.boss) {
+        // Controlliamo se la X del raggio interseca la larghezza del boss
+        // Usiamo Math.abs per vedere se la distanza orizzontale è minore del raggio del boss
+        if (Math.abs(gameState.boss.x - rayX) < (gameState.boss.size / 2 + 20)) {
+            gameState.boss.hp -= rayDamage; 
+            
+            // Effetto grafico opzionale: piccole scintille sul boss mentre viene colpito
+            if (Math.random() > 0.8) {
+                Renderer.createExplosion(rayX, gameState.boss.y + (Math.random() * 50), '#fff');
             }
         }
-
-        // 4. BOSS LOGIC
-        if (gameState.bossActive && gameState.boss) {
-            gameState.bullets.forEach((bullet, bIndex) => {
-                const dx = bullet.x - gameState.boss.x;
-                const dy = bullet.y - gameState.boss.y;
-                if (Math.sqrt(dx * dx + dy * dy) < gameState.boss.size) {
-                    gameState.boss.hp -= 10;
-                    Renderer.createExplosion(bullet.x, bullet.y, '#fff');
-                    gameState.bullets.splice(bIndex, 1);
-                }
-            });
+    }
+}
 
             if (gameState.boss.y < gameState.boss.targetY) gameState.boss.y += 2;
             Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
