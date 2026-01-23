@@ -70,6 +70,7 @@ function startScreenLoop() {
 }
 
 // --- GAME LOOP ---
+// --- GAME LOOP ---
 function gameLoop() {
     if (gameState.currentScreen === 'playing') {
         const now = Date.now();
@@ -102,11 +103,11 @@ function gameLoop() {
         gameState.playerX = Math.max(10, Math.min(CONFIG.CANVAS_WIDTH - 10, gameState.playerX));
         gameState.playerY = Math.max(10, Math.min(CONFIG.CANVAS_HEIGHT - 10, gameState.playerY));
 
-        // 3. AGGIORNAMENTO LOGICA (da Renderer e SpecialAttacks)
+        // 3. AGGIORNAMENTO LOGICA
         Renderer.autoFire();
         Renderer.updateBullets();
         Renderer.updateEnemies();
-        Renderer.updateExplosions(); // Chiamata alla funzione in renderer.js
+        Renderer.updateExplosions(); 
         SpecialAttacks.updateSpecialRay();
         SpecialAttacks.updateSpecialRay2();
 
@@ -118,8 +119,6 @@ function gameLoop() {
         }
 
         // --- GESTIONE COLLISIONI ---
-        
-        // Collisioni Proiettili -> Nemici (Ciclo inverso per sicurezza rimozione)
         for (let b = gameState.bullets.length - 1; b >= 0; b--) {
             let bullet = gameState.bullets[b];
             for (let e = gameState.enemies.length - 1; e >= 0; e--) {
@@ -132,40 +131,35 @@ function gameLoop() {
                     Renderer.createExplosion(enemy.x, enemy.y, enemy.color);
                     gameState.enemies.splice(e, 1);
                     gameState.bullets.splice(b, 1);
-                    break; // Esci dal ciclo proiettili perché il proiettile è distrutto
+                    break; 
                 }
             }
         }
 
-        // --- Collisioni Raggi Speciali (Nemici + Boss) ---
-    if (gameState.specialRay.active || gameState.specialRay2.active2) {
-    // Determiniamo la X del raggio attivo (o di entrambi se vuoi sommarli)
-    let rayX = gameState.specialRay.active ? gameState.specialRay.x : gameState.specialRay2.x2;
-    let rayDamage = 20; // Imposta il danno per frame o per tick del raggio
+        // --- Collisioni Raggi Speciali ---
+        if (gameState.specialRay.active || gameState.specialRay2.active2) {
+            let rayX = gameState.specialRay.active ? gameState.specialRay.x : gameState.specialRay2.x2;
+            let rayDamage = 20;
 
-    // 1. Collisione con Nemici Comuni (esistente)
-    for (let e = gameState.enemies.length - 1; e >= 0; e--) {
-        if (Math.abs(gameState.enemies[e].x - rayX) < 40) {
-            Renderer.createExplosion(gameState.enemies[e].x, gameState.enemies[e].y, '#ffffff');
-            gameState.enemies.splice(e, 1);
-        }
-    }
+            for (let e = gameState.enemies.length - 1; e >= 0; e--) {
+                if (Math.abs(gameState.enemies[e].x - rayX) < 40) {
+                    Renderer.createExplosion(gameState.enemies[e].x, gameState.enemies[e].y, '#ffffff');
+                    gameState.enemies.splice(e, 1);
+                }
+            }
 
-    // 2. NUOVO: Collisione con il Boss
-    if (gameState.bossActive && gameState.boss) {
-        // Controlliamo se la X del raggio interseca la larghezza del boss
-        // Usiamo Math.abs per vedere se la distanza orizzontale è minore del raggio del boss
-        if (Math.abs(gameState.boss.x - rayX) < (gameState.boss.size / 2 + 20)) {
-            gameState.boss.hp -= rayDamage; 
-            
-            // Effetto grafico opzionale: piccole scintille sul boss mentre viene colpito
-            if (Math.random() > 0.8) {
-                Renderer.createExplosion(rayX, gameState.boss.y + (Math.random() * 50), '#fff');
+            if (gameState.bossActive && gameState.boss) {
+                if (Math.abs(gameState.boss.x - rayX) < (gameState.boss.size / 2 + 20)) {
+                    gameState.boss.hp -= rayDamage; 
+                    if (Math.random() > 0.8) {
+                        Renderer.createExplosion(rayX, gameState.boss.y + (Math.random() * 50), '#fff');
+                    }
+                }
             }
         }
-    }
-}
 
+        // --- LOGICA BOSS ---
+        if (gameState.bossActive && gameState.boss) {
             if (gameState.boss.y < gameState.boss.targetY) gameState.boss.y += 2;
             Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
             
@@ -174,8 +168,9 @@ function gameLoop() {
                 showPowerUpScreen(); 
                 return; 
             }
-        
+        }
 
+        // Attivazione Boss per tempo
         if (gameState.gameTimer <= 40 && !gameState.bossActive) {
             gameState.bossActive = true;
             gameState.enemies = [];
@@ -184,20 +179,20 @@ function gameLoop() {
 
         // 5. RENDERING
         Renderer.drawPlayer(ctx, playerSprite);
-        Renderer.drawEnemies(ctx,asteroid);
+        Renderer.drawEnemies(ctx, asteroid);
         SpecialAttacks.drawSpecialRay(ctx);
         SpecialAttacks.drawSpecialRay2(ctx);
         
         if (gameState.isCharging || gameState.isCharging2) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
         
         Renderer.drawBullets(ctx);
-        Renderer.drawExplosions(ctx); // Chiamata alla funzione in renderer.js
+        Renderer.drawExplosions(ctx);
         Renderer.drawUI(ctx);
         
         requestAnimationFrame(gameLoop);
     }
 }
-
+           
 // --- HANDLERS ---
 function startGame() {
     if (!shadowImg.complete) { setTimeout(startGame, 100); return; }
