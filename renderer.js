@@ -123,21 +123,27 @@ export function updateBullets() {
 
 // ENEMIES
 
-export function drawEnemies(ctx) {
+// Aggiungiamo enemyImg ai parametri
+export function drawEnemies(ctx, enemyImg) {
     gameState.enemies.forEach(enemy => {
         ctx.save();
         
-        // Esempio di disegno: un triangolo o un rombo rivolto verso il basso
-        ctx.fillStyle = enemy.color;
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = enemy.color;
-        
-        ctx.beginPath();
-        ctx.moveTo(enemy.x, enemy.y + enemy.size); // Punta
-        ctx.lineTo(enemy.x - enemy.size / 2, enemy.y - enemy.size / 2);
-        ctx.lineTo(enemy.x + enemy.size / 2, enemy.y - enemy.size / 2);
-        ctx.closePath();
-        ctx.fill();
+        // Verifichiamo che l'immagine sia effettivamente passata e caricata
+        if (enemyImg) {
+            ctx.drawImage(
+                enemyImg, 
+                enemy.x - enemy.size / 2, 
+                enemy.y - enemy.size / 2, 
+                enemy.size, 
+                enemy.size
+            );
+        } else {
+            // Fallback nel caso l'immagine non arrivi correttamente
+            ctx.fillStyle = enemy.color;
+            ctx.beginPath();
+            ctx.arc(enemy.x, enemy.y, enemy.size / 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
         
         ctx.restore();
     });
@@ -145,14 +151,13 @@ export function drawEnemies(ctx) {
 
 export function spawnEnemies(count) {
     for (let i = 0; i < count; i++) {
+        const size = 30 + Math.random() * 20; // Dimensioni tra 30 e 50px
         gameState.enemies.push({
-            // Posizione X casuale entro i bordi
             x: Math.random() * (CONFIG.CANVAS_WIDTH - 40) + 20, 
-            // Parte da sopra lo schermo per un ingresso fluido
             y: -50 - (Math.random() * 200), 
-            size: 25,
-            speed: 1.5 + Math.random() * 2, // Velocità variabile
-            color: '#ff4444'
+            size: size,
+            speed: 1.5 + Math.random() * 2,
+            color: '#ff4444' // Utile se decidi di rimettere l'effetto shadow
         });
     }
 }
