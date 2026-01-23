@@ -126,7 +126,7 @@ export function drawSpecialRay2(ctx) {
     ctx.closePath();
 
     // Gradient orizzontale dinamico (deve seguire la forma, usiamo ray.x come centro)
-    let gradient = ctx.createLinearGradient(ray.x - bottomWidth/2, 0, ray.x + bottomWidth/2, 0);
+    let gradient = ctx.createLinearGradient(ray.x2 - bottomWidth/2, 0, ray.x2 + bottomWidth/2, 0);
     gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
     gradient.addColorStop(0.5, 'rgba(75, 0, 130, 0.9)');
     gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
