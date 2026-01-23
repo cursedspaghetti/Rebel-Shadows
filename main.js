@@ -5,7 +5,7 @@ import * as SpecialAttacks from './Special Attacks.js';
 
 // --- CONFIGURAZIONE TOUCH ---
 const TOUCH_SETTINGS = {
-    LERP: 0.01,             // Fluidità inseguimento
+    LERP: 0.5,             // Fluidità inseguimento
     OFFSET_Y: 80,          // Distanza sopra il dito
     TAP_DELAY: 250         // Tempo di attesa per distinguere Single/Double Tap (ms)
 };
