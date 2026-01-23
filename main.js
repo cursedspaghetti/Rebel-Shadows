@@ -5,7 +5,7 @@ import * as SpecialAttacks from './Special Attacks.js';
 
 // --- CONFIGURAZIONE TOUCH ---
 const TOUCH_SETTINGS = {
-    LERP: 0.05,             // Fluidità inseguimento
+    LERP: 0.01,             // Fluidità inseguimento
     OFFSET_Y: 80,          // Distanza sopra il dito
     TAP_DELAY: 250         // Tempo di attesa per distinguere Single/Double Tap (ms)
 };
@@ -28,9 +28,9 @@ const gameContainer = document.getElementById('game-container');
 const introImage = new Image();
 introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/shadow_intro.jpg';
 const bgImage = new Image();
-bgImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png';
+bgImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpaceVoid.png';
 const bgParallax = new Image();
-bgParallax.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpaceVoid.png'; 
+bgParallax.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png'; 
 // Nota: idealmente qui useresti un'immagine diversa con solo puntini bianchi
 // asset loading 
 const playerSprite = new Image();
