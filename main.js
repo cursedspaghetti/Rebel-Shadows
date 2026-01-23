@@ -22,24 +22,21 @@ const startScreen = document.getElementById('startScreen');
 const powerUpScreen = document.getElementById('powerUpScreen');
 const startButton = document.getElementById('startButton');
 const ringChoicesContainer = document.getElementById('ringChoices');
-const gameContainer = document.getElementById('game-container');
 
-// --- background images LOADING ---
+// --- ASSET LOADING ---
 const introImage = new Image();
 introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/shadow_intro.jpg';
 const bgImage = new Image();
 bgImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpaceVoid.png';
 const bgParallax = new Image();
 bgParallax.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png'; 
-// Nota: idealmente qui useresti un'immagine diversa con solo puntini bianchi
-// asset loading 
+
 const playerSprite = new Image();
 playerSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/booksprite.png';
 export const chargeImg = new Image();
 chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bookfull.png";
 const shadowImg = new Image();
 shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png';
-
 
 // --- INITIALIZATION ---
 function init() {
@@ -61,7 +58,6 @@ function init() {
     requestAnimationFrame(startScreenLoop);
 }
 
-// --- GAME LOOPS ---
 function startScreenLoop() {
     if (gameState.currentScreen === 'start') {
         Renderer.drawStartScreen(ctx, introImage);
@@ -69,26 +65,19 @@ function startScreenLoop() {
     }
 }
 
-// Aggiungi questa variabile fuori dal gameLoop (o in gameState) se non esiste già
-// let lastEnemySpawn = 0; 
-
+// --- GAME LOOP ---
 function gameLoop() {
     if (gameState.currentScreen === 'playing') {
         const now = Date.now();
-
-        // 1. Pulizia totale del frame
         ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
-        // 2. SFONDI (Parallasse e Principale)
+        // 1. SFONDI
         if (bgParallax.complete) {
             gameState.parallaxPositionY += CONFIG.PARALLAX_SPEED;
             if (gameState.parallaxPositionY >= CONFIG.CANVAS_HEIGHT) gameState.parallaxPositionY = 0;
-            ctx.globalAlpha = 1;
             ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
             ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-            ctx.globalAlpha = 1.0; 
         }
-
         if (bgImage.complete) {
             gameState.backgroundPositionY += CONFIG.SCROLL_SPEED;
             if (gameState.backgroundPositionY >= CONFIG.CANVAS_HEIGHT) gameState.backgroundPositionY = 0;
@@ -96,90 +85,103 @@ function gameLoop() {
             ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
         }
         
-        // 2. Logica Movimento Giocatore
+        // 2. MOVIMENTO GIOCATORE
         if (gameState.isTouchActive) {
-            const targetX = gameState.touchX;
-            const targetY = gameState.touchY - TOUCH_SETTINGS.OFFSET_Y;
-            gameState.playerX += (targetX - gameState.playerX) * TOUCH_SETTINGS.LERP;
-            gameState.playerY += (targetY - gameState.playerY) * TOUCH_SETTINGS.LERP;
+            gameState.playerX += (gameState.touchX - gameState.playerX) * TOUCH_SETTINGS.LERP;
+            gameState.playerY += (gameState.touchY - TOUCH_SETTINGS.OFFSET_Y - gameState.playerY) * TOUCH_SETTINGS.LERP;
         } else {
             if (gameState.keys['ArrowLeft']) gameState.playerX -= gameState.playerSpeed;
             if (gameState.keys['ArrowRight']) gameState.playerX += gameState.playerSpeed;
             if (gameState.keys['ArrowUp']) gameState.playerY -= gameState.playerSpeed;
             if (gameState.keys['ArrowDown']) gameState.playerY += gameState.playerSpeed;
         }
-
-        // Limiti bordi
         gameState.playerX = Math.max(10, Math.min(CONFIG.CANVAS_WIDTH - 10, gameState.playerX));
         gameState.playerY = Math.max(10, Math.min(CONFIG.CANVAS_HEIGHT - 10, gameState.playerY));
 
-        // 3. Logic Updates (Proiettili e Nemici)
+        // 3. AGGIORNAMENTO LOGICA (da Renderer e SpecialAttacks)
         Renderer.autoFire();
         Renderer.updateBullets();
-        
-        // --- LOGICA NEMICI ---
+        Renderer.updateEnemies();
+        Renderer.updateExplosions(); // Chiamata alla funzione in renderer.js
+        SpecialAttacks.updateSpecialRay();
+        SpecialAttacks.updateSpecialRay2();
+
         if (!gameState.bossActive) {
-            // Genera nemici ogni 2000ms (2 secondi)
             if (now - (gameState.lastEnemySpawn || 0) > 2000) {
-                Renderer.spawnEnemies(3); // Genera 3 nemici alla volta
+                Renderer.spawnEnemies(3);
                 gameState.lastEnemySpawn = now;
             }
         }
-        Renderer.updateEnemies(); // Muove i nemici esistenti verso il basso
-        // ---------------------
 
-        SpecialAttacks.updateSpecialRay();
-        SpecialAttacks.updateSpecialRay2();
+        // --- GESTIONE COLLISIONI ---
         
-        // 4. Boss Logic & Collisions
+        // Collisioni Proiettili -> Nemici (Ciclo inverso per sicurezza rimozione)
+        for (let b = gameState.bullets.length - 1; b >= 0; b--) {
+            let bullet = gameState.bullets[b];
+            for (let e = gameState.enemies.length - 1; e >= 0; e--) {
+                let enemy = gameState.enemies[e];
+                let dx = bullet.x - enemy.x;
+                let dy = bullet.y - enemy.y;
+                let dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if (dist < (enemy.size / 2 + bullet.size)) {
+                    Renderer.createExplosion(enemy.x, enemy.y, enemy.color);
+                    gameState.enemies.splice(e, 1);
+                    gameState.bullets.splice(b, 1);
+                    break; // Esci dal ciclo proiettili perché il proiettile è distrutto
+                }
+            }
+        }
+
+        // Collisioni Raggi Speciali -> Nemici
+        if (gameState.specialRay.active || gameState.specialRay2.active2) {
+            let rayX = gameState.specialRay.active ? gameState.specialRay.x : gameState.specialRay2.x2;
+            for (let e = gameState.enemies.length - 1; e >= 0; e--) {
+                if (Math.abs(gameState.enemies[e].x - rayX) < 40) {
+                    Renderer.createExplosion(gameState.enemies[e].x, gameState.enemies[e].y, '#ffffff');
+                    gameState.enemies.splice(e, 1);
+                }
+            }
+        }
+
+        // 4. BOSS LOGIC
         if (gameState.bossActive && gameState.boss) {
-            // Collisioni Bullets -> Boss
             gameState.bullets.forEach((bullet, bIndex) => {
                 const dx = bullet.x - gameState.boss.x;
                 const dy = bullet.y - gameState.boss.y;
                 if (Math.sqrt(dx * dx + dy * dy) < gameState.boss.size) {
                     gameState.boss.hp -= 10;
+                    Renderer.createExplosion(bullet.x, bullet.y, '#fff');
                     gameState.bullets.splice(bIndex, 1);
                 }
             });
 
-            // Collisioni Raggi Speciali -> Boss
-            if (gameState.specialRay.active && Math.abs(gameState.specialRay.x - gameState.boss.x) < gameState.boss.size) {
-                gameState.boss.hp -= 5;
-            }
-            if (gameState.specialRay2.active2 && Math.abs(gameState.specialRay2.x2 - gameState.boss.x) < gameState.boss.size) {
-                gameState.boss.hp -= 5;
-            }
-        }
-
-        // Trigger Boss (quando mancano meno di 58 secondi)
-        if (gameState.gameTimer <= 40 && !gameState.bossActive) {
-            gameState.bossActive = true;
-            gameState.enemies = []; // Pulisce i nemici comuni quando arriva il boss
-            gameState.boss = {
-                x: CONFIG.CANVAS_WIDTH / 2, y: -150, targetY: 300,
-                size: 140, hp: 5000, maxHp: 5000
-            };
-        }
-
-        // 5. Rendering
-        Renderer.drawPlayer(ctx, playerSprite);
-        
-        // Disegna i nemici (solo se non c'è il boss o se vuoi che restino quelli vecchi)
-        Renderer.drawEnemies(ctx);
-
-        if (gameState.bossActive && gameState.boss) {
             if (gameState.boss.y < gameState.boss.targetY) gameState.boss.y += 2;
             Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
-            if (gameState.boss.hp <= 0) { showPowerUpScreen(); return; }
+            
+            if (gameState.boss.hp <= 0) {
+                Renderer.createExplosion(gameState.boss.x, gameState.boss.y, '#ff0000');
+                showPowerUpScreen(); 
+                return; 
+            }
         }
 
+        if (gameState.gameTimer <= 40 && !gameState.bossActive) {
+            gameState.bossActive = true;
+            gameState.enemies = [];
+            gameState.boss = { x: CONFIG.CANVAS_WIDTH / 2, y: -150, targetY: 300, size: 140, hp: 5000, maxHp: 5000 };
+        }
+
+        // 5. RENDERING
+        Renderer.drawPlayer(ctx, playerSprite);
+        Renderer.drawEnemies(ctx);
         SpecialAttacks.drawSpecialRay(ctx);
         SpecialAttacks.drawSpecialRay2(ctx);
-        if (gameState.isCharging) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
-        if (gameState.isCharging2) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
-
+        
+        if (gameState.isCharging || gameState.isCharging2) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
+        
         Renderer.drawBullets(ctx);
+        Renderer.drawExplosions(ctx); // Chiamata alla funzione in renderer.js
         Renderer.drawUI(ctx);
         
         requestAnimationFrame(gameLoop);
@@ -223,12 +225,11 @@ function fireSpecialAttackSequence2() {
     setTimeout(() => {
         gameState.specialRay2.active2 = true;
         gameState.specialRay2.startTime2 = Date.now() / 1000;
-        gameState.specialRay2.x = gameState.playerX;
+        gameState.specialRay2.x2 = gameState.playerX;
         gameState.specialOnCooldown2 = true;
         gameState.specialLastUsed2 = Date.now() / 1000;
         setTimeout(() => gameState.specialOnCooldown2 = false, gameState.specialCooldown2 * 1000);
         setTimeout(() => gameState.isCharging2 = false, gameState.specialRay2.duration2 * 1000);
-
     }, 1000);
 }
 
@@ -236,24 +237,18 @@ function fireSpecialAttackSequence2() {
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
-    
-    // Gestione Dito 1: Movimento
     if (e.touches.length === 1) {
         const touch = e.touches[0];
         gameState.touchIdentifier = touch.identifier;
         gameState.isTouchActive = true;
         updateCoords(touch, rect);
     }
-
-    // Gestione Dito 2+: Speciali
     if (e.touches.length >= 2 && gameState.currentScreen === 'playing') {
         if (secondFingerTimer) {
-            // Se tocchi di nuovo prima del timeout -> Double Tap
             clearTimeout(secondFingerTimer);
             secondFingerTimer = null;
             fireSpecialAttackSequence2();
         } else {
-            // Primo tocco del secondo dito -> Aspetta per vedere se è Single o Double
             secondFingerTimer = setTimeout(() => {
                 fireSpecialAttackSequence();
                 secondFingerTimer = null;
@@ -284,7 +279,6 @@ function updateCoords(touch, rect) {
     gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
 }
 
-// Tastiera
 window.addEventListener('keydown', (e) => {
     gameState.keys[e.key] = true;
     if (e.key === ' ' && gameState.currentScreen === 'playing') {
