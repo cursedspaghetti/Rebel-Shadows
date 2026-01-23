@@ -74,64 +74,85 @@ export function drawSpecialRay(ctx) {
 
 export function drawSpecialRay2(ctx) {
     const ray = gameState.specialRay2;
-    
-    // Se il raggio non è attivo, continuiamo comunque a disegnare le particelle residue
-    // ma smettiamo di generarne di nuove.
     if (!ray || !ray.active2) {
-        if (gameState.rayParticles2.length === 0) return;
+        gameState.rayParticles2 = [];
+        return;
     }
 
-    // --- LOGICA GENERAZIONE (Solo se il raggio è attivo) ---
-    if (ray && ray.active2 && ray.currentWidth2 > 5) { 
-        // Generiamo più particelle per dare l'idea di un flusso consistente
-        for (let i = 0; i < 5; i++) {
+    const rayHeight = gameState.playerY;
+    const bottomWidth = ray.currentWidth2; // Larghezza alla base (giocatore)
+    const topWidth = ray.currentWidth2 * 0.2; // Più stretto in cima (effetto prospettiva)
+
+    // --- LOGICA PARTICELLE (Adattata al cono) ---
+    if (ray.currentWidth2 > 10) { 
+        for (let i = 0; i < 3; i++) {
+            const progress = Math.random(); // Dove si trova lungo l'altezza (0 = cima, 1 = fondo)
+            // Calcola la larghezza del raggio a quella specifica altezza Y
+            const currentWidthAtY = topWidth + (bottomWidth - topWidth) * progress;
+            
             gameState.rayParticles2.push({
-                // Partono dalla posizione X del giocatore (o del raggio)
-                x: ray.x2 + (Math.random() - 0.5) * ray.currentWidth2,
-                // Partono dal basso (posizione del giocatore)
-                y: gameState.playerY, 
-                size: Math.random() * 5 + 2,
-                // Velocità leggermente divergente
-                speedX: (Math.random() - 0.5) * 6, 
-                // Velocità verso l'alto (negativa)
-                speedY: -Math.random() * 10 - 5,    
-                life: 1.0,
-                decay: Math.random() * 0.02 + 0.01, // Durano più a lungo per attraversare lo schermo
-                color: Math.random() > 0.5 ? "#00ffcc" : "#8A2BE2" // Mix tra turchese e viola
+                x2: ray.x2 + (Math.random() - 0.5) * currentWidthAtY,
+                y2: progress * rayHeight,
+                size2: Math.random() * 4 + 1,
+                speedX2: (Math.random() - 0.5) * 2,
+                speedY2: -Math.random() * 5 - 2,
+                life2: 1.0,
+                decay2: Math.random() * 0.05 + 0.02
             });
         }
     }
 
-    // --- DISEGNO E AGGIORNAMENTO PARTICELLE ---
+    // Disegno particelle (rimane simile, ma con filtro per pulizia)
     ctx.save();
-    for (let i = gameState.rayParticles2.length - 1; i >= 0; i--) {
-        const p = gameState.rayParticles2[i];
-
-        // Effetto grafico particella
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.life;
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = p.color;
-        
+    gameState.rayParticles2.forEach((p, index) => {
+        ctx.fillStyle = `rgba(138, 43, 226, ${p.life})`;
         ctx.beginPath();
-        // Disegniamo piccole "fiammelle" o cerchi
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
+        p.x += p.speedX; p.y += p.speedY; p.life -= p.decay;
+        if (p.life <= 0) gameState.rayParticles2.splice(index, 1);
+    });
+    ctx.restore();
 
-        // Update posizione
-        p.x += p.speedX;
-        p.y += p.speedY;
-        p.life -= p.decay;
+    // --- DISEGNO DEL RAGGIO A CONO ---
+    ctx.save();
+    
+    // Definiamo il percorso del trapezio
+    ctx.beginPath();
+    ctx.moveTo(ray.x2 - topWidth / 2, 0);               // Angolo alto SX
+    ctx.lineTo(ray.x2 + topWidth / 2, 0);               // Angolo alto DX
+    ctx.lineTo(ray.x2 + bottomWidth / 2, rayHeight);    // Angolo basso DX
+    ctx.lineTo(ray.x2 - bottomWidth / 2, rayHeight);    // Angolo basso SX
+    ctx.closePath();
 
-        // Rilevamento Collisione (Esempio logico)
-        // Se hai una lista di nemici, potresti controllare qui se p.x/p.y tocca un nemico
-        // if (checkCollision(p, enemies)) { p.life = 0; spawnExplosion(p.x, p.y); }
+    // Gradient orizzontale dinamico (deve seguire la forma, usiamo ray.x come centro)
+    let gradient = ctx.createLinearGradient(ray.x - bottomWidth/2, 0, ray.x + bottomWidth/2, 0);
+    gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    gradient.addColorStop(0.5, 'rgba(75, 0, 130, 0.9)');
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
-        // Rimuovi particelle morte o fuori schermo
-        if (p.life <= 0 || p.y < -50) {
-            gameState.rayParticles2.splice(i, 1);
-        }
-    }
+    ctx.shadowBlur = 30;
+    ctx.shadowColor = "#4b0082";
+    ctx.fillStyle = gradient;
+    ctx.fill(); // Riempiamo il path creato sopra
+
+    // Core instabile (anche questo a cono)
+    const jitter = Math.random() * 4;
+    const coreTop = (topWidth * 0.2) + jitter;
+    const coreBottom = (bottomWidth * 0.2) + jitter;
+
+    ctx.beginPath();
+    ctx.moveTo(ray.x - coreTop / 2, 0);
+    ctx.lineTo(ray.x + coreTop / 2, 0);
+    ctx.lineTo(ray.x + coreBottom / 2, rayHeight);
+    ctx.lineTo(ray.x - coreBottom / 2, rayHeight);
+    ctx.closePath();
+
+    ctx.fillStyle = "#e0b0ff";
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = "#ff00ff";
+    ctx.fill();
+    
     ctx.restore();
 }
 
