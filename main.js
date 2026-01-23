@@ -83,7 +83,7 @@ function gameLoop() {
         if (bgParallax.complete) {
             gameState.parallaxPositionY += CONFIG.PARALLAX_SPEED;
             if (gameState.parallaxPositionY >= CONFIG.CANVAS_HEIGHT) gameState.parallaxPositionY = 0;
-            ctx.globalAlpha = 0.6;
+            ctx.globalAlpha = 1;
             ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
             ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
             ctx.globalAlpha = 1.0; 
