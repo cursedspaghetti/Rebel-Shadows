@@ -89,6 +89,7 @@ export let gameState = {
     
     // World & Entities
     enemies: [],
+    explosions: [],
     gameTimer: 60,
     timerInterval: null,
     bossActive: false,
