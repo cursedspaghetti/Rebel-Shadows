@@ -1,292 +1,267 @@
 import { CONFIG, gameState } from './config.js';
-import * as Renderer from './renderer.js';
-import * as Boss1 from './Boss1.js';
-import * as SpecialAttacks from './Special Attacks.js';
 
-// --- CONFIGURAZIONE TOUCH ---
-const TOUCH_SETTINGS = {
-    LERP: 0.5,             // Fluidità inseguimento
-    OFFSET_Y: 80,          // Distanza sopra il dito
-    TAP_DELAY: 250         // Tempo di attesa per distinguere Single/Double Tap (ms)
-};
-
-// Variabili di stato locali per l'input
-let secondFingerTimer = null;
-gameState.isTouchActive = false;
-gameState.touchIdentifier = null;
-
-// --- DOM ELEMENTS ---
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const startScreen = document.getElementById('startScreen');
-const powerUpScreen = document.getElementById('powerUpScreen');
-const startButton = document.getElementById('startButton');
-const ringChoicesContainer = document.getElementById('ringChoices');
-
-// --- ASSET LOADING ---
-const introImage = new Image();
-introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/shadow_intro.jpg';
-const bgImage = new Image();
-bgImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpaceVoid.png';
-const bgParallax = new Image();
-bgParallax.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png'; 
-
-const playerSprite = new Image();
-playerSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/booksprite.png';
-export const chargeImg = new Image();
-chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bookfull.png";
-const shadowImg = new Image();
-shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png';
-
-// --- INITIALIZATION ---
-function init() {
-    Object.keys(CONFIG.RING_COLORS).forEach(colorName => {
-        const button = document.createElement('div');
-        button.className = 'ring-choice';
-        button.textContent = colorName;
-        button.style.color = CONFIG.RING_COLORS[colorName];
-        button.dataset.color = CONFIG.RING_COLORS[colorName];
-        
-        button.onclick = () => {
-            document.querySelectorAll('.ring-choice').forEach(btn => btn.style.border = '4px solid transparent');
-            button.style.border = '4px solid ' + button.dataset.color;
-            gameState.selectedRingColor = button.dataset.color;
-            startButton.disabled = false;
-        };
-        ringChoicesContainer.appendChild(button);
-    });
-    requestAnimationFrame(startScreenLoop);
-}
-
-function startScreenLoop() {
-    if (gameState.currentScreen === 'start') {
-        Renderer.drawStartScreen(ctx, introImage);
-        requestAnimationFrame(startScreenLoop);
-    }
-}
-
-// --- GAME LOOP ---
-function gameLoop() {
-    if (gameState.currentScreen === 'playing') {
-        const now = Date.now();
-        ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-
-        // 1. SFONDI
-        if (bgParallax.complete) {
-            gameState.parallaxPositionY += CONFIG.PARALLAX_SPEED;
-            if (gameState.parallaxPositionY >= CONFIG.CANVAS_HEIGHT) gameState.parallaxPositionY = 0;
-            ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-            ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-        }
-        if (bgImage.complete) {
-            gameState.backgroundPositionY += CONFIG.SCROLL_SPEED;
-            if (gameState.backgroundPositionY >= CONFIG.CANVAS_HEIGHT) gameState.backgroundPositionY = 0;
-            ctx.drawImage(bgImage, 0, gameState.backgroundPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-            ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-        }
-        
-        // 2. MOVIMENTO GIOCATORE
-        if (gameState.isTouchActive) {
-            gameState.playerX += (gameState.touchX - gameState.playerX) * TOUCH_SETTINGS.LERP;
-            gameState.playerY += (gameState.touchY - TOUCH_SETTINGS.OFFSET_Y - gameState.playerY) * TOUCH_SETTINGS.LERP;
-        } else {
-            if (gameState.keys['ArrowLeft']) gameState.playerX -= gameState.playerSpeed;
-            if (gameState.keys['ArrowRight']) gameState.playerX += gameState.playerSpeed;
-            if (gameState.keys['ArrowUp']) gameState.playerY -= gameState.playerSpeed;
-            if (gameState.keys['ArrowDown']) gameState.playerY += gameState.playerSpeed;
-        }
-        gameState.playerX = Math.max(10, Math.min(CONFIG.CANVAS_WIDTH - 10, gameState.playerX));
-        gameState.playerY = Math.max(10, Math.min(CONFIG.CANVAS_HEIGHT - 10, gameState.playerY));
-
-        // 3. AGGIORNAMENTO LOGICA (da Renderer e SpecialAttacks)
-        Renderer.autoFire();
-        Renderer.updateBullets();
-        Renderer.updateEnemies();
-        Renderer.updateExplosions(); // Chiamata alla funzione in renderer.js
-        SpecialAttacks.updateSpecialRay();
-        SpecialAttacks.updateSpecialRay2();
-
-        if (!gameState.bossActive) {
-            if (now - (gameState.lastEnemySpawn || 0) > 2000) {
-                Renderer.spawnEnemies(3);
-                gameState.lastEnemySpawn = now;
-            }
-        }
-
-        // --- GESTIONE COLLISIONI ---
-        
-        // Collisioni Proiettili -> Nemici (Ciclo inverso per sicurezza rimozione)
-        for (let b = gameState.bullets.length - 1; b >= 0; b--) {
-            let bullet = gameState.bullets[b];
-            for (let e = gameState.enemies.length - 1; e >= 0; e--) {
-                let enemy = gameState.enemies[e];
-                let dx = bullet.x - enemy.x;
-                let dy = bullet.y - enemy.y;
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                
-                if (dist < (enemy.size / 2 + bullet.size)) {
-                    Renderer.createExplosion(enemy.x, enemy.y, enemy.color);
-                    gameState.enemies.splice(e, 1);
-                    gameState.bullets.splice(b, 1);
-                    break; // Esci dal ciclo proiettili perché il proiettile è distrutto
-                }
-            }
-        }
-
-        // Collisioni Raggi Speciali -> Nemici
-        if (gameState.specialRay.active || gameState.specialRay2.active2) {
-            let rayX = gameState.specialRay.active ? gameState.specialRay.x : gameState.specialRay2.x2;
-            for (let e = gameState.enemies.length - 1; e >= 0; e--) {
-                if (Math.abs(gameState.enemies[e].x - rayX) < 40) {
-                    Renderer.createExplosion(gameState.enemies[e].x, gameState.enemies[e].y, '#ffffff');
-                    gameState.enemies.splice(e, 1);
-                }
-            }
-        }
-
-        // 4. BOSS LOGIC
-        if (gameState.bossActive && gameState.boss) {
-            gameState.bullets.forEach((bullet, bIndex) => {
-                const dx = bullet.x - gameState.boss.x;
-                const dy = bullet.y - gameState.boss.y;
-                if (Math.sqrt(dx * dx + dy * dy) < gameState.boss.size) {
-                    gameState.boss.hp -= 10;
-                    Renderer.createExplosion(bullet.x, bullet.y, '#fff');
-                    gameState.bullets.splice(bIndex, 1);
-                }
-            });
-
-            if (gameState.boss.y < gameState.boss.targetY) gameState.boss.y += 2;
-            Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
-            
-            if (gameState.boss.hp <= 0) {
-                Renderer.createExplosion(gameState.boss.x, gameState.boss.y, '#ff0000');
-                showPowerUpScreen(); 
-                return; 
-            }
-        }
-
-        if (gameState.gameTimer <= 40 && !gameState.bossActive) {
-            gameState.bossActive = true;
-            gameState.enemies = [];
-            gameState.boss = { x: CONFIG.CANVAS_WIDTH / 2, y: -150, targetY: 300, size: 140, hp: 5000, maxHp: 5000 };
-        }
-
-        // 5. RENDERING
-        Renderer.drawPlayer(ctx, playerSprite);
-        Renderer.drawEnemies(ctx);
-        SpecialAttacks.drawSpecialRay(ctx);
-        SpecialAttacks.drawSpecialRay2(ctx);
-        
-        if (gameState.isCharging || gameState.isCharging2) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
-        
-        Renderer.drawBullets(ctx);
-        Renderer.drawExplosions(ctx); // Chiamata alla funzione in renderer.js
-        Renderer.drawUI(ctx);
-        
-        requestAnimationFrame(gameLoop);
-    }
-}
-
-// --- HANDLERS ---
-function startGame() {
-    if (!shadowImg.complete) { setTimeout(startGame, 100); return; }
-    startScreen.style.display = 'none';
-    gameState.currentScreen = 'playing';
-    gameState.timerInterval = setInterval(() => {
-        if (gameState.gameTimer > 0) gameState.gameTimer--;
-        else clearInterval(gameState.timerInterval);
-    }, 1000);
-    gameLoop();
-}
-
-function showPowerUpScreen() {
-    gameState.currentScreen = 'powerup';
-    powerUpScreen.style.display = 'flex';
-}
-
-function fireSpecialAttackSequence() {
-    if (gameState.specialOnCooldown || gameState.isCharging) return;
-    gameState.isCharging = true;
-    setTimeout(() => {
-        gameState.specialRay.active = true;
-        gameState.specialRay.startTime = Date.now() / 1000;
-        gameState.specialRay.x = gameState.playerX;
-        gameState.specialOnCooldown = true;
-        gameState.specialLastUsed = Date.now() / 1000;
-        setTimeout(() => gameState.specialOnCooldown = false, gameState.specialCooldown * 1000);
-        setTimeout(() => gameState.isCharging = false, gameState.specialRay.duration * 1000);
-    }, 1000);
-}
-
-function fireSpecialAttackSequence2() {
-    if (gameState.specialOnCooldown2 || gameState.isCharging2) return;
-    gameState.isCharging2 = true;
-    setTimeout(() => {
-        gameState.specialRay2.active2 = true;
-        gameState.specialRay2.startTime2 = Date.now() / 1000;
-        gameState.specialRay2.x2 = gameState.playerX;
-        gameState.specialOnCooldown2 = true;
-        gameState.specialLastUsed2 = Date.now() / 1000;
-        setTimeout(() => gameState.specialOnCooldown2 = false, gameState.specialCooldown2 * 1000);
-        setTimeout(() => gameState.isCharging2 = false, gameState.specialRay2.duration2 * 1000);
-    }, 1000);
-}
-
-// --- INPUT LISTENERS (MULTITOUCH) ---
-canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        gameState.touchIdentifier = touch.identifier;
-        gameState.isTouchActive = true;
-        updateCoords(touch, rect);
-    }
-    if (e.touches.length >= 2 && gameState.currentScreen === 'playing') {
-        if (secondFingerTimer) {
-            clearTimeout(secondFingerTimer);
-            secondFingerTimer = null;
-            fireSpecialAttackSequence2();
-        } else {
-            secondFingerTimer = setTimeout(() => {
-                fireSpecialAttackSequence();
-                secondFingerTimer = null;
-            }, TOUCH_SETTINGS.TAP_DELAY);
-        }
-    }
-}, { passive: false });
-
-canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const touch = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
-    if (touch) updateCoords(touch, rect);
-}, { passive: false });
-
-canvas.addEventListener('touchend', (e) => {
-    if (e.touches.length === 0) {
-        gameState.isTouchActive = false;
-        gameState.touchIdentifier = null;
+// START SCREEN
+export function drawStartScreen(ctx, introImage) {
+    if (introImage.complete) {
+        ctx.drawImage(introImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     } else {
-        const stillDragging = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
-        if (!stillDragging) gameState.isTouchActive = false;
+        ctx.fillStyle = '#000033';
+        ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
-});
-
-function updateCoords(touch, rect) {
-    gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
-    gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
 }
 
-window.addEventListener('keydown', (e) => {
-    gameState.keys[e.key] = true;
-    if (e.key === ' ' && gameState.currentScreen === 'playing') {
-        fireSpecialAttackSequence();
-        fireSpecialAttackSequence2();
-    }
-});
-window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
+// PLAYERS
 
-startButton.addEventListener('click', startGame);
-init();
+export function drawPlayer(ctx, img) {
+    if (!img.complete) return; 
+
+    const frameWidth = 512;  
+    const frameHeight = 349; 
+    
+    const scaleX = 0.09;      
+    const scaleY = 0.13;        
+    
+    const totalFrames = 13; 
+    const animationSpeed = 150;
+    const frameIndex = Math.floor(Date.now() / animationSpeed) % totalFrames;
+
+    ctx.save();
+    ctx.translate(gameState.playerX, gameState.playerY);
+
+    ctx.drawImage(
+        img,
+        frameIndex * frameWidth, 0, 
+        frameWidth, frameHeight,    
+        - (frameWidth * scaleX) / 2, 
+        - (frameHeight * scaleY) / 2, 
+        frameWidth * scaleX,         
+        frameHeight * scaleY         
+    );
+
+    ctx.restore();
+}
+
+
+// BULLETS
+
+export function drawBullets(ctx) {
+    gameState.bullets.forEach(bullet => {
+        ctx.save();
+        
+        const filamentWidth = bullet.size * 0.2;
+        const height = bullet.size * 8;         
+        const horizontalGap = 3;                
+
+        const drawFilament = (offsetX) => {
+            const posX = bullet.x + offsetX;
+            let gradient = ctx.createLinearGradient(
+                posX, bullet.y - height / 2, 
+                posX, bullet.y + height / 2
+            );
+            
+            gradient.addColorStop(0, '#ffffff');      
+            gradient.addColorStop(0.2, '#e0e0e0');    
+            gradient.addColorStop(0.7, 'rgba(100, 100, 100, 0.3)'); 
+            gradient.addColorStop(1, 'transparent');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.ellipse(posX, bullet.y, filamentWidth / 2, height / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+        };
+
+        ctx.shadowBlur = 3;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+
+        drawFilament(-horizontalGap / 2); 
+        drawFilament(horizontalGap / 2);  
+
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.arc(bullet.x, bullet.y - height / 2.2, filamentWidth, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    });
+}
+
+export function autoFire() {
+    if (gameState.currentScreen !== 'playing' || gameState.isCharging || gameState.isCharging2) return;
+
+    const now = Date.now();
+    const currentFireRate = CONFIG.FIRE_RATE_LEVELS[gameState.fireRateLevel] || 200;
+
+    if (now - gameState.lastShotTime >= currentFireRate) {
+        const missileCount = gameState.bulletLevel === 1 ? 1 : (gameState.bulletLevel === 2 ? 3 : 5);
+        const spacing = 18;
+        const verticalStagger = 12;
+        const totalWidth = (missileCount - 1) * spacing;
+        let startX = gameState.playerX - (totalWidth / 2);
+        const centerIndex = Math.floor(missileCount / 2);
+
+        for (let i = 0; i < missileCount; i++) {
+            const distFromCenter = Math.abs(i - centerIndex);
+            gameState.bullets.push({
+                x: startX + i * spacing,
+                y: (gameState.playerY - 20) + (distFromCenter * verticalStagger),
+                speed: 10,
+                size: 12,
+                color: gameState.selectedRingColor,
+                isSpecial: false
+            });
+        }
+        gameState.lastShotTime = now;
+    }
+}
+
+export function updateBullets() {
+    gameState.bullets = gameState.bullets.filter(bullet => {
+        bullet.y -= bullet.speed;
+        return bullet.y > 0;
+    });
+}
+
+// ENEMIES
+
+export function drawEnemies(ctx) {
+    gameState.enemies.forEach(enemy => {
+        ctx.save();
+        
+        // Esempio di disegno: un triangolo o un rombo rivolto verso il basso
+        ctx.fillStyle = enemy.color;
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = enemy.color;
+        
+        ctx.beginPath();
+        ctx.moveTo(enemy.x, enemy.y + enemy.size); // Punta
+        ctx.lineTo(enemy.x - enemy.size / 2, enemy.y - enemy.size / 2);
+        ctx.lineTo(enemy.x + enemy.size / 2, enemy.y - enemy.size / 2);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.restore();
+    });
+}
+
+export function spawnEnemies(count) {
+    for (let i = 0; i < count; i++) {
+        gameState.enemies.push({
+            // Posizione X casuale entro i bordi
+            x: Math.random() * (CONFIG.CANVAS_WIDTH - 40) + 20, 
+            // Parte da sopra lo schermo per un ingresso fluido
+            y: -50 - (Math.random() * 200), 
+            size: 25,
+            speed: 1.5 + Math.random() * 2, // Velocità variabile
+            color: '#ff4444'
+        });
+    }
+}
+
+export function updateEnemies() {
+    gameState.enemies = gameState.enemies.filter(enemy => {
+        // Muove il nemico verso il basso in base alla sua velocità
+        enemy.y += enemy.speed;
+        
+        // Mantieni il nemico solo se è ancora dentro l'area di gioco
+        // (Aggiungiamo un margine di 50px oltre il fondo del canvas)
+        return enemy.y < CONFIG.CANVAS_HEIGHT + 50;
+    });
+}
+
+
+export function createExplosion(x, y, color = '#FFC300') { // Giallo/Arancione come default
+    gameState.explosions.push({
+        x: x,
+        y: y,
+        radius: 5,         // Raggio iniziale
+        maxRadius: 30,     // Raggio massimo
+        alpha: 1,          // Opacità iniziale
+        speed: 0.8,        // Velocità di espansione
+        fadeSpeed: 0.05,   // Velocità di dissolvenza
+        color: color
+    });
+}
+
+export function updateExplosions() {
+    gameState.explosions = gameState.explosions.filter(explosion => {
+        explosion.radius += explosion.speed;
+        explosion.alpha -= explosion.fadeSpeed;
+        return explosion.alpha > 0 && explosion.radius < explosion.maxRadius;
+    });
+}
+
+export function drawExplosions(ctx) {
+    gameState.explosions.forEach(explosion => {
+        ctx.save();
+        ctx.globalAlpha = explosion.alpha;
+        ctx.fillStyle = explosion.color;
+        ctx.beginPath();
+        ctx.arc(explosion.x, explosion.y, explosion.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    });
+}
+
+//UI
+
+export function drawUI(ctx) {
+    ctx.save();
+    ctx.fillStyle = '#fff';
+    ctx.font = '20px "Courier New", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(`TIME: ${gameState.gameTimer}`, 10, 30);
+    ctx.restore();
+
+    const now = Date.now() / 1000;
+    
+    const elapsed1 = now - (gameState.specialLastUsed || 0);
+    const perc1 = Math.min(1, elapsed1 / gameState.specialCooldown);
+
+    const elapsed2 = now - (gameState.specialLastUsed2 || 0);
+    const perc2 = Math.min(1, elapsed2 / (gameState.specialCooldown2 || 1));
+
+    const barWidth = 40;
+    const barHeight = 4;
+    const x = gameState.playerX - barWidth / 2;
+    const y = gameState.playerY + 28;
+
+    ctx.save();
+
+    // Barra 1 (Viola)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(x, y, barWidth, barHeight);
+
+    if (perc1 < 1) {
+        const grad1 = ctx.createLinearGradient(x, y, x + barWidth, y);
+        grad1.addColorStop(0, '#4b0082');
+        grad1.addColorStop(1, '#8a2be2');
+        ctx.fillStyle = grad1;
+        ctx.fillRect(x, y, barWidth * perc1, barHeight);
+    } else {
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = '#bf00ff';
+        ctx.fillStyle = '#bf00ff'; 
+        ctx.fillRect(x, y, barWidth, barHeight);
+    }
+
+    // Barra 2 (Verdino/Turchese)
+    const y2 = y + barHeight + 3;
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(x, y2, barWidth, barHeight);
+
+    if (perc2 < 1) {
+        const grad2 = ctx.createLinearGradient(x, y2, x + barWidth, y2);
+        grad2.addColorStop(0, '#008b8b');
+        grad2.addColorStop(1, '#00ffcc');
+        ctx.fillStyle = grad2;
+        ctx.fillRect(x, y2, barWidth * perc2, barHeight);
+    } else {
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = '#33ff33';
+        ctx.fillStyle = '#33ff33'; 
+        ctx.fillRect(x, y2, barWidth, barHeight);
+    }
+
+    ctx.restore();
+}
