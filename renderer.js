@@ -169,7 +169,38 @@ export function updateEnemies() {
 }
 
 
+export function createExplosion(x, y, color = '#FFC300') { // Giallo/Arancione come default
+    gameState.explosions.push({
+        x: x,
+        y: y,
+        radius: 5,         // Raggio iniziale
+        maxRadius: 30,     // Raggio massimo
+        alpha: 1,          // Opacità iniziale
+        speed: 0.8,        // Velocità di espansione
+        fadeSpeed: 0.05,   // Velocità di dissolvenza
+        color: color
+    });
+}
 
+export function updateExplosions() {
+    gameState.explosions = gameState.explosions.filter(explosion => {
+        explosion.radius += explosion.speed;
+        explosion.alpha -= explosion.fadeSpeed;
+        return explosion.alpha > 0 && explosion.radius < explosion.maxRadius;
+    });
+}
+
+export function drawExplosions(ctx) {
+    gameState.explosions.forEach(explosion => {
+        ctx.save();
+        ctx.globalAlpha = explosion.alpha;
+        ctx.fillStyle = explosion.color;
+        ctx.beginPath();
+        ctx.arc(explosion.x, explosion.y, explosion.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    });
+}
 
 //UI
 
