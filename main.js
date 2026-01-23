@@ -164,7 +164,7 @@ function gameLoop() {
             }
         }
     }
-}
+
 
             if (gameState.boss.y < gameState.boss.targetY) gameState.boss.y += 2;
             Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
