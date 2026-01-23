@@ -150,12 +150,12 @@ export function drawEnemies(ctx, enemyImg) {
 
 export function spawnEnemies(count) {
     for (let i = 0; i < count; i++) {
-        const size = 30 + Math.random() * 20; // Dimensioni tra 30 e 50px
+        const size = 70 + Math.random() * 30; // Dimensioni tra 30 e 50px
         gameState.enemies.push({
             x: Math.random() * (CONFIG.CANVAS_WIDTH - 40) + 20, 
             y: -50 - (Math.random() * 200), 
             size: size,
-            speed: 1.5 + Math.random() * 2,
+            speed: 2 + Math.random() * 2,
             color: '#ff4444' // Utile se decidi di rimettere l'effetto shadow
         });
     }
