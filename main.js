@@ -39,8 +39,8 @@ chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-W
 // ENEMIES
 const shadowImg = new Image();
 shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png';
-const shadowImg = new Image();
-shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/asteroid.png';
+const asteroid = new Image();
+asteroid.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/asteroid.png';
 
 // --- INITIALIZATION ---
 function init() {
@@ -178,7 +178,7 @@ function gameLoop() {
 
         // 5. RENDERING
         Renderer.drawPlayer(ctx, playerSprite);
-        Renderer.drawEnemies(ctx);
+        Renderer.drawEnemies(ctx,asteroid);
         SpecialAttacks.drawSpecialRay(ctx);
         SpecialAttacks.drawSpecialRay2(ctx);
         
