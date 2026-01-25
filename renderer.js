@@ -127,17 +127,18 @@ export function spawnEnemies() {
     const spawnRate = 1000; 
 
     if (now - gameState.lastEnemySpawn > spawnRate) {
-        const size = 30 + Math.random() * 20; 
+        // I globi variano leggermente in dimensione
+        const size = 25 + Math.random() * 15; 
         gameState.enemies.push({
             id: Date.now(),
-            // USA CONFIG.CANVAS_WIDTH QUI
             x: Math.random() * (CONFIG.CANVAS_WIDTH - size), 
             y: -size, 
             width: size,
             height: size,
-            speed: 2 + Math.random() * 2, 
-            hp: Math.ceil(size / 10), 
-            color: `hsl(${Math.random() * 360}, 70%, 50%)` 
+            speed: 1.5 + Math.random() * 2, 
+            // I globi d'ombra potrebbero avere 1 solo HP (colpo secco) o essere indistruttibili
+            hp: 1, 
+            pulse: 0 // Usato per l'animazione dell'aura
         });
         gameState.lastEnemySpawn = now;
     }
@@ -164,21 +165,45 @@ export function updateEnemies() {
 export function drawEnemies(ctx) {
     gameState.enemies.forEach(enemy => {
         ctx.save();
-        
-        // Corpo del nemico (Stile Pixel Art semplice)
-        ctx.fillStyle = enemy.color;
-        ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
 
-        // Dettaglio "pixel" interno per dare profondità
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-        ctx.fillRect(enemy.x + 5, enemy.y + 5, enemy.width - 10, enemy.height - 10);
+        // Calcoliamo una pulsazione basata sul tempo per l'effetto "vivo"
+        enemy.pulse += 0.1;
+        const pulseScale = Math.sin(enemy.pulse) * 3;
 
-        // Barra della vita sopra il nemico (opzionale)
-        const healthBarWidth = (enemy.hp / Math.ceil(enemy.width / 10)) * enemy.width;
-        ctx.fillStyle = 'red';
-        ctx.fillRect(enemy.x, enemy.y - 10, enemy.width, 4);
-        ctx.fillStyle = 'green';
-        ctx.fillRect(enemy.x, enemy.y - 10, healthBarWidth, 4);
+        const centerX = enemy.x + enemy.width / 2;
+        const centerY = enemy.y + enemy.height / 2;
+        const radius = enemy.width / 2;
+
+        // 1. Aura esterna (Sfumatura d'ombra)
+        const gradient = ctx.createRadialGradient(
+            centerX, centerY, radius * 0.2, 
+            centerX, centerY, radius + pulseScale
+        );
+        gradient.addColorStop(0, 'rgba(20, 0, 40, 0.9)');  // Nucleo viola scuro
+        gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.6)');  // Nero semitrasparente
+        gradient.addColorStop(1, 'rgba(50, 0, 100, 0)');   // Dissolvenza totale
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius + pulseScale, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Nucleo "Pixelato" (Stile retrò)
+        // Creiamo dei piccoli quadratini casuali all'interno per l'effetto pixel art
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        const pixelSize = 4;
+        for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+                if (Math.random() > 0.3) {
+                    ctx.fillRect(
+                        centerX + (i * pixelSize * 2) - pixelSize/2, 
+                        centerY + (j * pixelSize * 2) - pixelSize/2, 
+                        pixelSize, 
+                        pixelSize
+                    );
+                }
+            }
+        }
 
         ctx.restore();
     });
