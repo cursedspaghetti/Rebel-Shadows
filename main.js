@@ -206,7 +206,7 @@ if (gameState.specialRay.active || (gameState.specialRay2 && gameState.specialRa
 
         // 5. RENDERING
         Renderer.drawPlayer(ctx, playerSprite);
-        Renderer.drawEnemies(ctx, asteroid);
+        Renderer.drawEnemies(ctx);
         SpecialAttacks.drawSpecialRay(ctx);
         SpecialAttacks.drawSpecialRay2(ctx);
         
