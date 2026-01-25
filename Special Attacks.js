@@ -80,14 +80,14 @@ export function drawSpecialRay2(ctx) {
     }
 
     const rayHeight = gameState.playerY;
-    const bottomWidth = ray.currentWidth2; // Larghezza alla base (giocatore)
-    const topWidth = ray.currentWidth2 * 4; // Più stretto in cima (effetto prospettiva)
+    const bottomWidth = ray.currentWidth2; 
+    // Aumentato il moltiplicatore da 4 a 8 per un cono molto più ampio
+    const topWidth = ray.currentWidth2 * 8; 
 
-    // --- LOGICA PARTICELLE (Adattata al cono) ---
+    // --- LOGICA PARTICELLE (Palette Viola/Nero) ---
     if (ray.currentWidth2 > 10) { 
         for (let i = 0; i < 3; i++) {
-            const progress = Math.random(); // Dove si trova lungo l'altezza (0 = cima, 1 = fondo)
-            // Calcola la larghezza del raggio a quella specifica altezza Y
+            const progress = Math.random(); 
             const currentWidthAtY = topWidth + (bottomWidth - topWidth) * progress;
             
             gameState.rayParticles2.push({
@@ -102,60 +102,67 @@ export function drawSpecialRay2(ctx) {
         }
     }
 
-    // Disegno particelle (rimane simile, ma con filtro per pulizia)
+    // Disegno particelle con ombre nere come richiesto
     ctx.save();
     gameState.rayParticles2.forEach((p, index) => {
-        ctx.fillStyle = `rgba(138, 43, 226, ${p.life})`;
+        ctx.fillStyle = `rgba(138, 43, 226, ${p.life2})`;
+        ctx.shadowBlur = 5;
+        ctx.shadowColor = "black";
         ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.arc(p.x2, p.y2, p.size2, 0, Math.PI * 2);
         ctx.fill();
-        p.x += p.speedX; p.y += p.speedY; p.life -= p.decay;
-        if (p.life <= 0) gameState.rayParticles2.splice(index, 1);
+
+        p.x2 += p.speedX2; 
+        p.y2 += p.speedY2; 
+        p.life2 -= p.decay2;
+        if (p.life2 <= 0) gameState.rayParticles2.splice(index, 1);
     });
     ctx.restore();
 
-    // --- DISEGNO DEL RAGGIO A CONO ---
+    // --- DISEGNO DEL RAGGIO A CONO (Palette Originale) ---
     ctx.save();
     
-    // Definiamo il percorso del trapezio
+    // Trapezio per il corpo del raggio
     ctx.beginPath();
-    ctx.moveTo(ray.x2 - topWidth / 2, 0);               // Angolo alto SX
-    ctx.lineTo(ray.x2 + topWidth / 2, 0);               // Angolo alto DX
-    ctx.lineTo(ray.x2 + bottomWidth / 2, rayHeight);    // Angolo basso DX
-    ctx.lineTo(ray.x2 - bottomWidth / 2, rayHeight);    // Angolo basso SX
+    ctx.moveTo(ray.x2 - topWidth / 2, 0);               
+    ctx.lineTo(ray.x2 + topWidth / 2, 0);               
+    ctx.lineTo(ray.x2 + bottomWidth / 2, rayHeight);    
+    ctx.lineTo(ray.x2 - bottomWidth / 2, rayHeight);    
     ctx.closePath();
 
-    // Gradient orizzontale dinamico (deve seguire la forma, usiamo ray.x come centro)
-    let gradient = ctx.createLinearGradient(ray.x2 - bottomWidth/2, 0, ray.x2 + bottomWidth/2, 0);
+    // Gradiente con la palette del primo raggio (più scuro e profondo)
+    // Usiamo topWidth per assicurarci che il gradiente copra tutta l'apertura
+    let gradient = ctx.createLinearGradient(ray.x2 - topWidth/2, 0, ray.x2 + topWidth/2, 0);
     gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    gradient.addColorStop(0.5, 'rgba(75, 0, 130, 0.9)');
+    gradient.addColorStop(0.2, 'rgba(48, 0, 65, 0.8)');   // Deep Purple
+    gradient.addColorStop(0.5, 'rgba(10, 0, 20, 0.95)');  // Near Black
+    gradient.addColorStop(0.8, 'rgba(75, 0, 130, 0.8)');  // Indigo
     gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
     ctx.shadowBlur = 30;
     ctx.shadowColor = "#4b0082";
     ctx.fillStyle = gradient;
-    ctx.fill(); // Riempiamo il path creato sopra
+    ctx.fill(); 
 
-    // Core instabile (anche questo a cono)
+    // Core instabile (più luminoso al centro)
     const jitter = Math.random() * 4;
-    const coreTop = (topWidth * 0.2) + jitter;
-    const coreBottom = (bottomWidth * 0.2) + jitter;
+    const coreTop = (topWidth * 0.15) + jitter;
+    const coreBottom = (bottomWidth * 0.15) + jitter;
 
     ctx.beginPath();
-    ctx.moveTo(ray.x - coreTop / 2, 0);
-    ctx.lineTo(ray.x + coreTop / 2, 0);
-    ctx.lineTo(ray.x + coreBottom / 2, rayHeight);
-    ctx.lineTo(ray.x - coreBottom / 2, rayHeight);
+    ctx.moveTo(ray.x2 - coreTop / 2, 0);
+    ctx.lineTo(ray.x2 + coreTop / 2, 0);
+    ctx.lineTo(ray.x2 + coreBottom / 2, rayHeight);
+    ctx.lineTo(ray.x2 - coreBottom / 2, rayHeight);
     ctx.closePath();
 
-    ctx.fillStyle = "#e0b0ff";
-    ctx.shadowBlur = 15;
+    ctx.fillStyle = "#e0b0ff"; // Lavender core
+    ctx.shadowBlur = 20;
     ctx.shadowColor = "#ff00ff";
     ctx.fill();
     
     ctx.restore();
 }
-
 
 export function drawChargeEffect(ctx, chargeImg) {
     if (chargeImg.complete && chargeImg.naturalWidth !== 0) {
