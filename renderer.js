@@ -123,20 +123,20 @@ export function updateBullets() {
 
 export function spawnEnemies() {
     const now = Date.now();
-    // Intervallo di spawn (es. ogni 1000ms), può diminuire per aumentare la difficoltà
     const spawnRate = 1000; 
 
     if (now - gameState.lastEnemySpawn > spawnRate) {
-        const size = 30 + Math.random() * 20; // Dimensioni variabili
+        const size = 30 + Math.random() * 20; 
         gameState.enemies.push({
             id: Date.now(),
-            x: Math.random() * (canvas.CANVAS_WIDTH - size), // Posizione X casuale
-            y: -size, // Parte appena fuori dallo schermo in alto
+            // USA CONFIG.CANVAS_WIDTH QUI
+            x: Math.random() * (CONFIG.CANVAS_WIDTH - size), 
+            y: -size, 
             width: size,
             height: size,
-            speed: 2 + Math.random() * 2, // Velocità casuale
-            hp: Math.ceil(size / 10), // Più sono grandi, più vita hanno
-            color: `hsl(${Math.random() * 360}, 70%, 50%)` // Colore casuale
+            speed: 2 + Math.random() * 2, 
+            hp: Math.ceil(size / 10), 
+            color: `hsl(${Math.random() * 360}, 70%, 50%)` 
         });
         gameState.lastEnemySpawn = now;
     }
