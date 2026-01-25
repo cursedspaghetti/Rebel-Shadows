@@ -46,38 +46,35 @@ export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
         
-        const filamentWidth = bullet.size * 0.2;
-        const height = bullet.size * 8;         
-        const horizontalGap = 3;                
+        // Colori pixel art (niente sfumature trasparenti)
+        const coreColor = '#ffffff';
+        const edgeColor = '#e0e0e0';
+        const pixelSize = 2; // La dimensione del "pixel" virtuale
+        
+        // Ridotto il gap orizzontale per farli sembrare un unico fascio o molto vicini
+        const horizontalGap = 2; 
+        const bulletWidth = 4;
+        const bulletHeight = 12;
 
-        const drawFilament = (offsetX) => {
-            const posX = bullet.x + offsetX;
-            let gradient = ctx.createLinearGradient(
-                posX, bullet.y - height / 2, 
-                posX, bullet.y + height / 2
-            );
+        const drawPixelBullet = (offsetX) => {
+            const posX = bullet.x + offsetX - (bulletWidth / 2);
+            const posY = bullet.y - (bulletHeight / 2);
+
+            // Corpo del proiettile (Rettangolo solido per pixel art)
+            ctx.fillStyle = edgeColor;
+            ctx.fillRect(posX, posY, bulletWidth, bulletHeight);
             
-            gradient.addColorStop(0, '#ffffff');      
-            gradient.addColorStop(0.2, '#e0e0e0');    
-            gradient.addColorStop(0.7, 'rgba(100, 100, 100, 0.3)'); 
-            gradient.addColorStop(1, 'transparent');
-
-            ctx.fillStyle = gradient;
-            ctx.beginPath();
-            ctx.ellipse(posX, bullet.y, filamentWidth / 2, height / 2, 0, 0, Math.PI * 2);
-            ctx.fill();
+            // "Highlight" centrale per dare profondità 8-bit
+            ctx.fillStyle = coreColor;
+            ctx.fillRect(posX + 1, posY + 1, bulletWidth - 2, bulletHeight - 4);
         };
 
-        ctx.shadowBlur = 3;
-        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+        // Rimuoviamo shadowBlur per un look pulito pixel art
+        ctx.shadowBlur = 0; 
 
-        drawFilament(-horizontalGap / 2); 
-        drawFilament(horizontalGap / 2);  
-
-        ctx.beginPath();
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-        ctx.arc(bullet.x, bullet.y - height / 2.2, filamentWidth, 0, Math.PI * 2);
-        ctx.fill();
+        // Disegniamo i due filamenti vicini
+        drawPixelBullet(-horizontalGap / 2);
+        drawPixelBullet(horizontalGap / 2);
 
         ctx.restore();
     });
@@ -91,8 +88,12 @@ export function autoFire() {
 
     if (now - gameState.lastShotTime >= currentFireRate) {
         const missileCount = gameState.bulletLevel === 1 ? 1 : (gameState.bulletLevel === 2 ? 3 : 5);
-        const spacing = 18;
-        const verticalStagger = 12;
+        
+        // --- MODIFICHE QUI ---
+        const spacing = 8; // Ridotto da 18 a 8 per averli molto vicini
+        const verticalStagger = 6; // Ridotto lo sfasamento verticale per coerenza
+        // ---------------------
+
         const totalWidth = (missileCount - 1) * spacing;
         let startX = gameState.playerX - (totalWidth / 2);
         const centerIndex = Math.floor(missileCount / 2);
@@ -102,8 +103,8 @@ export function autoFire() {
             gameState.bullets.push({
                 x: startX + i * spacing,
                 y: (gameState.playerY - 20) + (distFromCenter * verticalStagger),
-                speed: 10,
-                size: 12,
+                speed: 12, // Leggermente più veloce per un feeling arcade
+                size: 8,
                 color: gameState.selectedRingColor,
                 isSpecial: false
             });
