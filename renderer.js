@@ -42,6 +42,46 @@ export function drawPlayer(ctx, img) {
 
 
 // BULLETS
+export function drawBullets(ctx) {
+    gameState.bullets.forEach(bullet => {
+        ctx.save();
+        
+        const filamentWidth = bullet.size * 0.2;
+        const height = bullet.size * 8;         
+        const horizontalGap = 3;                
+
+        const drawFilament = (offsetX) => {
+            const posX = bullet.x + offsetX;
+            let gradient = ctx.createLinearGradient(
+                posX, bullet.y - height / 2, 
+                posX, bullet.y + height / 2
+            );
+            
+            gradient.addColorStop(0, '#ffffff');      
+            gradient.addColorStop(0.2, '#e0e0e0');    
+            gradient.addColorStop(0.7, 'rgba(100, 100, 100, 0.3)'); 
+            gradient.addColorStop(1, 'transparent');
+
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.ellipse(posX, bullet.y, filamentWidth / 2, height / 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+        };
+
+        ctx.shadowBlur = 3;
+        ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+
+        drawFilament(-horizontalGap / 2); 
+        drawFilament(horizontalGap / 2);  
+
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.arc(bullet.x, bullet.y - height / 2.2, filamentWidth, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+    });
+}
 
 export function autoFire() {
     if (gameState.currentScreen !== 'playing' || gameState.isCharging || gameState.isCharging2) return;
@@ -63,8 +103,8 @@ export function autoFire() {
                 x: startX + i * spacing,
                 y: (gameState.playerY - 20) + (distFromCenter * verticalStagger),
                 speed: 10,
-                size: 14,      // Diametro della sfera
-                rotation: 0,   // Angolo iniziale
+                size: 12,
+                color: gameState.selectedRingColor,
                 isSpecial: false
             });
         }
@@ -75,56 +115,7 @@ export function autoFire() {
 export function updateBullets() {
     gameState.bullets = gameState.bullets.filter(bullet => {
         bullet.y -= bullet.speed;
-        // Facciamo ruotare la sfera; più è veloce il valore, più il vortice è rapido
-        bullet.rotation += 0.25; 
-        return bullet.y > -50; // Rimuove il proiettile quando esce dallo schermo
-    });
-}
-
-export function drawBullets(ctx) {
-    gameState.bullets.forEach(bullet => {
-        ctx.save();
-        ctx.translate(bullet.x, bullet.y);
-        
-        const pSize = 2; // Dimensione del "pixel" (più piccolo = più dettaglio)
-        const radius = bullet.size / 2;
-        const glowSize = 4; // Spessore del bordo luminoso in pixel
-
-        // 1. DISEGNO DEL GLOW (Bordo luminoso pixelato)
-        ctx.fillStyle = 'rgba(100, 200, 255, 0.3)'; // Colore del bagliore (celeste/ombra)
-        for (let y = -radius - glowSize; y < radius + glowSize; y += pSize) {
-            for (let x = -radius - glowSize; x < radius + glowSize; x += pSize) {
-                if (x * x + y * y <= (radius + glowSize) * (radius + glowSize)) {
-                    ctx.fillRect(x, y, pSize, pSize);
-                }
-            }
-        }
-
-        // 2. DISEGNO DELLA SFERA RUOTANTE
-        ctx.rotate(bullet.rotation);
-        for (let y = -radius; y < radius; y += pSize) {
-            for (let x = -radius; x < radius; x += pSize) {
-                if (x * x + y * y <= radius * radius) {
-                    
-                    // Logica dei colori per l'effetto "Vortice d'Ombra"
-                    let color = '#111111'; // Nero profondo di base
-                    
-                    // Creiamo delle striature che si muovono con la rotazione
-                    const pattern = Math.sin((x + bullet.rotation * 5) * 0.5);
-                    
-                    if (pattern > 0.4) color = '#222222'; // Grigio scuro
-                    if (pattern > 0.8) color = '#444444'; // Grigio medio (riflesso)
-                    
-                    // Nucleo centrale fisso
-                    if (x * x + y * y < (radius/4) * (radius/4)) color = '#000000';
-
-                    ctx.fillStyle = color;
-                    ctx.fillRect(x, y, pSize, pSize);
-                }
-            }
-        }
-
-        ctx.restore();
+        return bullet.y > 0;
     });
 }
 
