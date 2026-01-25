@@ -118,46 +118,73 @@ function gameLoop() {
             }
         }
 
-        // --- GESTIONE COLLISIONI ---
-        for (let b = gameState.bullets.length - 1; b >= 0; b--) {
-            let bullet = gameState.bullets[b];
-            for (let e = gameState.enemies.length - 1; e >= 0; e--) {
-                let enemy = gameState.enemies[e];
-                let dx = bullet.x - enemy.x;
-                let dy = bullet.y - enemy.y;
-                let dist = Math.sqrt(dx*dx + dy*dy);
-                
-                if (dist < (enemy.size / 2 + bullet.size)) {
-                    Renderer.createExplosion(enemy.x, enemy.y, enemy.color);
-                    gameState.enemies.splice(e, 1);
-                    gameState.bullets.splice(b, 1);
-                    break; 
-                }
+    // --- GESTIONE COLLISIONI OTTIMIZZATA ---
+
+// 1. Collisioni Proiettili (Bullets)
+for (let b = gameState.bullets.length - 1; b >= 0; b--) {
+    const bullet = gameState.bullets[b];
+    let bulletDestroyed = false;
+
+    // Controllo collisione con il BOSS
+    if (gameState.bossActive && gameState.boss) {
+        const dx = bullet.x - gameState.boss.x;
+        const dy = bullet.y - gameState.boss.y;
+        const distanceSq = dx * dx + dy * dy;
+        const radiusSum = (gameState.boss.size / 2) + bullet.size;
+
+        if (distanceSq < radiusSum * radiusSum) {
+            gameState.boss.hp -= 1;
+            Renderer.createExplosion(bullet.x, bullet.y, '#ffffff');
+            gameState.bullets.splice(b, 1);
+            bulletDestroyed = true;
+        }
+    }
+
+    // Controllo collisione con NEMICI (solo se il proiettile non ha colpito il boss)
+    if (!bulletDestroyed) {
+        for (let e = gameState.enemies.length - 1; e >= 0; e--) {
+            const enemy = gameState.enemies[e];
+            const dx = bullet.x - enemy.x;
+            const dy = bullet.y - enemy.y;
+            const distanceSq = dx * dx + dy * dy;
+            const radiusSum = (enemy.size / 2) + bullet.size;
+
+            if (distanceSq < radiusSum * radiusSum) {
+                Renderer.createExplosion(enemy.x, enemy.y, enemy.color);
+                gameState.enemies.splice(e, 1);
+                gameState.bullets.splice(b, 1);
+                break; // Esci dal ciclo nemici, il proiettile è usato
             }
         }
+    }
+}
 
-        // --- Collisioni Raggi Speciali ---
-        if (gameState.specialRay.active || gameState.specialRay2.active2) {
-            let rayX = gameState.specialRay.active ? gameState.specialRay.x : gameState.specialRay2.x2;
-            let rayDamage = 20;
+// 2. Collisioni Raggi Speciali (Special Rays)
+if (gameState.specialRay.active || (gameState.specialRay2 && gameState.specialRay2.active2)) {
+    const rayX = gameState.specialRay.active ? gameState.specialRay.x : gameState.specialRay2.x2;
+    const rayDamage = 0.5; // Danno continuo per frame (regolabile)
+    const rayWidth = 40;
 
-            for (let e = gameState.enemies.length - 1; e >= 0; e--) {
-                if (Math.abs(gameState.enemies[e].x - rayX) < 40) {
-                    Renderer.createExplosion(gameState.enemies[e].x, gameState.enemies[e].y, '#ffffff');
-                    gameState.enemies.splice(e, 1);
-                }
-            }
+    // Raggio vs Nemici
+    for (let e = gameState.enemies.length - 1; e >= 0; e--) {
+        if (Math.abs(gameState.enemies[e].x - rayX) < rayWidth) {
+            Renderer.createExplosion(gameState.enemies[e].x, gameState.enemies[e].y, '#ffffff');
+            gameState.enemies.splice(e, 1);
+        }
+    }
 
-            if (gameState.bossActive && gameState.boss) {
-                if (Math.abs(gameState.boss.x - rayX) < (gameState.boss.size / 2 + 20)) {
-                    gameState.boss.hp -= rayDamage; 
-                    if (Math.random() > 0.8) {
-                        Renderer.createExplosion(rayX, gameState.boss.y + (Math.random() * 50), '#fff');
-                    }
-                }
+    // Raggio vs Boss
+    if (gameState.bossActive && gameState.boss) {
+        const bossHitbox = (gameState.boss.size / 2) + 20;
+        if (Math.abs(gameState.boss.x - rayX) < bossHitbox) {
+            gameState.boss.hp -= rayDamage;
+            // Effetto particellare casuale durante il colpo del raggio
+            if (Math.random() > 0.8) {
+                Renderer.createExplosion(rayX, gameState.boss.y + (Math.random() * 40 - 20), '#fff');
             }
         }
-
+    }
+}
         // --- LOGICA BOSS ---
         if (gameState.bossActive && gameState.boss) {
             if (gameState.boss.y < gameState.boss.targetY) gameState.boss.y += 2;
