@@ -122,54 +122,33 @@ export function updateBullets() {
 
 // ENEMIES
 
-// Aggiungiamo enemyImg ai parametri
-export function drawEnemies(ctx, enemyImg) {
-    gameState.enemies.forEach(enemy => {
-        ctx.save();
-        
-        // Verifichiamo che l'immagine sia effettivamente passata e caricata
-        if (enemyImg) {
-            ctx.drawImage(
-                enemyImg, 
-                enemy.x - enemy.size / 2, 
-                enemy.y - enemy.size / 2, 
-                enemy.size, 
-                enemy.size
-            );
-        } else {
-            // Fallback nel caso l'immagine non arrivi correttamente
-            ctx.fillStyle = enemy.color;
-            ctx.beginPath();
-            ctx.arc(enemy.x, enemy.y, enemy.size / 2, 0, Math.PI * 2);
-            ctx.fill();
+export function autoFire() {
+    if (gameState.currentScreen !== 'playing' || gameState.isCharging || gameState.isCharging2) return;
+
+    const now = Date.now();
+    const currentFireRate = CONFIG.FIRE_RATE_LEVELS[gameState.fireRateLevel] || 200;
+
+    if (now - gameState.lastShotTime >= currentFireRate) {
+        const missileCount = gameState.bulletLevel === 1 ? 1 : (gameState.bulletLevel === 2 ? 3 : 5);
+        const spacing = 18;
+        const verticalStagger = 12;
+        const totalWidth = (missileCount - 1) * spacing;
+        let startX = gameState.playerX - (totalWidth / 2);
+        const centerIndex = Math.floor(missileCount / 2);
+
+        for (let i = 0; i < missileCount; i++) {
+            const distFromCenter = Math.abs(i - centerIndex);
+            gameState.bullets.push({
+                x: startX + i * spacing,
+                y: (gameState.playerY - 20) + (distFromCenter * verticalStagger),
+                speed: 10,
+                size: 14,      // Diametro della sfera
+                rotation: 0,   // Angolo iniziale
+                isSpecial: false
+            });
         }
-        
-        ctx.restore();
-    });
-}
-
-export function spawnEnemies(count) {
-    for (let i = 0; i < count; i++) {
-        const size = 70 + Math.random() * 30; // Dimensioni tra 30 e 50px
-        gameState.enemies.push({
-            x: Math.random() * (CONFIG.CANVAS_WIDTH - 40) + 20, 
-            y: -50 - (Math.random() * 200), 
-            size: size,
-            speed: 5 + Math.random() * 2,
-            color: '#ff4444' // Utile se decidi di rimettere l'effetto shadow
-        });
+        gameState.lastShotTime = now;
     }
-}
-
-export function updateEnemies() {
-    gameState.enemies = gameState.enemies.filter(enemy => {
-        // Muove il nemico verso il basso in base alla sua velocità
-        enemy.y += enemy.speed;
-        
-        // Mantieni il nemico solo se è ancora dentro l'area di gioco
-        // (Aggiungiamo un margine di 50px oltre il fondo del canvas)
-        return enemy.y < CONFIG.CANVAS_HEIGHT + 50;
-    });
 }
 
 
