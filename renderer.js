@@ -130,7 +130,7 @@ export function spawnEnemies() {
         const size = 30 + Math.random() * 20; // Dimensioni variabili
         gameState.enemies.push({
             id: Date.now(),
-            x: Math.random() * (canvas.width - size), // Posizione X casuale
+            x: Math.random() * (canvas.CANVAS_WIDTH - size), // Posizione X casuale
             y: -size, // Parte appena fuori dallo schermo in alto
             width: size,
             height: size,
@@ -144,18 +144,15 @@ export function spawnEnemies() {
 
 export function updateEnemies() {
     gameState.enemies = gameState.enemies.filter(enemy => {
-        // Movimento verso il basso
         enemy.y += enemy.speed;
 
-        // Rimuovi se esce dal fondo dello schermo
-        if (enemy.y > canvas.height) {
-            // Qui potresti togliere una vita al giocatore
+        // USA CONFIG.CANVAS_HEIGHT QUI
+        if (enemy.y > CONFIG.CANVAS_HEIGHT) {
             return false;
         }
 
-        // Rimuovi se morto (gestito solitamente dalla logica delle collisioni)
         if (enemy.hp <= 0) {
-            gameState.score += 10; // Aggiungi punti
+            gameState.score += 10; 
             return false;
         }
 
