@@ -57,6 +57,14 @@ export let gameState = {
     lastShotTime: 0,
     bullets: [],
 
+    // Shield State
+    shieldActive: false,
+    shieldDuration: 5,       // Secondi di durata
+    shieldStartTime: 0,
+    shieldCooldown: 15,      // Secondi di ricarica
+    shieldLastUsed: 0,
+    shieldOnCooldown: false,
+    
     // Special Attack State 1
     specialCooldown: 10,
     specialLastUsed: 0,
