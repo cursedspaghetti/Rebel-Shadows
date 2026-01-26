@@ -121,5 +121,7 @@ export function resetGameState() {
     gameState.bossActive = false;
     gameState.specialOnCooldown = false;
     gameState.specialOnCooldown2 = false;
+    gameState.shieldActive = false;
+    gameState.shieldOnCooldown = false;
 
 }
