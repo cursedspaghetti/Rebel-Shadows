@@ -220,3 +220,66 @@ export function updateSpecialRay2() {
         ray.active2 = false;
     }
 }
+
+export function activateShield() {
+    const now = Date.now() / 1000;
+    if (gameState.shieldOnCooldown) return;
+
+    gameState.shieldActive = true;
+    gameState.shieldStartTime = now;
+    gameState.shieldLastUsed = now;
+    gameState.shieldOnCooldown = true;
+}
+
+export function updateShield() {
+    if (!gameState.shieldActive) {
+        // Gestione Cooldown
+        const now = Date.now() / 1000;
+        if (gameState.shieldOnCooldown && now - gameState.shieldLastUsed > gameState.shieldCooldown) {
+            gameState.shieldOnCooldown = false;
+        }
+        return;
+    }
+
+    const now = Date.now() / 1000;
+    const elapsed = now - gameState.shieldStartTime;
+
+    if (elapsed >= gameState.shieldDuration) {
+        gameState.shieldActive = false;
+    }
+}
+
+export function drawShield(ctx) {
+    if (!gameState.shieldActive) return;
+
+    const playerSize = 40; // Regola in base alla dimensione del tuo player
+    const radius = playerSize + Math.sin(Date.now() * 0.01) * 5; // Effetto pulsante
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(gameState.playerX, gameState.playerY, radius, 0, Math.PI * 2);
+    
+    // Gradiente radiale per lo scudo
+    let gradient = ctx.createRadialGradient(
+        gameState.playerX, gameState.playerY, radius * 0.7,
+        gameState.playerX, gameState.playerY, radius
+    );
+    gradient.addColorStop(0, 'rgba(0, 191, 255, 0)');   // Trasparente al centro
+    gradient.addColorStop(0.8, 'rgba(0, 191, 255, 0.3)'); // Celeste tenue
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0.8)'); // Bordo bianco luminoso
+
+    ctx.fillStyle = gradient;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = "#00bfff";
+    ctx.fill();
+    
+    // Un cerchio sottile esterno per dare definizione
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    ctx.restore();
+}
+
+
+
