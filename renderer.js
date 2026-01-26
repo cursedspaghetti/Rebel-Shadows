@@ -122,93 +122,91 @@ export function updateBullets() {
 
 // ENEMIES
 
-export function spawnEnemies() {
-    const now = Date.now();
-    const spawnRate = 1000; 
-
-    if (now - gameState.lastEnemySpawn > spawnRate) {
-        // I globi variano leggermente in dimensione
-        const size = 25 + Math.random() * 15; 
-        gameState.enemies.push({
-            id: Date.now(),
-            x: Math.random() * (CONFIG.CANVAS_WIDTH - size), 
-            y: -size, 
-            width: size,
-            height: size,
-            speed: 1.5 + Math.random() * 2, 
-            // I globi d'ombra potrebbero avere 1 solo HP (colpo secco) o essere indistruttibili
-            hp: 1, 
-            pulse: 0 // Usato per l'animazione dell'aura
-        });
-        gameState.lastEnemySpawn = now;
-    }
-}
-
-export function updateEnemies() {
-    gameState.enemies = gameState.enemies.filter(enemy => {
-        enemy.y += enemy.speed;
-
-        // USA CONFIG.CANVAS_HEIGHT QUI
-        if (enemy.y > CONFIG.CANVAS_HEIGHT) {
-            return false;
-        }
-
-        if (enemy.hp <= 0) {
-            gameState.score += 10; 
-            return false;
-        }
-
-        return true;
-    });
-}
-
+/**
+ * Disegna i nemici come entità spettrali (nucleo d'ombra ed energia oscura)
+ */
 export function drawEnemies(ctx) {
     gameState.enemies.forEach(enemy => {
         ctx.save();
 
-        // Calcoliamo una pulsazione basata sul tempo per l'effetto "vivo"
-        enemy.pulse += 0.1;
-        const pulseScale = Math.sin(enemy.pulse) * 3;
-
-        const centerX = enemy.x + enemy.width / 2;
-        const centerY = enemy.y + enemy.height / 2;
-        const radius = enemy.width / 2;
-
-        // 1. Aura esterna (Sfumatura d'ombra)
-        const gradient = ctx.createRadialGradient(
-            centerX, centerY, radius * 0.2, 
-            centerX, centerY, radius + pulseScale
+        // 1. ALONE SPETTRALE ESTERNO (Nebbia oscura)
+        const ghostGlow = ctx.createRadialGradient(
+            enemy.x, enemy.y, 0,
+            enemy.x, enemy.y, enemy.size
         );
-        gradient.addColorStop(0, 'rgba(20, 0, 40, 0.9)');  // Nucleo viola scuro
-        gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.6)');  // Nero semitrasparente
-        gradient.addColorStop(1, 'rgba(50, 0, 100, 0)');   // Dissolvenza totale
+        ghostGlow.addColorStop(0, 'rgba(138, 43, 226, 0.6)'); // Viola elettrico al centro
+        ghostGlow.addColorStop(0.5, 'rgba(75, 0, 130, 0.3)');  // Indigo sfumato
+        ghostGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');         // Dissolvenza nel nero
 
-        ctx.fillStyle = gradient;
+        ctx.fillStyle = ghostGlow;
         ctx.beginPath();
-        ctx.arc(centerX, centerY, radius + pulseScale, 0, Math.PI * 2);
+        ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
         ctx.fill();
 
-        // 2. Nucleo "Pixelato" (Stile retrò)
-        // Creiamo dei piccoli quadratini casuali all'interno per l'effetto pixel art
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        const pixelSize = 4;
-        for (let i = -1; i <= 1; i++) {
-            for (let j = -1; j <= 1; j++) {
-                if (Math.random() > 0.3) {
-                    ctx.fillRect(
-                        centerX + (i * pixelSize * 2) - pixelSize/2, 
-                        centerY + (j * pixelSize * 2) - pixelSize/2, 
-                        pixelSize, 
-                        pixelSize
-                    );
-                }
-            }
+        // 2. IL NUCLEO D'OMBRA (Il "vuoto")
+        // Creiamo un gradiente che va dal nero totale a un bordo luminoso spettrale
+        const voidCore = ctx.createRadialGradient(
+            enemy.x, enemy.y, enemy.size * 0.1, // Centro del vuoto
+            enemy.x, enemy.y, enemy.size * 0.4  // Limite del nucleo
+        );
+        voidCore.addColorStop(0, '#000000');           // Il centro è puro vuoto (nero)
+        voidCore.addColorStop(0.7, '#1a0033');         // Viola scurissimo
+        voidCore.addColorStop(1, '#00ffff');           // Bordo ciano "elettrico" (effetto spettrale)
+
+        // Effetto bagliore esterno per il bordo del vuoto
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#8a2be2';
+        
+        ctx.fillStyle = voidCore;
+        ctx.beginPath();
+        ctx.arc(enemy.x, enemy.y, enemy.size * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 3. PARTICELLE DI ENERGIA (Piccoli punti luminosi attorno al nucleo)
+        ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
+        for (let i = 0; i < 3; i++) {
+            const angle = (Date.now() / 500) + (i * 2);
+            const dist = (enemy.size * 0.4) + Math.sin(Date.now() / 200) * 5;
+            const px = enemy.x + Math.cos(angle) * dist;
+            const py = enemy.y + Math.sin(angle) * dist;
+            
+            ctx.beginPath();
+            ctx.arc(px, py, 2, 0, Math.PI * 2);
+            ctx.fill();
         }
 
         ctx.restore();
     });
 }
 
+/**
+ * Genera i nemici spettrali
+ */
+export function spawnEnemies(count) {
+    for (let i = 0; i < count; i++) {
+        const size = 60 + Math.random() * 40; 
+        gameState.enemies.push({
+            x: Math.random() * (CONFIG.CANVAS_WIDTH - 60) + 30, 
+            y: -100 - (Math.random() * 300), 
+            size: size,
+            speed: 2 + Math.random() * 2, // I fantasmi solitamente sono più lenti e costanti
+            color: '#8a2be2'
+        });
+    }
+}
+
+/**
+ * Aggiorna la posizione
+ */
+export function updateEnemies() {
+    gameState.enemies = gameState.enemies.filter(enemy => {
+        enemy.y += enemy.speed;
+        // Aggiungiamo un leggero movimento oscillatorio orizzontale (floating)
+        enemy.x += Math.sin(enemy.y / 30) * 0.5; 
+        
+        return enemy.y < CONFIG.CANVAS_HEIGHT + 100;
+    });
+}
 export function createExplosion(x, y, color = '#FFC300') { // Giallo/Arancione come default
     gameState.explosions.push({
         x: x,
