@@ -120,12 +120,14 @@ function gameLoop() {
 
     // --- GESTIONE COLLISIONI OTTIMIZZATA ---
 
-// 1. Collisioni Proiettili (Bullets)
+// --- GESTIONE COLLISIONI OTTIMIZZATA ---
+
+// 1. Collisioni Proiettili (Bullets) contro Boss e Nemici
 for (let b = gameState.bullets.length - 1; b >= 0; b--) {
     const bullet = gameState.bullets[b];
     let bulletDestroyed = false;
 
-    // Controllo collisione con il BOSS
+    // Collisione Proiettile vs BOSS
     if (gameState.bossActive && gameState.boss) {
         const dx = bullet.x - gameState.boss.x;
         const dy = bullet.y - gameState.boss.y;
@@ -140,7 +142,7 @@ for (let b = gameState.bullets.length - 1; b >= 0; b--) {
         }
     }
 
-    // Controllo collisione con NEMICI (solo se il proiettile non ha colpito il boss)
+    // Collisione Proiettile vs NEMICI (solo se il proiettile non è già esploso sul boss)
     if (!bulletDestroyed) {
         for (let e = gameState.enemies.length - 1; e >= 0; e--) {
             const enemy = gameState.enemies[e];
@@ -150,41 +152,52 @@ for (let b = gameState.bullets.length - 1; b >= 0; b--) {
             const radiusSum = (enemy.size / 2) + bullet.size;
 
             if (distanceSq < radiusSum * radiusSum) {
-                Renderer.createExplosion(enemy.x, enemy.y, enemy.color);
+                Renderer.createExplosion(enemy.x, enemy.y, enemy.color || '#fff');
                 gameState.enemies.splice(e, 1);
                 gameState.bullets.splice(b, 1);
-                break; // Esci dal ciclo nemici, il proiettile è usato
+                bulletDestroyed = true;
+                break; // Interrompe il ciclo dei nemici per questo proiettile
             }
         }
     }
 }
 
 // 2. Collisioni Raggi Speciali (Special Rays)
-if (gameState.specialRay.active || (gameState.specialRay2 && gameState.specialRay2.active2)) {
-    const rayX = gameState.specialRay.active ? gameState.specialRay.x : gameState.specialRay2.x2;
-    const rayDamage = 0.5; // Danno continuo per frame (regolabile)
-    const rayWidth = 40;
+// Gestiamo entrambi i raggi (specialRay e specialRay2) in sequenza
+const rays = [
+    { active: gameState.specialRay.active, x: gameState.playerX, width: 40 },
+    { active: gameState.specialRay2?.active2, x: gameState.playerX, width: 40 }
+];
 
-    // Raggio vs Nemici
-    for (let e = gameState.enemies.length - 1; e >= 0; e--) {
-        if (Math.abs(gameState.enemies[e].x - rayX) < rayWidth) {
-            Renderer.createExplosion(gameState.enemies[e].x, gameState.enemies[e].y, '#ffffff');
-            gameState.enemies.splice(e, 1);
+for (const ray of rays) {
+    if (ray.active) {
+        // Raggio vs Nemici
+        for (let e = gameState.enemies.length - 1; e >= 0; e--) {
+            const enemy = gameState.enemies[e];
+            // Controllo collisione sull'asse X (il raggio copre tutta l'altezza del canvas)
+            if (Math.abs(enemy.x - ray.x) < (ray.width / 2 + enemy.size / 2)) {
+                Renderer.createExplosion(enemy.x, enemy.y, '#ffffff');
+                gameState.enemies.splice(e, 1);
+            }
         }
-    }
 
-    // Raggio vs Boss
-    if (gameState.bossActive && gameState.boss) {
-        const bossHitbox = (gameState.boss.size / 2) + 20;
-        if (Math.abs(gameState.boss.x - rayX) < bossHitbox) {
-            gameState.boss.hp -= rayDamage;
-            // Effetto particellare casuale durante il colpo del raggio
-            if (Math.random() > 0.8) {
-                Renderer.createExplosion(rayX, gameState.boss.y + (Math.random() * 40 - 20), '#fff');
+        // Raggio vs Boss
+        if (gameState.bossActive && gameState.boss) {
+            const bossHitboxX = (gameState.boss.size / 2) + (ray.width / 2);
+            if (Math.abs(gameState.boss.x - ray.x) < bossHitboxX) {
+                gameState.boss.hp -= 0.5; // Danno continuo
+                if (Math.random() > 0.8) {
+                    Renderer.createExplosion(ray.x, gameState.boss.y + (Math.random() * 60 - 30), '#fff');
+                }
             }
         }
     }
 }
+
+
+
+
+        
         // --- LOGICA BOSS ---
         if (gameState.bossActive && gameState.boss) {
             if (gameState.boss.y < gameState.boss.targetY) gameState.boss.y += 2;
