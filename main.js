@@ -185,7 +185,7 @@ for (const ray of rays) {
         if (gameState.bossActive && gameState.boss) {
             const bossHitboxX = (gameState.boss.size / 2) + (ray.width / 2);
             if (Math.abs(gameState.boss.x - ray.x) < bossHitboxX) {
-                gameState.boss.hp -= 0.5; // Danno continuo
+                gameState.boss.hp -= 5; // Danno continuo
                 if (Math.random() > 0.8) {
                     Renderer.createExplosion(ray.x, gameState.boss.y + (Math.random() * 60 - 30), '#fff');
                 }
