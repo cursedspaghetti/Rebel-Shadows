@@ -1,12 +1,23 @@
 import { CONFIG, gameState } from './config.js';
 
 // START SCREEN
-export function drawStartScreen(ctx, introImage) {
-    if (introImage.complete) {
-        ctx.drawImage(introImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+export function drawStartScreen(ctx, bgImage, introImage) {
+    // 1. Disegna lo sfondo (EmptySpace)
+    if (bgImage.complete) {
+        ctx.drawImage(bgImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     } else {
-        ctx.fillStyle = '#000033';
+        ctx.fillStyle = '#000033'; // Colore di fallback
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    }
+
+    // 2. Sovrapponi l'immagine intro (shadow_intro) nella parte bassa
+    if (introImage.complete) {
+        // Calcoliamo le proporzioni per farla stare in basso
+        const imgWidth = CONFIG.CANVAS_WIDTH;
+        const imgHeight = (introImage.height / introImage.width) * imgWidth;
+        const yPos = CONFIG.CANVAS_HEIGHT - imgHeight;
+
+        ctx.drawImage(introImage, 0, yPos, imgWidth, imgHeight);
     }
 }
 
