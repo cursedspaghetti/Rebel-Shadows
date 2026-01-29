@@ -24,7 +24,7 @@ const startButton = document.getElementById('startButton');
 
 // --- ASSET LOADING ---
 const introImage = new Image();
-introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/shadow_intro.jpg';
+introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/shadow_intro.png';
 const bgImage = new Image();
 bgImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpaceVoid.png';
 const bgParallax = new Image();
@@ -49,7 +49,7 @@ function init() {
 
 function startScreenLoop() {
     if (gameState.currentScreen === 'start') {
-        Renderer.drawStartScreen(ctx, introImage);
+        Renderer.drawStartScreen(ctx, bgImage, introImage);
         requestAnimationFrame(startScreenLoop);
     }
 }
