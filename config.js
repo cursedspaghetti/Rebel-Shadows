@@ -7,13 +7,22 @@ export const CONFIG = {
     CANVAS_HEIGHT: 852,
     
     // Regole di Gioco
-    GAME_TIME: 60,           
+    GAME_TIME: 60,            
     SCROLL_SPEED: 2.5,
     PARALLAX_SPEED: 1,      
     
     // Boss Stats
-    BOSS_MAX_HP: 5000,        // Vita totale del boss
-    BOSS_PHASE_2_THRESHOLD: 0.5, // Entra in fase 2 al 50% HP
+    BOSS_MAX_HP: 5000, 
+    BOSS_PHASE_2_THRESHOLD: 0.5,
+    
+    // Boss Attacks Settings
+    BOSS_ATTACKS: {
+        RADIAL_INTERVAL: [5000, 8000], // Range ms per raggera
+        DASH_INTERVAL: [9000, 15000],  // Range ms per carica
+        DASH_SPEED: 14,                // Velocità della carica
+        RADIAL_BULLET_COUNT: 12,       // Quanti proiettili nella raggera
+        RADIAL_BULLET_SPEED: 5         // Velocità proiettili raggera
+    },
     
     // Player Stats & Health
     PLAYER_MAX_HP: 100,
@@ -84,34 +93,18 @@ export let gameState = {
     shieldLastUsed: 0,
     shieldOnCooldown: false,
     
-    // Special Attack 1 (Ray)
-    specialCooldown: 10,
-    specialLastUsed: 0,
+    // Special Attacks
     specialOnCooldown: false,
-    specialRay: { 
-        active: false,
-        x: 0,
-        maxWidth: 250,
-        currentWidth: 0,
-        duration: 0.8,
-        startTime: 0
-    },
-    isCharging: false,
-    rayParticles: [],
-
-    // Special Attack 2 (Ray alternative)
-    specialCooldown2: 10,
-    specialLastUsed2: 0,
+    specialLastUsed: 0,
+    specialRay: { active: false, x: 0, maxWidth: 250, currentWidth: 0, duration: 0.8, startTime: 0 },
+    
     specialOnCooldown2: false,
-    specialRay2: { 
-        active2: false,
-        x2: 0,
-        maxWidth2: 250,
-        currentWidth2: 0,
-        duration2: 0.8,
-        startTime2: 0
-    },
+    specialLastUsed2: 0,
+    specialRay2: { active2: false, x2: 0, maxWidth2: 250, currentWidth2: 0, duration2: 0.8, startTime2: 0 },
+
+    isCharging: false,
     isCharging2: false,
+    rayParticles: [],
     rayParticles2: [],
     
     // World & Entities
@@ -124,11 +117,16 @@ export let gameState = {
     bossActive: false,
     boss: {
         x: CONFIG.CANVAS_WIDTH / 2,
-        y: -200,             // Parte fuori schermo
+        y: -200,
         hp: CONFIG.BOSS_MAX_HP,
         maxHp: CONFIG.BOSS_MAX_HP,
         targetX: CONFIG.CANVAS_WIDTH / 2,
         lastShot: 0,
+        lastRadialShot: 0,    // Timer raggera
+        lastDash: 0,          // Timer carica
+        isDashing: false,     // Stato carica
+        dashVX: 0,            // Direzione X carica
+        dashVY: 0,            // Direzione Y carica
         phase: 1
     },
     lastEnemySpawn: 0,
@@ -152,7 +150,7 @@ export function resetGameState() {
     gameState.enemies = [];
     gameState.gameTimer = CONFIG.GAME_TIME;
     
-    // Reset Boss
+    // Reset Boss con i nuovi parametri
     gameState.bossActive = false;
     gameState.boss = {
         x: CONFIG.CANVAS_WIDTH / 2,
@@ -161,6 +159,11 @@ export function resetGameState() {
         maxHp: CONFIG.BOSS_MAX_HP,
         targetX: CONFIG.CANVAS_WIDTH / 2,
         lastShot: 0,
+        lastRadialShot: Date.now(),
+        lastDash: Date.now(),
+        isDashing: false,
+        dashVX: 0,
+        dashVY: 0,
         phase: 1
     };
 
