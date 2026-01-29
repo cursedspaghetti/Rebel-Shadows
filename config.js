@@ -59,7 +59,7 @@ export const CONFIG = {
 export let gameState = {
     // Screen Management
     currentScreen: 'start', 
-    screenShake: 0,        
+    screenShake: 0,         
     
     // Player Properties & Health
     selectedRingColor: null,
@@ -83,7 +83,7 @@ export let gameState = {
     bulletLevel: 3,
     fireRate: 200,
     lastShotTime: 0,
-    bullets: [],
+    bullets: [], // Proiettili Player
 
     // Shield State
     shieldActive: false,
@@ -108,7 +108,8 @@ export let gameState = {
     rayParticles2: [],
     
     // World & Entities
-    enemies: [],
+    enemies: [],      // Nemici base
+    bossBullets: [],  // <--- AGGIUNTO: Proiettili specifici del Boss
     explosions: [],
     gameTimer: CONFIG.GAME_TIME,
     timerInterval: null,
@@ -122,11 +123,11 @@ export let gameState = {
         maxHp: CONFIG.BOSS_MAX_HP,
         targetX: CONFIG.CANVAS_WIDTH / 2,
         lastShot: 0,
-        lastRadialShot: 0,    // Timer raggera
-        lastDash: 0,          // Timer carica
-        isDashing: false,     // Stato carica
-        dashVX: 0,            // Direzione X carica
-        dashVY: 0,            // Direzione Y carica
+        lastRadialShot: 0,    
+        lastDash: 0,          
+        isDashing: false,     
+        dashVX: 0,            
+        dashVY: 0,            
         phase: 1
     },
     lastEnemySpawn: 0,
@@ -146,8 +147,13 @@ export function resetGameState() {
     gameState.screenShake = 0;
     gameState.playerX = CONFIG.CANVAS_WIDTH / 2;
     gameState.playerY = CONFIG.CANVAS_HEIGHT - 300;
+    
+    // Reset Array Entità
     gameState.bullets = [];
     gameState.enemies = [];
+    gameState.bossBullets = []; // <--- AGGIUNTO: Reset proiettili boss
+    gameState.explosions = [];
+    
     gameState.gameTimer = CONFIG.GAME_TIME;
     
     // Reset Boss con i nuovi parametri
