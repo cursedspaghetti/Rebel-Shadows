@@ -1,128 +1,112 @@
 import { CONFIG, gameState } from './config.js';
 
-/**
- * Aggiorna la logica del Boss: movimento e attacco
- */
-export function updateBoss(boss) {
+export function updateBoss(boss, player) {
     if (!boss || boss.hp <= 0) return;
 
-    // 1. INIZIALIZZAZIONE (se mancano le proprietà)
-    if (boss.targetX === undefined) boss.targetX = boss.x;
-    if (boss.lastShot === undefined) boss.lastShot = Date.now();
-
-    // 2. MOVIMENTO CASUALE (Solo orizzontale, parte alta)
-    // Se il boss è vicino alla destinazione, ne sceglie una nuova
-    if (Math.abs(boss.x - boss.targetX) < 10) {
-        // Resta entro i margini del canvas
-        boss.targetX = Math.random() * (CONFIG.CANVAS_WIDTH - 200) + 100;
-    }
-
-    // Movimento fluido verso il target (Interpolazione lineare)
-    boss.x += (boss.targetX - boss.x) * 0.02;
-
-    // Mantiene un'altezza fissa nella parte alta
-    boss.y = 150; 
-
-    // 3. LOGICA DI ATTACCO (Lancio nemici)
     const now = Date.now();
-    const shootInterval = 2000; // Un proiettile ogni 2 secondi
 
-    if (now - boss.lastShot > shootInterval) {
-        spawnBossBullet(boss.x, boss.y + 20);
-        boss.lastShot = now;
+    // 1. INIZIALIZZAZIONE
+    if (boss.targetX === undefined) boss.targetX = boss.x;
+    if (boss.lastShot === undefined) boss.lastShot = now;
+    if (boss.lastRadialShot === undefined) boss.lastRadialShot = now;
+    if (boss.lastDash === undefined) boss.lastDash = now;
+    if (boss.isDashing === undefined) boss.isDashing = false;
+
+    // 2. LOGICA DI MOVIMENTO E ATTACCO CARICA
+    if (boss.isDashing) {
+        // Applichiamo il movimento calcolato al momento del lancio
+        boss.x += boss.dashVX;
+        boss.y += boss.dashVY;
+
+        // Se esce dai bordi del canvas, finisce la carica
+        if (boss.y > CONFIG.CANVAS_HEIGHT + 100 || boss.x < -100 || boss.x > CONFIG.CANVAS_WIDTH + 100) {
+            boss.isDashing = false;
+            // Lo facciamo rientrare dall'alto sopra il centro
+            boss.y = -150; 
+            boss.targetX = CONFIG.CANVAS_WIDTH / 2;
+        }
+    } else {
+        // MOVIMENTO NORMALE (Floating)
+        if (boss.y < 150) boss.y += 4; // Rientro fluido dopo il dash
+        else boss.y = 150;
+
+        if (Math.abs(boss.x - boss.targetX) < 10) {
+            boss.targetX = Math.random() * (CONFIG.CANVAS_WIDTH - 200) + 100;
+        }
+        boss.x += (boss.targetX - boss.x) * 0.02;
+
+        // 3. TRIGGER ATTACCHI
+
+        // A. Proiettile standard
+        if (now - boss.lastShot > 2000) {
+            spawnBossBullet(boss.x, boss.y + 20);
+            boss.lastShot = now;
+        }
+
+        // B. Raggera (5-8 secondi)
+        const radialInterval = 5000 + Math.random() * 3000;
+        if (now - boss.lastRadialShot > radialInterval) {
+            spawnRadialAttack(boss.x, boss.y);
+            boss.lastRadialShot = now;
+        }
+
+        // C. CARICA MIRATA (9-15 secondi)
+        const dashInterval = 9000 + Math.random() * 6000;
+        if (now - boss.lastDash > dashInterval) {
+            startDash(boss, player);
+            boss.lastDash = now;
+        }
     }
 }
 
 /**
- * Crea un nemico che funge da proiettile partendo dal boss
+ * Calcola la traiettoria verso il player per la carica
  */
+function startDash(boss, player) {
+    boss.isDashing = true;
+
+    // Calcoliamo la distanza tra boss e player
+    const dx = player.x - boss.x;
+    const dy = player.y - boss.y;
+    
+    // Calcoliamo l'angolo
+    const angle = Math.atan2(dy, dx);
+    
+    // Definiamo la velocità della carica
+    const speed = 12;
+    
+    // Salviamo le componenti della velocità nel boss
+    boss.dashVX = Math.cos(angle) * speed;
+    boss.dashVY = Math.sin(angle) * speed;
+}
+
+// --- Funzioni di supporto per i proiettili ---
+
+function spawnRadialAttack(startX, startY) {
+    const numBullets = 12;
+    for (let i = 0; i < numBullets; i++) {
+        const angle = (Math.PI * 2 / numBullets) * i;
+        const speed = 5;
+        gameState.enemies.push({
+            x: startX,
+            y: startY,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            size: 25,
+            color: '#ff00ff',
+            isBossBullet: true
+        });
+    }
+}
+
 function spawnBossBullet(x, y) {
-    const size = 35 + Math.random() * 15; // Leggermente più piccoli dei nemici normali
     gameState.enemies.push({
         x: x,
         y: y,
-        size: size,
-        speed: 3 + Math.random() * 2, // Velocità di discesa
+        vx: 0,
+        vy: 5,
+        size: 30,
         color: '#8a2be2',
-        isBossBullet: true // Flag opzionale se vuoi distinguerli
+        isBossBullet: true
     });
-}
-
-/**
- * Disegna il Boss e la sua interfaccia
- */
-export function drawBossShadow(ctx, boss, img) {
-    if (!img.complete || boss.hp <= 0) return;
-
-    const totalFrames = 9;
-    const frameDuration = 100; 
-    const originalSize = 400;  
-    
-    const frameIndex = Math.floor((Date.now() / frameDuration) % totalFrames);
-    const floatOffset = Math.sin(Date.now() * 0.003) * 15; // Oscillazione verticale
-
-    // --- 1. DISEGNO IL CORPO DEL BOSS ---
-    ctx.save();
-    
-    // Posizionamento e scaling
-    ctx.translate(boss.x, boss.y + floatOffset);
-    ctx.scale(0.6, 0.6); 
-
-    const sx = Math.floor(frameIndex * originalSize);
-    ctx.drawImage(
-        img,
-        sx, 0,                                
-        originalSize, originalSize,           
-        -originalSize / 2, -originalSize / 2,  
-        originalSize, originalSize            
-    );
-
-    ctx.restore();
-
-    // --- 2. DISEGNO L'INTERFACCIA (BARRA HP) ---
-    drawBossUI(ctx, boss);
-}
-
-/**
- * Disegna la barra della salute fissa in alto
- */
-function drawBossUI(ctx, boss) {
-    const healthPercent = Math.max(0, (boss.hp || 0) / (boss.maxHp || 100));
-    const barWidth = ctx.canvas.width * 0.6;
-    const barHeight = 16;
-    const x = (ctx.canvas.width - barWidth) / 2;
-    const y = 40; 
-
-    ctx.save();
-
-    // Sfondo barra (ombra)
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = 'rgba(128, 0, 255, 0.5)';
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(x, y, barWidth, barHeight);
-    ctx.shadowBlur = 0;
-
-    // Gradiente salute
-    const gradient = ctx.createLinearGradient(x, 0, x + barWidth, 0);
-    gradient.addColorStop(0, '#4b0082'); // Indigo
-    gradient.addColorStop(0.5, '#8a2be2'); // BlueViolet
-    gradient.addColorStop(1, '#ff00ff'); // Fuchsia
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(x, y, barWidth * healthPercent, barHeight);
-
-    // Bordo
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, barWidth, barHeight);
-
-    // Testo Nome Boss
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 20px Orbitron, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.shadowBlur = 5;
-    ctx.shadowColor = 'black';
-    ctx.fillText("SHADOW GUARDIAN", ctx.canvas.width / 2, y - 12);
-
-    ctx.restore();
 }
