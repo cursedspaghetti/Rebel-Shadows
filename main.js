@@ -198,7 +198,7 @@ function handleAllCollisions() {
             // Usiamo una hitbox approssimativa (120 è metà della dimensione visuale del boss)
             const radSum = 120 + bullet.size;
             if (distSq < radSum * radSum) {
-                gameState.boss.hp -= 10; // Danno proiettile
+                gameState.boss.hp -= 1; // Danno proiettile
                 Renderer.createExplosion(bullet.x, bullet.y, '#ffffff');
                 gameState.bullets.splice(b, 1);
                 bulletDestroyed = true;
