@@ -275,7 +275,6 @@ function handleAllCollisions() {
         }
     }
 }
-
 // --- ALTRI HANDLERS ---
 function applyDamage(amount, shakeIntensity) {
     gameState.hp -= amount;
