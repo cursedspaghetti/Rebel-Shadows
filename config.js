@@ -87,18 +87,34 @@ export let gameState = {
     shieldLastUsed: 0,
     shieldOnCooldown: false,
     
-    // Special Attacks
-    specialOnCooldown: false,
+    // Special Attack 1 (Ray)
+    specialCooldown: 10,
     specialLastUsed: 0,
-    specialRay: { active: false, x: 0, maxWidth: 250, currentWidth: 0, duration: 0.8, startTime: 0 },
-    
-    specialOnCooldown2: false,
-    specialLastUsed2: 0,
-    specialRay2: { active2: false, x2: 0, maxWidth2: 250, currentWidth2: 0, duration2: 0.8, startTime2: 0 },
-
+    specialOnCooldown: false,
+    specialRay: { 
+        active: false,
+        x: 0,
+        maxWidth: 250,
+        currentWidth: 0,
+        duration: 0.8,
+        startTime: 0
+    },
     isCharging: false,
-    isCharging2: false,
     rayParticles: [],
+
+    // Special Attack 2 (Ray alternative)
+    specialCooldown2: 10,
+    specialLastUsed2: 0,
+    specialOnCooldown2: false,
+    specialRay2: { 
+        active2: false,
+        x2: 0,
+        maxWidth2: 250,
+        currentWidth2: 0,
+        duration2: 0.8,
+        startTime2: 0
+    },
+    isCharging2: false,
     rayParticles2: [],
     
     // World & Entities
