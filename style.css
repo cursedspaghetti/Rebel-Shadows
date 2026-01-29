@@ -63,29 +63,6 @@ canvas {
     box-sizing: border-box;
 }
 
-/* --- ADDED: RING SELECTION GRID --- */
-#ringChoices {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr); /* 2 columns for the colors */
-    gap: 10px;
-    margin: 20px 0;
-    width: 100%;
-}
-
-.ring-choice {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 10px;
-    font-size: 8px;
-    cursor: pointer;
-    border: 4px solid transparent;
-    text-transform: uppercase;
-    transition: background 0.2s;
-}
-
-.ring-choice:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
 /* --- ADDED: POWER-UP SCREEN --- */
 #powerUpScreen {
     position: absolute;
