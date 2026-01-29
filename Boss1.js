@@ -139,34 +139,33 @@ function drawBossBullets(ctx) {
  */
 function drawBossUI(ctx, boss) {
     const healthPercent = Math.max(0, (boss.hp || 0) / (boss.maxHp || 100));
-    const barWidth = ctx.canvas.width * 0.6;
-    const barHeight = 16;
-    const x = (ctx.canvas.width - barWidth) / 2;
-    const y = 40; 
+    
+    // Dimensioni ridotte per essere meno invasiva
+    const barWidth = 200; 
+    const barHeight = 10;
+    const x = Math.floor((ctx.canvas.width - barWidth) / 2);
+    const y = 30; 
 
     ctx.save();
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = 'rgba(128, 0, 255, 0.5)';
-    
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(x, y, barWidth, barHeight);
-    
-    const gradient = ctx.createLinearGradient(x, 0, x + barWidth, 0);
-    gradient.addColorStop(0, '#4b0082');
-    gradient.addColorStop(0.5, '#8a2be2');
-    gradient.addColorStop(1, '#ff00ff');
-    
-    ctx.fillStyle = gradient;
-    ctx.fillRect(x, y, barWidth * healthPercent, barHeight);
-    
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(x, y, barWidth, barHeight);
+    ctx.imageSmoothingEnabled = false;
 
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(x, y, barWidth, barHeight);
+
+    ctx.fillStyle = '#ff00ff'; 
+    ctx.fillRect(x, y, Math.floor(barWidth * healthPercent), barHeight);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.fillRect(x, y, Math.floor(barWidth * healthPercent), 2);
+
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+
+    ctx.strokeRect(x - 1, y - 1, barWidth + 2, barHeight + 2);
     ctx.fillStyle = 'white';
-    ctx.font = 'bold 20px Orbitron, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText("SHADOW GUARDIAN", ctx.canvas.width / 2, y - 12);
+    ctx.font = '10px "Courier New", monospace'; // Font chunky
+    ctx.textAlign = 'left';
+    ctx.fillText("SHADOW #647", x, y - 8);
     ctx.restore();
 }
 
