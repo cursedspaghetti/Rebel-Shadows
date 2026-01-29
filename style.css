@@ -21,7 +21,7 @@ body {
     position: relative;
     width: 393px;
     height: 852px;
-    background-color: #000; /* Nero o un colore scuro di base */
+    background-color: #000;
     overflow: hidden;
 
     /* Mantiene i bordi dei pixel nitidi */
@@ -29,41 +29,36 @@ body {
     image-rendering: crisp-edges;
 }
 
-/* Assicurati che il canvas sia trasparente se vuoi vedere il colore del container */
-canvas {
-    display: block;
-    background: transparent;
-}
-
 /* 2. IL CANVAS */
 #gameCanvas {
     display: block;
     width: 100%;
     height: 100%;
-    /* Keep the background transparent so the #game-container texture shows through */
     background: transparent; 
 }
 
-/* 3. SCHERMATA INIZIALE */
+/* 3. SCHERMATA INIZIALE - Ora allineata in alto */
 #startScreen {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7); /* Slightly darker for better contrast */
+    background-color: rgba(0, 0, 0, 0.7);
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start; /* Allinea all'inizio (alto) */
     align-items: center;
     color: white;
     text-align: center;
     z-index: 10;
-    padding: 20px;
+    padding-top: 100px;         /* Distanza dal bordo superiore */
+    padding-left: 20px;
+    padding-right: 20px;
     box-sizing: border-box;
 }
 
-/* --- ADDED: POWER-UP SCREEN --- */
+/* 4. SCHERMATA POWER-UP - Ora allineata in alto */
 #powerUpScreen {
     position: absolute;
     top: 0;
@@ -71,22 +66,24 @@ canvas {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.85);
-    display: none; /* Controlled by JS: .style.display = 'flex' */
+    display: none; /* Gestito da JS */
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start; /* Allinea all'inizio (alto) */
     align-items: center;
     z-index: 20;
     color: gold;
+    padding-top: 120px;         /* Distanza dal bordo superiore */
+    box-sizing: border-box;
 }
 
 .power-up-options {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    margin-top: 30px;
+    margin-top: 40px;
 }
 
-/* 4. BOTTONE PIXEL ART */
+/* 5. BOTTONI PIXEL ART */
 button {
     font-family: 'Press Start 2P', cursive;
     background-color: #1b0190;
@@ -112,11 +109,15 @@ button:active:not(:disabled) {
     box-shadow: 0px 0px 0px #000;
 }
 
-/* 5. RESPONSIVE PER MOBILE */
+/* 6. RESPONSIVE PER MOBILE */
 @media (max-width: 450px) {
     #game-container {
         width: 100vw;
         height: 100vh;
         border: none;
+    }
+    
+    #startScreen, #powerUpScreen {
+        padding-top: 60px; /* Ridotto leggermente su mobile per adattarsi meglio */
     }
 }
