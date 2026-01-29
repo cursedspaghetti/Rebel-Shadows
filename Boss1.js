@@ -1,7 +1,7 @@
 import { CONFIG, gameState } from './config.js';
 
 /**
- * Aggiorna la logica del Boss: movimento fluido, raggera e carica mirata
+ * LOGICA: Aggiorna movimento, attacchi e stati del Boss
  */
 export function updateBoss(boss, player) {
     if (!boss || boss.hp <= 0) return;
@@ -10,43 +10,35 @@ export function updateBoss(boss, player) {
 
     // 1. GESTIONE MOVIMENTO (DASH vs FLOATING)
     if (boss.isDashing) {
-        // Applica la velocità vettoriale calcolata al momento del via
         boss.x += boss.dashVX;
         boss.y += boss.dashVY;
 
-        // Se esce dai bordi (più un margine), resetta lo stato
         if (boss.y > CONFIG.CANVAS_HEIGHT + 150 || boss.x < -150 || boss.x > CONFIG.CANVAS_WIDTH + 150) {
             boss.isDashing = false;
-            boss.y = -150; // Ricompare dall'alto
+            boss.y = -150; 
             boss.targetX = CONFIG.CANVAS_WIDTH / 2;
         }
     } else {
-        // MOVIMENTO NORMALE (Floating)
-        if (boss.y < 150) boss.y += 4; // Rientro in posizione dopo il dash
+        if (boss.y < 150) boss.y += 4;
         else boss.y = 150;
 
-        // Movimento orizzontale verso il target casuale
         if (Math.abs(boss.x - boss.targetX) < 10) {
             boss.targetX = Math.random() * (CONFIG.CANVAS_WIDTH - 200) + 100;
         }
         boss.x += (boss.targetX - boss.x) * 0.02;
 
-        // 2. LOGICA ATTACCHI (Solo se non sta caricando)
-        
-        // A. Fuoco Standard (ogni 2 secondi)
+        // 2. LOGICA ATTACCHI
         if (now - boss.lastShot > 2000) {
             spawnBossBullet(boss.x, boss.y + 20);
             boss.lastShot = now;
         }
 
-        // B. Attacco a Raggera (intervallo configurato)
         const radialInterval = CONFIG.BOSS_ATTACKS.RADIAL_INTERVAL[0] + Math.random() * 3000;
         if (now - boss.lastRadialShot > radialInterval) {
             spawnRadialAttack(boss.x, boss.y);
             boss.lastRadialShot = now;
         }
 
-        // C. Carica Mirata verso il Player (intervallo configurato)
         const dashInterval = CONFIG.BOSS_ATTACKS.DASH_INTERVAL[0] + Math.random() * 6000;
         if (now - boss.lastDash > dashInterval) {
             startDash(boss, player);
@@ -56,58 +48,109 @@ export function updateBoss(boss, player) {
 }
 
 /**
- * Inizia la carica: calcola il vettore verso la posizione attuale del player
+ * GRAFICA: Disegna il corpo, l'animazione e la UI
  */
+export function drawBossShadow(ctx, boss, img) {
+    if (!img.complete || boss.hp <= 0) return;
+
+    const totalFrames = 9;
+    const frameDuration = 100; 
+    const originalSize = 400;  
+    
+    const frameIndex = Math.floor((Date.now() / frameDuration) % totalFrames);
+    const floatOffset = boss.isDashing ? 0 : Math.sin(Date.now() * 0.003) * 15;
+
+    ctx.save();
+    
+    // Posizionamento e scaling
+    ctx.translate(boss.x, boss.y + floatOffset);
+    
+    // Se sta caricando, potresti volerlo ruotare verso la direzione del dash
+    if (boss.isDashing) {
+        const angle = Math.atan2(boss.dashVY, boss.dashVX);
+        ctx.rotate(angle + Math.PI / 2); // +90 gradi se l'immagine guarda in alto
+    }
+
+    ctx.scale(0.6, 0.6); 
+
+    const sx = Math.floor(frameIndex * originalSize);
+    ctx.drawImage(
+        img,
+        sx, 0,                                  
+        originalSize, originalSize,           
+        -originalSize / 2, -originalSize / 2,  
+        originalSize, originalSize            
+    );
+
+    ctx.restore();
+
+    // Disegna la barra HP
+    drawBossUI(ctx, boss);
+}
+
+/**
+ * UI: Barra della salute fissa
+ */
+function drawBossUI(ctx, boss) {
+    const healthPercent = Math.max(0, (boss.hp || 0) / (boss.maxHp || 100));
+    const barWidth = ctx.canvas.width * 0.6;
+    const barHeight = 16;
+    const x = (ctx.canvas.width - barWidth) / 2;
+    const y = 40; 
+
+    ctx.save();
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = 'rgba(128, 0, 255, 0.5)';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(x, y, barWidth, barHeight);
+    
+    const gradient = ctx.createLinearGradient(x, 0, x + barWidth, 0);
+    gradient.addColorStop(0, '#4b0082');
+    gradient.addColorStop(0.5, '#8a2be2');
+    gradient.addColorStop(1, '#ff00ff');
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(x, y, barWidth * healthPercent, barHeight);
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, barWidth, barHeight);
+
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 20px Orbitron, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText("SHADOW GUARDIAN", ctx.canvas.width / 2, y - 12);
+    ctx.restore();
+}
+
+// --- FUNZIONI DI SUPPORTO (DASH & BULLETS) ---
+
 function startDash(boss, player) {
     boss.isDashing = true;
-
-    // Calcolo distanza tra boss e giocatore
-    const dx = (player.x || gameState.playerX) - boss.x;
-    const dy = (player.y || gameState.playerY) - boss.y;
-    
-    // Angolo verso il player
+    const dx = gameState.playerX - boss.x;
+    const dy = gameState.playerY - boss.y;
     const angle = Math.atan2(dy, dx);
-    
-    // Velocità definita nel config
     const speed = CONFIG.BOSS_ATTACKS.DASH_SPEED;
-    
-    // Scomposizione in componenti X e Y
     boss.dashVX = Math.cos(angle) * speed;
     boss.dashVY = Math.sin(angle) * speed;
 }
 
-/**
- * Crea proiettili che si espandono in tutte le direzioni
- */
 function spawnRadialAttack(startX, startY) {
     const numBullets = CONFIG.BOSS_ATTACKS.RADIAL_BULLET_COUNT;
     const speed = CONFIG.BOSS_ATTACKS.RADIAL_BULLET_SPEED;
-
     for (let i = 0; i < numBullets; i++) {
         const angle = (Math.PI * 2 / numBullets) * i;
         gameState.enemies.push({
-            x: startX,
-            y: startY,
+            x: startX, y: startY,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
-            size: 25,
-            color: '#ff00ff',
-            isBossBullet: true
+            size: 25, color: '#ff00ff', isBossBullet: true
         });
     }
 }
 
-/**
- * Proiettile base che scende verticalmente
- */
 function spawnBossBullet(x, y) {
     gameState.enemies.push({
-        x: x,
-        y: y,
-        vx: 0,
-        vy: 5,
-        size: 30,
-        color: '#8a2be2',
-        isBossBullet: true
+        x: x, y: y, vx: 0, vy: 5,
+        size: 30, color: '#8a2be2', isBossBullet: true
     });
 }
