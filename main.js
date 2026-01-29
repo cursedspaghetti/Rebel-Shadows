@@ -174,25 +174,31 @@ function gameLoop() {
 
 // --- FUNZIONE COLLISIONI ---
 function handleAllCollisions() {
+    // Valore hitbox boss unico per proiettili e raggi (più piccolo del precedente 120/100)
+    const BOSS_HITBOX_RAD = 80; 
+    const PLAYER_HITBOX_RAD = 15;
+
     // 1. Proiettili vs Boss/Nemici
     for (let b = gameState.bullets.length - 1; b >= 0; b--) {
         const bullet = gameState.bullets[b];
         let bulletDestroyed = false;
 
+        // Collisione con Boss
         if (gameState.bossActive && gameState.boss) {
             const dx = bullet.x - gameState.boss.x;
             const dy = bullet.y - gameState.boss.y;
             const distSq = dx * dx + dy * dy;
-            // Usiamo una hitbox approssimativa (120 è metà della dimensione visuale del boss)
-            const radSum = 120 + bullet.size;
+            const radSum = BOSS_HITBOX_RAD + bullet.size;
+            
             if (distSq < radSum * radSum) {
-                gameState.boss.hp -= 1; // Danno proiettile
+                gameState.boss.hp -= 1;
                 Renderer.createExplosion(bullet.x, bullet.y, '#ffffff');
                 gameState.bullets.splice(b, 1);
                 bulletDestroyed = true;
             }
         }
 
+        // Collisione con Nemici normali (se il proiettile non è già esploso sul boss)
         if (!bulletDestroyed) {
             for (let e = gameState.enemies.length - 1; e >= 0; e--) {
                 const enemy = gameState.enemies[e];
@@ -200,6 +206,7 @@ function handleAllCollisions() {
                 const dy = bullet.y - enemy.y;
                 const distSq = dx * dx + dy * dy;
                 const radSum = (enemy.size / 2) + bullet.size;
+                
                 if (distSq < radSum * radSum) {
                     Renderer.createExplosion(enemy.x, enemy.y, enemy.color || '#fff');
                     gameState.enemies.splice(e, 1);
@@ -211,35 +218,42 @@ function handleAllCollisions() {
         }
     }
 
-    // 2. Raggi Speciali
+    // 2. Raggi Speciali (Corretto bug dello splice usando ciclo for inverso)
     const activeRays = [
-        { active: gameState.specialRay.active, x: gameState.playerX, width: 40 },
+        { active: gameState.specialRay?.active, x: gameState.playerX, width: 40 },
         { active: gameState.specialRay2?.active2, x: gameState.playerX, width: 40 }
     ];
+
     activeRays.forEach(ray => {
         if (ray.active) {
-            gameState.enemies.forEach((enemy, e) => {
+            // Nemici normali colpiti dai raggi
+            for (let e = gameState.enemies.length - 1; e >= 0; e--) {
+                const enemy = gameState.enemies[e];
                 if (Math.abs(enemy.x - ray.x) < (ray.width / 2 + enemy.size / 2)) {
                     Renderer.createExplosion(enemy.x, enemy.y, '#ffffff');
                     gameState.enemies.splice(e, 1);
                 }
-            });
+            }
+            
+            // Boss colpito dai raggi
             if (gameState.bossActive && gameState.boss) {
-                if (Math.abs(gameState.boss.x - ray.x) < (100 + ray.width / 2)) {
-                    gameState.boss.hp -= 5;
+                if (Math.abs(gameState.boss.x - ray.x) < (BOSS_HITBOX_RAD + ray.width / 2)) {
+                    gameState.boss.hp -= 5; // Danno costante del raggio
                 }
             }
         }
     });
 
-    // 3. Player vs Nemici/Boss
+    // 3. Player vs Nemici/Boss (Invulnerabilità e Scudo)
     if (!gameState.isInvulnerable && !gameState.shieldActive) {
+        // Player vs Nemici
         for (let e = gameState.enemies.length - 1; e >= 0; e--) {
             const enemy = gameState.enemies[e];
             const dx = gameState.playerX - enemy.x;
             const dy = gameState.playerY - enemy.y;
             const distSq = dx * dx + dy * dy;
-            const radSum = 15 + (enemy.size / 2);
+            const radSum = PLAYER_HITBOX_RAD + (enemy.size / 2);
+            
             if (distSq < radSum * radSum) {
                 applyDamage(5, 12);
                 Renderer.createExplosion(enemy.x, enemy.y, enemy.color);
@@ -247,11 +261,14 @@ function handleAllCollisions() {
                 break;
             }
         }
+
+        // Player vs Boss
         if (gameState.bossActive && gameState.boss) {
             const dx = gameState.playerX - gameState.boss.x;
             const dy = gameState.playerY - gameState.boss.y;
             const distSq = dx * dx + dy * dy;
-            const radSum = 60; // Hitbox boss per collisione player
+            // Hitbox boss per collisione player (60 è più onesto di 80 per dare margine di manovra)
+            const radSum = 60 + PLAYER_HITBOX_RAD; 
             if (distSq < radSum * radSum) {
                 applyDamage(30, 28);
             }
