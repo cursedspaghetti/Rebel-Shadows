@@ -39,11 +39,6 @@ export const CONFIG = {
         3: 70   
     },
     
-    // Estetica
-    RING_COLORS: {
-        'WHITE': '#fff',
-        'PURPLE': '#800080'
-    },
     
     // Input & Touch
     TOUCH: {
@@ -62,7 +57,6 @@ export let gameState = {
     screenShake: 0,         
     
     // Player Properties & Health
-    selectedRingColor: null,
     hp: CONFIG.PLAYER_MAX_HP,
     isInvulnerable: false,
     lastDamageTime: 0,
