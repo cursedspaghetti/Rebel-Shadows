@@ -12,7 +12,7 @@ export const CONFIG = {
     PARALLAX_SPEED: 1,      
     
     // Boss Stats
-    BOSS_MAX_HP: 500,        // Vita totale del boss
+    BOSS_MAX_HP: 5000,        // Vita totale del boss
     BOSS_PHASE_2_THRESHOLD: 0.5, // Entra in fase 2 al 50% HP
     
     // Player Stats & Health
