@@ -155,4 +155,18 @@ export function resetGameState() {
     // Reset Boss
     gameState.bossActive = false;
     gameState.boss = {
-        x: CONFIG.CANVAS
+        x: CONFIG.CANVAS_WIDTH / 2,
+        y: -200,
+        hp: CONFIG.BOSS_MAX_HP,
+        maxHp: CONFIG.BOSS_MAX_HP,
+        targetX: CONFIG.CANVAS_WIDTH / 2,
+        lastShot: 0,
+        phase: 1
+    };
+
+    gameState.specialOnCooldown = false;
+    gameState.specialOnCooldown2 = false;
+    gameState.shieldActive = false;
+    gameState.shieldOnCooldown = false;
+    gameState.currentScreen = 'playing';
+}
