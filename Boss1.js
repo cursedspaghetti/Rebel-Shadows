@@ -1,57 +1,53 @@
 import { CONFIG, gameState } from './config.js';
 
+/**
+ * Aggiorna la logica del Boss: movimento fluido, raggera e carica mirata
+ */
 export function updateBoss(boss, player) {
     if (!boss || boss.hp <= 0) return;
 
     const now = Date.now();
 
-    // 1. INIZIALIZZAZIONE
-    if (boss.targetX === undefined) boss.targetX = boss.x;
-    if (boss.lastShot === undefined) boss.lastShot = now;
-    if (boss.lastRadialShot === undefined) boss.lastRadialShot = now;
-    if (boss.lastDash === undefined) boss.lastDash = now;
-    if (boss.isDashing === undefined) boss.isDashing = false;
-
-    // 2. LOGICA DI MOVIMENTO E ATTACCO CARICA
+    // 1. GESTIONE MOVIMENTO (DASH vs FLOATING)
     if (boss.isDashing) {
-        // Applichiamo il movimento calcolato al momento del lancio
+        // Applica la velocità vettoriale calcolata al momento del via
         boss.x += boss.dashVX;
         boss.y += boss.dashVY;
 
-        // Se esce dai bordi del canvas, finisce la carica
-        if (boss.y > CONFIG.CANVAS_HEIGHT + 100 || boss.x < -100 || boss.x > CONFIG.CANVAS_WIDTH + 100) {
+        // Se esce dai bordi (più un margine), resetta lo stato
+        if (boss.y > CONFIG.CANVAS_HEIGHT + 150 || boss.x < -150 || boss.x > CONFIG.CANVAS_WIDTH + 150) {
             boss.isDashing = false;
-            // Lo facciamo rientrare dall'alto sopra il centro
-            boss.y = -150; 
+            boss.y = -150; // Ricompare dall'alto
             boss.targetX = CONFIG.CANVAS_WIDTH / 2;
         }
     } else {
         // MOVIMENTO NORMALE (Floating)
-        if (boss.y < 150) boss.y += 4; // Rientro fluido dopo il dash
+        if (boss.y < 150) boss.y += 4; // Rientro in posizione dopo il dash
         else boss.y = 150;
 
+        // Movimento orizzontale verso il target casuale
         if (Math.abs(boss.x - boss.targetX) < 10) {
             boss.targetX = Math.random() * (CONFIG.CANVAS_WIDTH - 200) + 100;
         }
         boss.x += (boss.targetX - boss.x) * 0.02;
 
-        // 3. TRIGGER ATTACCHI
-
-        // A. Proiettile standard
+        // 2. LOGICA ATTACCHI (Solo se non sta caricando)
+        
+        // A. Fuoco Standard (ogni 2 secondi)
         if (now - boss.lastShot > 2000) {
             spawnBossBullet(boss.x, boss.y + 20);
             boss.lastShot = now;
         }
 
-        // B. Raggera (5-8 secondi)
-        const radialInterval = 5000 + Math.random() * 3000;
+        // B. Attacco a Raggera (intervallo configurato)
+        const radialInterval = CONFIG.BOSS_ATTACKS.RADIAL_INTERVAL[0] + Math.random() * 3000;
         if (now - boss.lastRadialShot > radialInterval) {
             spawnRadialAttack(boss.x, boss.y);
             boss.lastRadialShot = now;
         }
 
-        // C. CARICA MIRATA (9-15 secondi)
-        const dashInterval = 9000 + Math.random() * 6000;
+        // C. Carica Mirata verso il Player (intervallo configurato)
+        const dashInterval = CONFIG.BOSS_ATTACKS.DASH_INTERVAL[0] + Math.random() * 6000;
         if (now - boss.lastDash > dashInterval) {
             startDash(boss, player);
             boss.lastDash = now;
@@ -60,33 +56,35 @@ export function updateBoss(boss, player) {
 }
 
 /**
- * Calcola la traiettoria verso il player per la carica
+ * Inizia la carica: calcola il vettore verso la posizione attuale del player
  */
 function startDash(boss, player) {
     boss.isDashing = true;
 
-    // Calcoliamo la distanza tra boss e player
-    const dx = player.x - boss.x;
-    const dy = player.y - boss.y;
+    // Calcolo distanza tra boss e giocatore
+    const dx = (player.x || gameState.playerX) - boss.x;
+    const dy = (player.y || gameState.playerY) - boss.y;
     
-    // Calcoliamo l'angolo
+    // Angolo verso il player
     const angle = Math.atan2(dy, dx);
     
-    // Definiamo la velocità della carica
-    const speed = 12;
+    // Velocità definita nel config
+    const speed = CONFIG.BOSS_ATTACKS.DASH_SPEED;
     
-    // Salviamo le componenti della velocità nel boss
+    // Scomposizione in componenti X e Y
     boss.dashVX = Math.cos(angle) * speed;
     boss.dashVY = Math.sin(angle) * speed;
 }
 
-// --- Funzioni di supporto per i proiettili ---
-
+/**
+ * Crea proiettili che si espandono in tutte le direzioni
+ */
 function spawnRadialAttack(startX, startY) {
-    const numBullets = 12;
+    const numBullets = CONFIG.BOSS_ATTACKS.RADIAL_BULLET_COUNT;
+    const speed = CONFIG.BOSS_ATTACKS.RADIAL_BULLET_SPEED;
+
     for (let i = 0; i < numBullets; i++) {
         const angle = (Math.PI * 2 / numBullets) * i;
-        const speed = 5;
         gameState.enemies.push({
             x: startX,
             y: startY,
@@ -99,6 +97,9 @@ function spawnRadialAttack(startX, startY) {
     }
 }
 
+/**
+ * Proiettile base che scende verticalmente
+ */
 function spawnBossBullet(x, y) {
     gameState.enemies.push({
         x: x,
