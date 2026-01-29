@@ -21,7 +21,6 @@ const ctx = canvas.getContext('2d');
 const startScreen = document.getElementById('startScreen');
 const powerUpScreen = document.getElementById('powerUpScreen');
 const startButton = document.getElementById('startButton');
-const ringChoicesContainer = document.getElementById('ringChoices');
 
 // --- ASSET LOADING ---
 const introImage = new Image();
