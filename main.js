@@ -7,10 +7,9 @@ import * as SpecialAttacks from './Special Attacks.js';
 const TOUCH_SETTINGS = {
     LERP: 0.5,             // Fluidità inseguimento
     OFFSET_Y: 80,          // Distanza sopra il dito
-    TAP_DELAY: 250         // Tempo di attesa per distinguere Single/Double Tap (ms)
+    TAP_DELAY: 250         // Tempo per distinguere Single/Double Tap
 };
 
-// Variabili di stato locali per l'input
 let secondFingerTimer = null;
 gameState.isTouchActive = false;
 gameState.touchIdentifier = null;
@@ -40,10 +39,7 @@ shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-W
 
 // --- INITIALIZATION ---
 function init() {
-    // Rendiamo il pulsante subito cliccabile
     startButton.disabled = false;
-    
-    // Avviamo il loop del menu
     requestAnimationFrame(startScreenLoop);
 }
 
@@ -56,264 +52,191 @@ function startScreenLoop() {
 
 // --- GAME LOOP ---
 function gameLoop() {
-    if (gameState.currentScreen === 'playing') {
-        const now = Date.now();
+    if (gameState.currentScreen !== 'playing') return;
 
-        // --- 0. LOGICA PRE-RENDERING ---
-        if (gameState.isInvulnerable) {
-            if (now - gameState.lastDamageTime > CONFIG.INVULNERABILITY_TIME) {
-                gameState.isInvulnerable = false;
-            }
-        }
+    const now = Date.now();
 
-        if (gameState.screenShake > 0.1) {
-            gameState.screenShake *= CONFIG.SHAKE_DECAY;
-        } else {
-            gameState.screenShake = 0;
-        }
-
-        // --- 1. PULIZIA E CAMERA SHAKE ---
-        ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-        
-        ctx.save(); 
-        if (gameState.screenShake > 0) {
-            const shakeX = (Math.random() - 0.5) * gameState.screenShake;
-            const shakeY = (Math.random() - 0.5) * gameState.screenShake;
-            ctx.translate(shakeX, shakeY);
-        }
-
-        // --- 2. DISEGNO SFONDI ---
-        if (bgParallax.complete) {
-            gameState.parallaxPositionY += CONFIG.PARALLAX_SPEED;
-            if (gameState.parallaxPositionY >= CONFIG.CANVAS_HEIGHT) gameState.parallaxPositionY = 0;
-            ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-            ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-        }
-        if (bgImage.complete) {
-            gameState.backgroundPositionY += CONFIG.SCROLL_SPEED;
-            if (gameState.backgroundPositionY >= CONFIG.CANVAS_HEIGHT) gameState.backgroundPositionY = 0;
-            ctx.drawImage(bgImage, 0, gameState.backgroundPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-            ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-        }
-        
-        // --- 3. MOVIMENTO GIOCATORE ---
-        if (gameState.isTouchActive) {
-            gameState.playerX += (gameState.touchX - gameState.playerX) * TOUCH_SETTINGS.LERP;
-            gameState.playerY += (gameState.touchY - TOUCH_SETTINGS.OFFSET_Y - gameState.playerY) * TOUCH_SETTINGS.LERP;
-        } else {
-            if (gameState.keys['ArrowLeft']) gameState.playerX -= gameState.playerSpeed;
-            if (gameState.keys['ArrowRight']) gameState.playerX += gameState.playerSpeed;
-            if (gameState.keys['ArrowUp']) gameState.playerY -= gameState.playerSpeed;
-            if (gameState.keys['ArrowDown']) gameState.playerY += gameState.playerSpeed;
-        }
-        gameState.playerX = Math.max(10, Math.min(CONFIG.CANVAS_WIDTH - 10, gameState.playerX));
-        gameState.playerY = Math.max(10, Math.min(CONFIG.CANVAS_HEIGHT - 10, gameState.playerY));
-
-        // --- 4. AGGIORNAMENTO LOGICA ---
-        Renderer.autoFire();
-        Renderer.updateBullets();
-        Renderer.updateEnemies();
-        Renderer.updateExplosions(); 
-        SpecialAttacks.updateSpecialRay();
-        SpecialAttacks.updateSpecialRay2();
-
-        // Spawn nemici normali solo se il boss non è attivo
-        if (!gameState.bossActive) {
-            if (now - (gameState.lastEnemySpawn || 0) > 2000) {
-                Renderer.spawnEnemies(3);
-                gameState.lastEnemySpawn = now;
-            }
-        }
-
-        // --- 5. LOGICA BOSS ---
-        if (gameState.gameTimer <= 40 && !gameState.bossActive) {
-            gameState.bossActive = true;
-            gameState.enemies = []; // Pulisce lo schermo dai nemici comuni
-            // Il boss è già inizializzato nel config.js, lo attiviamo e basta
-        }
-
-        if (gameState.bossActive && gameState.boss) {
-            // Logica movimento e attacco del Boss
-            Boss1.updateBoss(gameState.boss);
-            
-            // Disegno Boss
-            Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
-            
-            // Controllo morte Boss
-            if (gameState.boss.hp <= 0) {
-                Renderer.createExplosion(gameState.boss.x, gameState.boss.y, '#ff0000');
-                showPowerUpScreen(); 
-                return; 
-            }
-        }
-
-        // --- GESTIONE COLLISIONI ---
-        handleAllCollisions();
-
-        // --- 6. RENDERING ENTITÀ ---
-        const isBlinking = gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0;
-        if (!isBlinking) {
-            Renderer.drawPlayer(ctx, playerSprite);
-        }
-
-        Renderer.drawEnemies(ctx);
-        SpecialAttacks.drawSpecialRay(ctx);
-        SpecialAttacks.drawSpecialRay2(ctx);
-        if (gameState.isCharging || gameState.isCharging2) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
-        Renderer.drawBullets(ctx);
-        Renderer.drawExplosions(ctx);
-
-        ctx.restore(); // Fine vibrazione
-
-        // --- 7. DISEGNO UI (FISSA) ---
-        Renderer.drawUI(ctx);
-        
-        requestAnimationFrame(gameLoop);
+    // 1. LOGICA PRE-RENDERING (Invulnerabilità e Shake)
+    if (gameState.isInvulnerable && (now - gameState.lastDamageTime > CONFIG.INVULNERABILITY_TIME)) {
+        gameState.isInvulnerable = false;
     }
+
+    if (gameState.screenShake > 0.1) gameState.screenShake *= CONFIG.SHAKE_DECAY;
+    else gameState.screenShake = 0;
+
+    // 2. PULIZIA E CAMERA SHAKE
+    ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    ctx.save(); 
+    if (gameState.screenShake > 0) {
+        ctx.translate((Math.random() - 0.5) * gameState.screenShake, (Math.random() - 0.5) * gameState.screenShake);
+    }
+
+    // 3. DISEGNO SFONDI
+    updateAndDrawBackgrounds();
+    
+    // 4. MOVIMENTO GIOCATORE
+    updatePlayerMovement();
+
+    // 5. AGGIORNAMENTO LOGICA ENTITÀ
+    Renderer.autoFire();
+    Renderer.updateBullets();
+    Renderer.updateEnemies();
+    Renderer.updateExplosions(); 
+    SpecialAttacks.updateSpecialRay();
+    SpecialAttacks.updateSpecialRay2();
+
+    // Spawn nemici comuni (solo se il boss non c'è)
+    if (!gameState.bossActive) {
+        if (now - (gameState.lastEnemySpawn || 0) > 2000) {
+            Renderer.spawnEnemies(3);
+            gameState.lastEnemySpawn = now;
+        }
+        if (gameState.gameTimer <= 40) {
+            gameState.bossActive = true;
+            gameState.enemies = []; 
+        }
+    }
+
+    // 6. LOGICA E RENDERING BOSS
+    if (gameState.bossActive && gameState.boss) {
+        Boss1.updateBoss(gameState.boss); // Aggiorna Boss E i suoi proiettili
+        Boss1.drawBossShadow(ctx, gameState.boss, shadowImg); // Disegna Boss, UI e Proiettili
+        
+        if (gameState.boss.hp <= 0) {
+            Renderer.createExplosion(gameState.boss.x, gameState.boss.y, '#ff0000');
+            showPowerUpScreen(); 
+            return; 
+        }
+    }
+
+    // 7. COLLISIONI
+    handleAllCollisions();
+
+    // 8. RENDERING GIOCATORE ED EFFETTI
+    const isBlinking = gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0;
+    if (!isBlinking) Renderer.drawPlayer(ctx, playerSprite);
+
+    Renderer.drawEnemies(ctx);
+    SpecialAttacks.drawSpecialRay(ctx);
+    SpecialAttacks.drawSpecialRay2(ctx);
+    if (gameState.isCharging || gameState.isCharging2) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
+    Renderer.drawBullets(ctx);
+    Renderer.drawExplosions(ctx);
+
+    ctx.restore(); 
+
+    // 9. UI FISSA
+    Renderer.drawUI(ctx);
+    requestAnimationFrame(gameLoop);
 }
 
-// --- FUNZIONE COLLISIONI AGGIORNATA ---
+// --- HELPER FUNCTIONS ---
+
+function updateAndDrawBackgrounds() {
+    // Parallax
+    gameState.parallaxPositionY = (gameState.parallaxPositionY + CONFIG.PARALLAX_SPEED) % CONFIG.CANVAS_HEIGHT;
+    ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    
+    // Background principale
+    gameState.backgroundPositionY = (gameState.backgroundPositionY + CONFIG.SCROLL_SPEED) % CONFIG.CANVAS_HEIGHT;
+    ctx.drawImage(bgImage, 0, gameState.backgroundPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+}
+
+function updatePlayerMovement() {
+    if (gameState.isTouchActive) {
+        gameState.playerX += (gameState.touchX - gameState.playerX) * TOUCH_SETTINGS.LERP;
+        gameState.playerY += (gameState.touchY - TOUCH_SETTINGS.OFFSET_Y - gameState.playerY) * TOUCH_SETTINGS.LERP;
+    } else {
+        if (gameState.keys['ArrowLeft']) gameState.playerX -= gameState.playerSpeed;
+        if (gameState.keys['ArrowRight']) gameState.playerX += gameState.playerSpeed;
+        if (gameState.keys['ArrowUp']) gameState.playerY -= gameState.playerSpeed;
+        if (gameState.keys['ArrowDown']) gameState.playerY += gameState.playerSpeed;
+    }
+    gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
+    gameState.playerY = Math.max(20, Math.min(CONFIG.CANVAS_HEIGHT - 20, gameState.playerY));
+}
+
 function handleAllCollisions() {
     const BOSS_HITBOX_RAD = 80; 
     const PLAYER_HITBOX_RAD = 15;
 
-    // 1. PROIETTILI PLAYER vs Nemici/Boss
+    // 1. PROIETTILI PLAYER vs Boss/Nemici
     for (let b = gameState.bullets.length - 1; b >= 0; b--) {
         const bullet = gameState.bullets[b];
-        let bulletDestroyed = false;
-
-        // Collisione con Boss
+        
         if (gameState.bossActive && gameState.boss) {
-            const dx = bullet.x - gameState.boss.x;
-            const dy = bullet.y - gameState.boss.y;
-            const distSq = dx * dx + dy * dy;
-            const radSum = BOSS_HITBOX_RAD + bullet.size;
-            
-            if (distSq < radSum * radSum) {
+            const dist = Math.hypot(bullet.x - gameState.boss.x, bullet.y - gameState.boss.y);
+            if (dist < BOSS_HITBOX_RAD + bullet.size) {
                 gameState.boss.hp -= 1;
                 Renderer.createExplosion(bullet.x, bullet.y, '#ffffff');
                 gameState.bullets.splice(b, 1);
-                bulletDestroyed = true;
+                continue;
             }
         }
 
-        // Collisione con Nemici normali
-        if (!bulletDestroyed) {
-            for (let e = gameState.enemies.length - 1; e >= 0; e--) {
-                const enemy = gameState.enemies[e];
-                const dx = bullet.x - enemy.x;
-                const dy = bullet.y - enemy.y;
-                const distSq = dx * dx + dy * dy;
-                const radSum = (enemy.size / 2) + bullet.size;
-                
-                if (distSq < radSum * radSum) {
-                    Renderer.createExplosion(enemy.x, enemy.y, enemy.color || '#fff');
-                    gameState.enemies.splice(e, 1);
-                    gameState.bullets.splice(b, 1);
-                    bulletDestroyed = true;
-                    break;
-                }
+        for (let e = gameState.enemies.length - 1; e >= 0; e--) {
+            const enemy = gameState.enemies[e];
+            const dist = Math.hypot(bullet.x - enemy.x, bullet.y - enemy.y);
+            if (dist < (enemy.size / 2) + bullet.size) {
+                Renderer.createExplosion(enemy.x, enemy.y, enemy.color || '#fff');
+                gameState.enemies.splice(e, 1);
+                gameState.bullets.splice(b, 1);
+                break;
             }
         }
     }
 
-    // 2. RAGGI SPECIALI vs Nemici/Boss
-    const activeRays = [
-        { active: gameState.specialRay?.active, x: gameState.playerX, width: 40 },
-        { active: gameState.specialRay2?.active2, x: gameState.playerX, width: 40 }
-    ];
-
-    activeRays.forEach(ray => {
-        if (ray.active) {
-            // Nemici normali
-            for (let e = gameState.enemies.length - 1; e >= 0; e--) {
-                const enemy = gameState.enemies[e];
-                if (Math.abs(enemy.x - ray.x) < (ray.width / 2 + enemy.size / 2)) {
-                    Renderer.createExplosion(enemy.x, enemy.y, '#ffffff');
-                    gameState.enemies.splice(e, 1);
-                }
-            }
-            // Boss
-            if (gameState.bossActive && gameState.boss) {
-                if (Math.abs(gameState.boss.x - ray.x) < (BOSS_HITBOX_RAD + ray.width / 2)) {
-                    gameState.boss.hp -= 0.5; // Danno a frame (aggiustato per bilanciamento)
-                }
-            }
-        }
-    });
-
-    // 3. PROIETTILI BOSS vs PLAYER (Nuova Sezione)
+    // 2. PROIETTILI BOSS vs PLAYER
     if (gameState.bossBullets) {
         for (let i = gameState.bossBullets.length - 1; i >= 0; i--) {
             const b = gameState.bossBullets[i];
-            const dx = gameState.playerX - b.x;
-            const dy = gameState.playerY - b.y;
-            const distSq = dx * dx + dy * dy;
-            const radSum = PLAYER_HITBOX_RAD + (b.size / 2);
-
-            if (distSq < radSum * radSum) {
-                // Se non è invulnerabile o scudato, applica danno
+            const dist = Math.hypot(gameState.playerX - b.x, gameState.playerY - b.y);
+            if (dist < PLAYER_HITBOX_RAD + (b.size / 2)) {
                 if (!gameState.isInvulnerable && !gameState.shieldActive) {
-                    applyDamage(10, 15); // Danno dei proiettili boss
+                    applyDamage(10, 15);
                 }
-                // Il proiettile sparisce comunque al contatto (o crea esplosione)
                 Renderer.createExplosion(b.x, b.y, b.color);
                 gameState.bossBullets.splice(i, 1);
             }
         }
     }
 
-    // 4. PLAYER vs NEMICI/BOSS (Corpo a corpo)
+    // 3. PLAYER vs CORPO NEMICI/BOSS
     if (!gameState.isInvulnerable && !gameState.shieldActive) {
-        // Contro nemici normali
-        for (let e = gameState.enemies.length - 1; e >= 0; e--) {
-            const enemy = gameState.enemies[e];
-            const dx = gameState.playerX - enemy.x;
-            const dy = gameState.playerY - enemy.y;
-            const distSq = dx * dx + dy * dy;
-            const radSum = PLAYER_HITBOX_RAD + (enemy.size / 2);
-            
-            if (distSq < radSum * radSum) {
+        // vs Nemici
+        gameState.enemies.forEach((enemy, index) => {
+            if (Math.hypot(gameState.playerX - enemy.x, gameState.playerY - enemy.y) < PLAYER_HITBOX_RAD + enemy.size/2) {
                 applyDamage(5, 12);
-                Renderer.createExplosion(enemy.x, enemy.y, enemy.color);
-                gameState.enemies.splice(e, 1);
-                break;
+                gameState.enemies.splice(index, 1);
             }
-        }
-
-        // Contro il corpo del Boss
+        });
+        // vs Boss corpo a corpo
         if (gameState.bossActive && gameState.boss) {
-            const dx = gameState.playerX - gameState.boss.x;
-            const dy = gameState.playerY - gameState.boss.y;
-            const distSq = dx * dx + dy * dy;
-            const radSum = 60 + PLAYER_HITBOX_RAD; 
-            if (distSq < radSum * radSum) {
-                applyDamage(30, 28); // Danno alto da contatto boss
+            if (Math.hypot(gameState.playerX - gameState.boss.x, gameState.playerY - gameState.boss.y) < 60 + PLAYER_HITBOX_RAD) {
+                applyDamage(30, 25);
             }
         }
     }
 }
-// --- ALTRI HANDLERS ---
+
 function applyDamage(amount, shakeIntensity) {
     gameState.hp -= amount;
     gameState.isInvulnerable = true;
     gameState.lastDamageTime = Date.now();
     gameState.screenShake = shakeIntensity;
-
     if (gameState.hp <= 0) {
-        gameState.hp = 0;
         alert("GAME OVER");
         location.reload(); 
     }
 }
 
 function startGame() {
-    if (!shadowImg.complete) { setTimeout(startGame, 100); return; }
     startScreen.style.display = 'none';
     gameState.currentScreen = 'playing';
     gameState.timerInterval = setInterval(() => {
         if (gameState.gameTimer > 0) gameState.gameTimer--;
-        else clearInterval(gameState.timerInterval);
     }, 1000);
     gameLoop();
 }
@@ -321,8 +244,10 @@ function startGame() {
 function showPowerUpScreen() {
     gameState.currentScreen = 'powerup';
     powerUpScreen.style.display = 'flex';
+    if (gameState.timerInterval) clearInterval(gameState.timerInterval);
 }
 
+// --- SPECIAL ATTACK SEQUENCES ---
 function fireSpecialAttackSequence() {
     if (gameState.specialOnCooldown || gameState.isCharging) return;
     gameState.isCharging = true;
@@ -383,12 +308,10 @@ canvas.addEventListener('touchmove', (e) => {
 }, { passive: false });
 
 canvas.addEventListener('touchend', (e) => {
-    if (e.touches.length === 0) {
+    const stillDragging = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
+    if (!stillDragging) {
         gameState.isTouchActive = false;
         gameState.touchIdentifier = null;
-    } else {
-        const stillDragging = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
-        if (!stillDragging) gameState.isTouchActive = false;
     }
 });
 
