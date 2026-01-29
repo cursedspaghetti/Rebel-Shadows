@@ -172,13 +172,12 @@ function gameLoop() {
     }
 }
 
-// --- FUNZIONE COLLISIONI ---
+// --- FUNZIONE COLLISIONI AGGIORNATA ---
 function handleAllCollisions() {
-    // Valore hitbox boss unico per proiettili e raggi (più piccolo del precedente 120/100)
     const BOSS_HITBOX_RAD = 80; 
     const PLAYER_HITBOX_RAD = 15;
 
-    // 1. Proiettili vs Boss/Nemici
+    // 1. PROIETTILI PLAYER vs Nemici/Boss
     for (let b = gameState.bullets.length - 1; b >= 0; b--) {
         const bullet = gameState.bullets[b];
         let bulletDestroyed = false;
@@ -198,7 +197,7 @@ function handleAllCollisions() {
             }
         }
 
-        // Collisione con Nemici normali (se il proiettile non è già esploso sul boss)
+        // Collisione con Nemici normali
         if (!bulletDestroyed) {
             for (let e = gameState.enemies.length - 1; e >= 0; e--) {
                 const enemy = gameState.enemies[e];
@@ -218,7 +217,7 @@ function handleAllCollisions() {
         }
     }
 
-    // 2. Raggi Speciali (Corretto bug dello splice usando ciclo for inverso)
+    // 2. RAGGI SPECIALI vs Nemici/Boss
     const activeRays = [
         { active: gameState.specialRay?.active, x: gameState.playerX, width: 40 },
         { active: gameState.specialRay2?.active2, x: gameState.playerX, width: 40 }
@@ -226,7 +225,7 @@ function handleAllCollisions() {
 
     activeRays.forEach(ray => {
         if (ray.active) {
-            // Nemici normali colpiti dai raggi
+            // Nemici normali
             for (let e = gameState.enemies.length - 1; e >= 0; e--) {
                 const enemy = gameState.enemies[e];
                 if (Math.abs(enemy.x - ray.x) < (ray.width / 2 + enemy.size / 2)) {
@@ -234,19 +233,39 @@ function handleAllCollisions() {
                     gameState.enemies.splice(e, 1);
                 }
             }
-            
-            // Boss colpito dai raggi
+            // Boss
             if (gameState.bossActive && gameState.boss) {
                 if (Math.abs(gameState.boss.x - ray.x) < (BOSS_HITBOX_RAD + ray.width / 2)) {
-                    gameState.boss.hp -= 5; // Danno costante del raggio
+                    gameState.boss.hp -= 0.5; // Danno a frame (aggiustato per bilanciamento)
                 }
             }
         }
     });
 
-    // 3. Player vs Nemici/Boss (Invulnerabilità e Scudo)
+    // 3. PROIETTILI BOSS vs PLAYER (Nuova Sezione)
+    if (gameState.bossBullets) {
+        for (let i = gameState.bossBullets.length - 1; i >= 0; i--) {
+            const b = gameState.bossBullets[i];
+            const dx = gameState.playerX - b.x;
+            const dy = gameState.playerY - b.y;
+            const distSq = dx * dx + dy * dy;
+            const radSum = PLAYER_HITBOX_RAD + (b.size / 2);
+
+            if (distSq < radSum * radSum) {
+                // Se non è invulnerabile o scudato, applica danno
+                if (!gameState.isInvulnerable && !gameState.shieldActive) {
+                    applyDamage(10, 15); // Danno dei proiettili boss
+                }
+                // Il proiettile sparisce comunque al contatto (o crea esplosione)
+                Renderer.createExplosion(b.x, b.y, b.color);
+                gameState.bossBullets.splice(i, 1);
+            }
+        }
+    }
+
+    // 4. PLAYER vs NEMICI/BOSS (Corpo a corpo)
     if (!gameState.isInvulnerable && !gameState.shieldActive) {
-        // Player vs Nemici
+        // Contro nemici normali
         for (let e = gameState.enemies.length - 1; e >= 0; e--) {
             const enemy = gameState.enemies[e];
             const dx = gameState.playerX - enemy.x;
@@ -262,15 +281,14 @@ function handleAllCollisions() {
             }
         }
 
-        // Player vs Boss
+        // Contro il corpo del Boss
         if (gameState.bossActive && gameState.boss) {
             const dx = gameState.playerX - gameState.boss.x;
             const dy = gameState.playerY - gameState.boss.y;
             const distSq = dx * dx + dy * dy;
-            // Hitbox boss per collisione player (60 è più onesto di 80 per dare margine di manovra)
             const radSum = 60 + PLAYER_HITBOX_RAD; 
             if (distSq < radSum * radSum) {
-                applyDamage(30, 28);
+                applyDamage(30, 28); // Danno alto da contatto boss
             }
         }
     }
