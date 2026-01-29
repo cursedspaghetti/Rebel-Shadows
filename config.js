@@ -3,25 +3,35 @@
  * Static values that define the game rules and dimensions.
  */
 
-
 export const CONFIG = {
-
-    
+    // Dimensioni Canvas
     CANVAS_WIDTH: 393,
     CANVAS_HEIGHT: 852,
-    GAME_TIME: 60, // seconds until boss
-    SCROLL_SPEED: 2.5,
-    PARALLAX_SPEED: 1,      // Velocità delle stelle lontane (lento)
     
+    // Regole di Gioco
+    GAME_TIME: 60,           // secondi fino al boss
+    SCROLL_SPEED: 2.5,
+    PARALLAX_SPEED: 1,      // Velocità stelle lontane
+    
+    // Player Stats & Health
+    PLAYER_MAX_HP: 100,
+    COLLISION_DAMAGE: 20,    // Danno subito al contatto con nemici
+    INVULNERABILITY_TIME: 1500, // Millisecondi di invulnerabilità post-danno (1.5s)
+    
+    // Meccaniche di Fuoco
     FIRE_RATE_LEVELS: {
         1: 200, // Base: 200 ms
         2: 120, // Level 2
         3: 70   // Level 3
     },
+    
+    // Estetica
     RING_COLORS: {
         'WHITE': '#fff',
         'PURPLE': '#800080'
     },
+    
+    // Input & Touch
     TOUCH: {
         LERP: 0.05,
         OFFSET_Y: 70,
@@ -37,10 +47,13 @@ export let gameState = {
     // Screen Management
     currentScreen: 'start', // 'start', 'playing', 'powerup', 'boss'
     
-    // Player Properties
+    // Player Properties & Health
     selectedRingColor: null,
-    playerX: 393 / 2, // Initialized with CANVAS_WIDTH / 2
-    playerY: 852 - 300, // Initialized with CANVAS_HEIGHT - 300
+    hp: CONFIG.PLAYER_MAX_HP,
+    isInvulnerable: false,
+    lastDamageTime: 0,
+    playerX: CONFIG.CANVAS_WIDTH / 2,
+    playerY: CONFIG.CANVAS_HEIGHT - 300,
     playerSpeed: 3,
     playerTrail: [],
     
@@ -59,13 +72,13 @@ export let gameState = {
 
     // Shield State
     shieldActive: false,
-    shieldDuration: 5,       // Secondi di durata
+    shieldDuration: 5,
     shieldStartTime: 0,
-    shieldCooldown: 15,      // Secondi di ricarica
+    shieldCooldown: 15,
     shieldLastUsed: 0,
     shieldOnCooldown: false,
     
-    // Special Attack State 1
+    // Special Attack 1 (Ray)
     specialCooldown: 10,
     specialLastUsed: 0,
     specialOnCooldown: false,
@@ -80,7 +93,7 @@ export let gameState = {
     isCharging: false,
     rayParticles: [],
 
-    // Special Attack State 2
+    // Special Attack 2 (Ray alternative)
     specialCooldown2: 10,
     specialLastUsed2: 0,
     specialOnCooldown2: false,
@@ -98,21 +111,24 @@ export let gameState = {
     // World & Entities
     enemies: [],
     explosions: [],
-    gameTimer: 60,
+    gameTimer: CONFIG.GAME_TIME,
     timerInterval: null,
     bossActive: false,
     lastEnemySpawn: 0,
     
-    //backgroudposition
-    backgroundPositionY: 0,   // Per il livello principale
-    parallaxPositionY: 0      // Per il livello lontano
+    // Background Position
+    backgroundPositionY: 0,
+    parallaxPositionY: 0
 };
 
 /**
  * HELPER: Reset State
- * Useful if you want to restart the game without refreshing the page.
+ * Riporta lo stato ai valori iniziali per un nuovo match.
  */
 export function resetGameState() {
+    gameState.hp = CONFIG.PLAYER_MAX_HP;
+    gameState.isInvulnerable = false;
+    gameState.lastDamageTime = 0;
     gameState.playerX = CONFIG.CANVAS_WIDTH / 2;
     gameState.playerY = CONFIG.CANVAS_HEIGHT - 300;
     gameState.bullets = [];
@@ -123,5 +139,5 @@ export function resetGameState() {
     gameState.specialOnCooldown2 = false;
     gameState.shieldActive = false;
     gameState.shieldOnCooldown = false;
-
+    gameState.currentScreen = 'playing';
 }
