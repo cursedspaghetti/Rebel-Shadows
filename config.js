@@ -2,7 +2,6 @@
  * CONFIGURATION CONSTANTS
  * Static values that define the game rules and dimensions.
  */
-
 export const CONFIG = {
     // Dimensioni Canvas
     CANVAS_WIDTH: 393,
@@ -17,6 +16,9 @@ export const CONFIG = {
     PLAYER_MAX_HP: 100,
     COLLISION_DAMAGE: 20,    // Danno subito al contatto con nemici
     INVULNERABILITY_TIME: 1500, // Millisecondi di invulnerabilità post-danno (1.5s)
+    
+    // Camera Shake (Vibrazione)
+    SHAKE_DECAY: 0.9,       // Quanto velocemente si smorza la vibrazione (0.9 = veloce)
     
     // Meccaniche di Fuoco
     FIRE_RATE_LEVELS: {
@@ -46,6 +48,7 @@ export const CONFIG = {
 export let gameState = {
     // Screen Management
     currentScreen: 'start', // 'start', 'playing', 'powerup', 'boss'
+    screenShake: 0,        // Intensità attuale della vibrazione
     
     // Player Properties & Health
     selectedRingColor: null,
@@ -62,6 +65,7 @@ export let gameState = {
     touchIdentifier: null,
     touchX: null,
     touchY: null,
+    isTouchActive: false,
 
     // Combat Stats
     fireRateLevel: 1,
@@ -114,6 +118,7 @@ export let gameState = {
     gameTimer: CONFIG.GAME_TIME,
     timerInterval: null,
     bossActive: false,
+    boss: null,             // Inizializzato al momento dello spawn
     lastEnemySpawn: 0,
     
     // Background Position
@@ -129,12 +134,14 @@ export function resetGameState() {
     gameState.hp = CONFIG.PLAYER_MAX_HP;
     gameState.isInvulnerable = false;
     gameState.lastDamageTime = 0;
+    gameState.screenShake = 0;
     gameState.playerX = CONFIG.CANVAS_WIDTH / 2;
     gameState.playerY = CONFIG.CANVAS_HEIGHT - 300;
     gameState.bullets = [];
     gameState.enemies = [];
     gameState.gameTimer = CONFIG.GAME_TIME;
     gameState.bossActive = false;
+    gameState.boss = null;
     gameState.specialOnCooldown = false;
     gameState.specialOnCooldown2 = false;
     gameState.shieldActive = false;
