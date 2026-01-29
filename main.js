@@ -41,21 +41,10 @@ shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-W
 
 // --- INITIALIZATION ---
 function init() {
-    Object.keys(CONFIG.RING_COLORS).forEach(colorName => {
-        const button = document.createElement('div');
-        button.className = 'ring-choice';
-        button.textContent = colorName;
-        button.style.color = CONFIG.RING_COLORS[colorName];
-        button.dataset.color = CONFIG.RING_COLORS[colorName];
-        
-        button.onclick = () => {
-            document.querySelectorAll('.ring-choice').forEach(btn => btn.style.border = '4px solid transparent');
-            button.style.border = '4px solid ' + button.dataset.color;
-            gameState.selectedRingColor = button.dataset.color;
-            startButton.disabled = false;
-        };
-        ringChoicesContainer.appendChild(button);
-    });
+    // Rendiamo il pulsante subito cliccabile
+    startButton.disabled = false;
+    
+    // Avviamo il loop del menu
     requestAnimationFrame(startScreenLoop);
 }
 
