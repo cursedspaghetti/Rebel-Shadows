@@ -1,21 +1,7 @@
 import { CONFIG, gameState } from './config.js';
 
-let sparkles = [];
-
-function createSparkle(bookX, bookY, bookWidth) {
-    return {
-        x: bookX + Math.random() * bookWidth,
-        y: bookY + 5,
-        size: Math.floor(Math.random() * 2) + 1, // Dimensione pixelart
-        speedY: Math.random() * -1.2 - 0.5,
-        speedX: (Math.random() - 0.5) * 0.6,
-        alpha: 1.0, // Parte da 1.0 (visibile)
-        color: Math.random() > 0.5 ? '#FFFFAA' : '#FFFFFF'
-    };
-}
-
 export function drawStartScreen(ctx, bgImage, introImage) {
-    // 1. Sfondo
+    // 1. Pulizia e Sfondo
     if (bgImage.complete && bgImage.naturalWidth !== 0) {
         ctx.drawImage(bgImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     } else {
@@ -23,52 +9,24 @@ export function drawStartScreen(ctx, bgImage, introImage) {
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 
-    // 2. Disegno del Libro (30%)
+    // 2. Disegno dell'immagine Intro (Libro al 30%)
     if (introImage.complete && introImage.naturalWidth !== 0) {
+        // Calcoliamo le proporzioni originali
         const aspectRatio = introImage.height / introImage.width;
-        const imgWidth = CONFIG.CANVAS_WIDTH * 0.3; 
-        const imgHeight = imgWidth * aspectRatio;
-        const xPos = (CONFIG.CANVAS_WIDTH - imgWidth) / 2;
-        const yPos = CONFIG.CANVAS_HEIGHT - imgHeight - 50;
-
-        ctx.globalAlpha = 1.0;
-        ctx.shadowBlur = 0; // Reset ombre per l'immagine
-        ctx.drawImage(introImage, xPos, yPos, imgWidth, imgHeight);
-
-        // --- LOGICA DELLE SCINTILLE ---
-        if (Math.random() > 0.75) { 
-            sparkles.push(createSparkle(xPos, yPos, imgWidth));
-        }
-
-        for (let i = sparkles.length - 1; i >= 0; i--) {
-            let s = sparkles[i];
-
-            ctx.globalAlpha = s.alpha;
-            ctx.shadowBlur = 10;     // Effetto Glow
-            ctx.shadowColor = s.color;
-            ctx.fillStyle = s.color;
-            
-            ctx.fillRect(s.x, s.y, s.size, s.size);
-
-            // Reset ombra dopo ogni rettangolo (per performance e pulizia)
-            ctx.shadowBlur = 0;
-
-            // Aggiornamento posizione
-            s.y += s.speedY;
-            s.x += s.speedX;
-
-            // Sparizione in 1 secondo: 1.0 / 60 frames = 0.0166...
-            s.alpha -= 0.017; 
-
-            // Rimuovi se invisibile
-            if (s.alpha <= 0) {
-                sparkles.splice(i, 1);
-            }
-        }
         
-        // Reset finale
+        // Dimensione ridotta al 30% della larghezza del canvas
+        const imgWidth = CONFIG.CANVAS_WIDTH * 0.2; 
+        const imgHeight = imgWidth * aspectRatio;
+
+        // Posizionamento centrato e verso il basso
+        const xPos = (CONFIG.CANVAS_WIDTH - imgWidth) / 2;
+        const yPos = CONFIG.CANVAS_HEIGHT - imgHeight - 50; 
+
+        // Reset dei parametri di disegno per sicurezza
         ctx.globalAlpha = 1.0;
         ctx.shadowBlur = 0;
+        
+        ctx.drawImage(introImage, xPos, yPos, imgWidth, imgHeight);
     }
 }
 
