@@ -105,6 +105,7 @@ function gameLoop() {
         
         if (gameState.boss.hp <= 0) {
             Renderer.createExplosion(gameState.boss.x, gameState.boss.y, '#ff0000');
+            gameState.bossActive = false;
             showPowerUpScreen(); 
             return; 
         }
@@ -118,6 +119,7 @@ function gameLoop() {
     if (!isBlinking) Renderer.drawPlayer(ctx, playerSprite);
 
     Renderer.drawEnemies(ctx);
+    Renderer.drawEnemyBullets(ctx);
     SpecialAttacks.drawSpecialRay(ctx);
     SpecialAttacks.drawSpecialRay2(ctx);
     if (gameState.isCharging || gameState.isCharging2) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
