@@ -1,8 +1,9 @@
 import { CONFIG, gameState } from './config.js';
 
-// --- SCHERMATA INIZIALE ---
-// Aggiungi 'timestamp' ai parametri della funzione
-export function drawStartScreen(ctx, bgParallax, introImage, timestamp) {
+// Variabile esterna per gestire l'animazione in modo persistente tra i frame
+let hoverCounter = 0;
+export function drawStartScreen(ctx, bgParallax, introImage) {
+    // 1. GESTIONE SFONDO
     if (bgParallax.complete && bgParallax.naturalWidth !== 0) {
         ctx.drawImage(bgParallax, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     } else {
@@ -10,25 +11,35 @@ export function drawStartScreen(ctx, bgParallax, introImage, timestamp) {
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 
+    // 2. GESTIONE IMMAGINE INTRO CON EFFETTO FLUTTUANTE
     if (introImage.complete && introImage.naturalWidth !== 0) {
+        // Calcoli dimensionali
         const originalWidth = introImage.naturalWidth;
         const originalHeight = introImage.naturalHeight;
         const aspectRatio = originalHeight / originalWidth;
         const imgWidth = CONFIG.CANVAS_WIDTH * 0.2; 
         const imgHeight = imgWidth * aspectRatio;
-        
-        // --- LOGICA DI FLUTTUAZIONE ---
-        const amplitude = 15; // Quanti pixel si muove in alto/basso
-        const speed = 0.002;  // Velocità dell'oscillazione
-        const hoverOffset = Math.sin(timestamp * speed) * amplitude;
-        
-        const xPos = (CONFIG.CANVAS_WIDTH - imgWidth) / 2;
-        // Aggiungiamo hoverOffset alla posizione Y
-        const yPos = (CONFIG.CANVAS_HEIGHT - imgHeight - 50) + hoverOffset; 
 
+        // --- LOGICA DI FLUTTUAZIONE ---
+        const amplitude = 12; // Pixel di spostamento (su/giù)
+        const speed = 0.04;   // Velocità del movimento
+        
+        // Calcolo dell'offset verticale usando il seno
+        const hoverOffset = Math.sin(hoverCounter) * amplitude;
+        
+        // Incremento e Reset del contatore (mantiene il valore tra 0 e 2*PI)
+        hoverCounter = (hoverCounter + speed) % (Math.PI * 2);
+
+        // Posizionamento (il valore 50 è il margine dal fondo)
+        const xPos = (CONFIG.CANVAS_WIDTH - imgWidth) / 2;
+        const yPos = (CONFIG.CANVAS_HEIGHT - imgHeight - 50) + hoverOffset;
+
+        // Rendering dell'immagine
+        ctx.save(); // Buona pratica per non influenzare altri disegni
         ctx.globalAlpha = 1.0;
         ctx.shadowBlur = 0;
         ctx.drawImage(introImage, xPos, yPos, imgWidth, imgHeight);
+        ctx.restore();
     }
 }
 
