@@ -1,9 +1,9 @@
 import { CONFIG, gameState } from './config.js';
 
-export function drawStartScreen(ctx, bgImage, introImage) {
+export function drawStartScreen(ctx, bgParallax, introImage) {
     // 1. Pulizia e Sfondo
-    if (bgImage.complete && bgImage.naturalWidth !== 0) {
-        ctx.drawImage(bgImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    if (bgParallax.complete && bgParallax.naturalWidth !== 0) {
+        ctx.drawImage(bgParallax, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     } else {
         ctx.fillStyle = '#000033'; 
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
