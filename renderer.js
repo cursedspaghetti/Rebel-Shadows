@@ -52,20 +52,20 @@ export function drawPlayer(ctx, img) {
 }
 // Barra Vita
 export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
-    const barWidth = 20;
+    const barWidth = 10;
     const barHeight = 150;
     const padding = 20;
     
     // Posizionamento a destra (verticale)
     const x = canvasWidth - barWidth - padding;
-    const y = 50; // Distanza dal bordo superiore
+    const y = 50; 
 
     // 1. Sfondo della barra (Bordo stile Pixel Art)
-    ctx.fillStyle = '#000000'; // Nero
+    ctx.fillStyle = '#000000';
     ctx.fillRect(x - 2, y - 2, barWidth + 4, barHeight + 4);
 
     // 2. Sfondo vuoto della barra
-    ctx.fillStyle = '#333333'; // Grigio scuro
+    ctx.fillStyle = '#333333';
     ctx.fillRect(x, y, barWidth, barHeight);
 
     // 3. Calcolo dell'altezza della vita
@@ -73,17 +73,22 @@ export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
     const currentHealthHeight = barHeight * healthPercentage;
 
     // 4. Parte piena (Verde Pixel Art)
-    // Disegniamo dal basso verso l'alto
     ctx.fillStyle = '#49eb34'; 
     ctx.fillRect(x, y + (barHeight - currentHealthHeight), barWidth, currentHealthHeight);
 
-    // 5. Testo "HP" sotto la barra
+    // --- AGGIUNTA TESTO ---
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 16px "Courier New", Courier, monospace'; // Font monospaced per stile pixel
     ctx.textAlign = 'center';
-    ctx.fillText("HP", x + (barWidth / 2), y + barHeight + 25);
-}
+    
+    // 5. Valore numerico (es. 75/100) posizionato subito sotto la barra
+    ctx.font = '12px "Courier New", Courier, monospace'; // Font leggermente più piccolo per i numeri
+    const hpStatus = `${Math.ceil(currentHp)}/${maxHp}`;
+    ctx.fillText(hpStatus, x + (barWidth / 2), y + barHeight + 20);
 
+    // 6. Testo "HP" sotto il valore numerico
+    ctx.font = 'bold 16px "Courier New", Courier, monospace';
+    ctx.fillText("HP", x + (barWidth / 2), y + barHeight + 40);
+}
 // BULLETS
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
