@@ -50,7 +50,39 @@ export function drawPlayer(ctx, img) {
     );
     ctx.restore();
 }
+// Barra Vita
+export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
+    const barWidth = 20;
+    const barHeight = 150;
+    const padding = 20;
+    
+    // Posizionamento a destra (verticale)
+    const x = canvasWidth - barWidth - padding;
+    const y = 50; // Distanza dal bordo superiore
 
+    // 1. Sfondo della barra (Bordo stile Pixel Art)
+    ctx.fillStyle = '#000000'; // Nero
+    ctx.fillRect(x - 2, y - 2, barWidth + 4, barHeight + 4);
+
+    // 2. Sfondo vuoto della barra
+    ctx.fillStyle = '#333333'; // Grigio scuro
+    ctx.fillRect(x, y, barWidth, barHeight);
+
+    // 3. Calcolo dell'altezza della vita
+    const healthPercentage = Math.max(0, currentHp / maxHp);
+    const currentHealthHeight = barHeight * healthPercentage;
+
+    // 4. Parte piena (Verde Pixel Art)
+    // Disegniamo dal basso verso l'alto
+    ctx.fillStyle = '#49eb34'; 
+    ctx.fillRect(x, y + (barHeight - currentHealthHeight), barWidth, currentHealthHeight);
+
+    // 5. Testo "HP" sotto la barra
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 16px "Courier New", Courier, monospace'; // Font monospaced per stile pixel
+    ctx.textAlign = 'center';
+    ctx.fillText("HP", x + (barWidth / 2), y + barHeight + 25);
+}
 
 // BULLETS
 export function drawBullets(ctx) {
