@@ -64,15 +64,16 @@ export function updateBoss(boss) {
         }
 
         //DA VALUTARE IN FUTURO per creare una nuva sequanze se il livello è superiore  
-        /*
+        
         // Colpo standard frontale
-        if (now - boss.lastShot > (2000 * cooldownMult)) {
+       /* if (now - boss.lastShot > (2000 * cooldownMult)) {
             spawnBossBullet(boss.x, boss.y + 20);
             boss.lastShot = now;
         }
+       */
+        
       } 
-    */
-
+   
     // 3. AGGIORNAMENTO FISICA PROIETTILI
     updateBossBullets();
 }
@@ -262,7 +263,7 @@ function spawnTargetedBullet(boss) {
     });
 }
 
-    /*    
+ 
 function spawnBossBullet(x, y) {
     gameState.bossBullets.push({
         x: x,
@@ -274,4 +275,4 @@ function spawnBossBullet(x, y) {
         type: 'standard'
     });
 }
- */
+
