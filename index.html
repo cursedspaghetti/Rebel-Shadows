@@ -1,53 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Deep in Shadows</title>
+    <title>Rebel Shadows</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
     <div id="game-container">
+        <div class="vignette"></div>
+        <div class="scanlines"></div>
         
         <canvas id="gameCanvas" width="393" height="852"></canvas>
         
-        <div id="startScreen" class="obscure-theme">
-    <div class="vignette"></div>
-    <div class="scanlines"></div>
-
-    <div class="content">
-        <header>
-            <h1 class="glitch-text" data-text="REBEL SHADOWS">REBEL SHADOWS</h1>
-            <div class="manifesto">
-                <p>The ritual fractured.</p>
-                <p>The Dream World bleeds.</p>
-                <p>Only the Book can bind what was unleashed.</p>
+        <div id="startScreen">
+            <div id="title">
+                <h1 class="glitch" data-text="REBEL SHADOWS">REBEL SHADOWS</h1>
+                <div class="lore-text">
+                    <p>The ritual fractured.</p>
+                    <p>The Shadows fled into the minds of the living.</p>
+                    <p>Only the Book remains to bind them.</p>
+                </div>
             </div>
-        </header>
-
-        <div class="action-zone">
-            <button id="startButton">
-                <span class="static-effect">ENTER THE VOID</span>
-            </button>
+            
+            <div class="action-area">
+                <button id="startButton">OPEN THE BOOK</button>
+            </div>
         </div>
-    </div>
-</div>
 
-        <div id="powerUpScreen">
-            <h1>BOSS DEFEATED!</h1>
-            <h2>CHOOSE POWER-UP</h2>
+        <div id="powerUpScreen" style="display: none;">
+            <h1>BOSS DEFEATED</h1>
+            <h2>CHOOSE A BLESSING</h2>
             <div class="power-up-options">
-                <button id="pu-fireRate" class="power-up-btn">IMPROVE FIRE RATE</button>
-                <button id="pu-special" class="power-up-btn">IMPROVE SPECIAL ATTACK</button>
+                <button id="pu-fireRate" class="power-up-btn">QUICKEN PULSE</button>
+                <button id="pu-special" class="power-up-btn">STRENGTHEN WILL</button>
             </div>
         </div>
-        
     </div>
 
     <script type="module" src="main.js"></script>
-
 </body>
 </html>
