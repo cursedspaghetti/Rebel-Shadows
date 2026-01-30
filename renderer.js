@@ -66,42 +66,53 @@ export function drawPlayer(ctx, img) {
 }
 // Barra Vita
 export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
-    const barWidth = 10;
+    const barWidth = 12; // Slightly wider for better visibility
     const barHeight = 150;
     const padding = 20;
     
-    // Posizionamento a destra (verticale)
     const x = canvasWidth - barWidth - padding;
     const y = 50; 
 
-    // 1. Sfondo della barra (Bordo stile Pixel Art)
+    // 1. Outer Border (Pixel Outline)
     ctx.fillStyle = '#000000';
     ctx.fillRect(x - 2, y - 2, barWidth + 4, barHeight + 4);
 
-    // 2. Sfondo vuoto della barra
+    // 2. Empty Background
     ctx.fillStyle = '#333333';
     ctx.fillRect(x, y, barWidth, barHeight);
 
-    // 3. Calcolo dell'altezza della vita
+    // 3. Health Calculation
     const healthPercentage = Math.max(0, currentHp / maxHp);
     const currentHealthHeight = barHeight * healthPercentage;
 
-    // 4. Parte piena (Verde Pixel Art)
-    ctx.fillStyle = '#49eb34'; 
-    ctx.fillRect(x, y + (barHeight - currentHealthHeight), barWidth, currentHealthHeight);
+    // 4. Dynamic Color Logic
+    let healthColor = '#49eb34'; // Green
+    if (healthPercentage < 0.25) {
+        healthColor = '#eb3434'; // Red
+    } else if (healthPercentage < 0.5) {
+        healthColor = '#ebca34'; // Yellow
+    }
 
-    // --- AGGIUNTA TESTO ---
+    // 5. Draw Health (Bottom-up)
+    const healthY = y + (barHeight - currentHealthHeight);
+    ctx.fillStyle = healthColor;
+    ctx.fillRect(x, healthY, barWidth, currentHealthHeight);
+
+    // 6. Visual Polish: Simple Highlight (Left side of the bar)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.fillRect(x, healthY, 3, currentHealthHeight);
+
+    // --- UI TEXT ---
     ctx.fillStyle = '#FFFFFF';
     ctx.textAlign = 'center';
     
-    // 5. Valore numerico (es. 75/100) posizionato subito sotto la barra
-    ctx.font = '12px "Courier New", Courier, monospace'; // Font leggermente più piccolo per i numeri
-    const hpStatus = `${Math.ceil(currentHp)}`;
-    ctx.fillText(hpStatus, x + (barWidth / 2), y + barHeight + 20);
+    // HP Numbers
+    ctx.font = '12px "Courier New", Courier, monospace';
+    ctx.fillText(`${Math.ceil(currentHp)}`, x + (barWidth / 2), y + barHeight + 20);
 
-    // 6. Testo "HP" sotto il valore numerico
-    ctx.font = 'bold 16px "Courier New", Courier, monospace';
-    ctx.fillText("HP", x + (barWidth / 2), y + barHeight + 40);
+    // HP Label
+    ctx.font = 'bold 14px "Courier New", Courier, monospace';
+    ctx.fillText("HP", x + (barWidth / 2), y + barHeight + 38);
 }
 // BULLETS
 export function drawBullets(ctx) {
