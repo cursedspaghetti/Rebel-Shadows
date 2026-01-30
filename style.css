@@ -12,8 +12,19 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    /* Font principale */
     font-family: 'Press Start 2P', cursive;
+}
+
+/* --- ANIMAZIONE FADE IN --- */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* 1. CONTENITORE GIOCO */
@@ -23,8 +34,6 @@ body {
     height: 852px;
     background-color: #000;
     overflow: hidden;
-
-    /* Mantiene i bordi dei pixel nitidi */
     image-rendering: pixelated;
     image-rendering: crisp-edges;
 }
@@ -37,7 +46,7 @@ body {
     background: transparent; 
 }
 
-/* 3. SCHERMATA INIZIALE - Ora allineata in alto */
+/* 3. SCHERMATA INIZIALE */
 #startScreen {
     position: absolute;
     top: 0;
@@ -47,18 +56,44 @@ body {
     background-color: rgba(0, 0, 0, 0.7);
     display: flex;
     flex-direction: column;
-    justify-content: flex-start; /* Allinea all'inizio (alto) */
+    justify-content: flex-start;
     align-items: center;
     color: white;
     text-align: center;
     z-index: 10;
-    padding-top: 100px;         /* Distanza dal bordo superiore */
+    padding-top: 100px;
     padding-left: 20px;
     padding-right: 20px;
     box-sizing: border-box;
 }
 
-/* 4. SCHERMATA POWER-UP - Ora allineata in alto */
+/* Stile H4: Grigio, Piccolo e Animato */
+#startScreen h4 {
+    color: #a0a0a0; 
+    font-size: 10px; /* Ridotto leggermente per leggibilità pixel art */
+    line-height: 1.8;
+    margin-bottom: 25px;
+    opacity: 0;
+    animation: fadeIn 1.5s ease-out forwards;
+}
+
+/* Ritardi sequenziali */
+#startScreen h4:nth-of-type(1) {
+    animation-delay: 1s;
+}
+
+#startScreen h4:nth-of-type(2) {
+    animation-delay: 2s;
+}
+
+/* Specifichiamo l'animazione SOLO per lo startButton */
+#startButton {
+    opacity: 0;
+    animation: fadeIn 1.5s ease-out forwards;
+    animation-delay: 3s; /* Appare dopo che il testo è leggibile */
+}
+
+/* 4. SCHERMATA POWER-UP */
 #powerUpScreen {
     position: absolute;
     top: 0;
@@ -66,13 +101,13 @@ body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.85);
-    display: none; /* Gestito da JS */
+    display: none;
     flex-direction: column;
-    justify-content: flex-start; /* Allinea all'inizio (alto) */
+    justify-content: flex-start;
     align-items: center;
     z-index: 20;
     color: gold;
-    padding-top: 120px;         /* Distanza dal bordo superiore */
+    padding-top: 120px;
     box-sizing: border-box;
 }
 
@@ -83,7 +118,7 @@ body {
     margin-top: 40px;
 }
 
-/* 5. BOTTONI PIXEL ART */
+/* 5. BOTTONI PIXEL ART (Stile Generale) */
 button {
     font-family: 'Press Start 2P', cursive;
     background-color: #1b0190;
@@ -118,6 +153,6 @@ button:active:not(:disabled) {
     }
     
     #startScreen, #powerUpScreen {
-        padding-top: 60px; /* Ridotto leggermente su mobile per adattarsi meglio */
+        padding-top: 60px;
     }
 }
