@@ -265,33 +265,7 @@ export function updateEnemyBullets() {
     });
 }
 
-// --- ESPLOSIONI ---
-export function createExplosion(x, y, color = '#FFC300') {
-    gameState.explosions.push({
-        x: x, y: y, radius: 5, maxRadius: 30,
-        alpha: 1, speed: 0.8, fadeSpeed: 0.05, color: color
-    });
-}
 
-export function updateExplosions() {
-    gameState.explosions = gameState.explosions.filter(exp => {
-        exp.radius += exp.speed;
-        exp.alpha -= exp.fadeSpeed;
-        return exp.alpha > 0;
-    });
-}
-
-export function drawExplosions(ctx) {
-    gameState.explosions.forEach(exp => {
-        ctx.save();
-        ctx.globalAlpha = exp.alpha;
-        ctx.fillStyle = exp.color;
-        ctx.beginPath();
-        ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-    });
-}
 
 //UI
 
