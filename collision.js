@@ -140,4 +140,15 @@ export function handleAllCollisions() {
     }
 }
 
+function applyDamage(amount, shakeIntensity) {
+    gameState.hp -= amount;
+    gameState.isInvulnerable = true;
+    gameState.lastDamageTime = Date.now();
+    gameState.screenShake = shakeIntensity;
+    if (gameState.hp <= 0) {
+        alert("GAME OVER");
+        location.reload(); 
+    }
+}
+
 
