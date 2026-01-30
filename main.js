@@ -23,7 +23,7 @@ const startButton = document.getElementById('startButton');
 
 // --- ASSET LOADING ---
 const introImage = new Image();
-introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/shadow_intro.png';
+introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
 const bgImage = new Image();
 bgImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpaceVoid.png';
 const bgParallax = new Image();
