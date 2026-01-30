@@ -83,7 +83,7 @@ function gameLoop() {
     Renderer.updateBullets();
     Renderer.updateEnemies();
     Renderer.updateEnemyBullets() 
-    Renderer.updateExplosions(); 
+    collision.updateExplosions(); 
     SpecialAttacks.updateSpecialRay();
     SpecialAttacks.updateSpecialRay2();
 
