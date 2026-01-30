@@ -1,7 +1,23 @@
 import { CONFIG, gameState } from './config.js';
 
+// Array per contenere le scintille attive
+let sparkles = [];
+
+function createSparkle(bookX, bookY, bookWidth) {
+    return {
+        // Partenza casuale lungo la larghezza del libro
+        x: bookX + Math.random() * bookWidth,
+        y: bookY + 20, // Parte leggermente sopra il bordo del libro
+        size: Math.floor(Math.random() * 3) + 2, // Pixel art: 2-4px
+        speedY: Math.random() * -2 - 1, // Sale verso l'alto
+        speedX: (Math.random() - 0.5) * 1, // Leggera oscillazione laterale
+        alpha: 1.0, // Opacità iniziale
+        life: 1.0   // Vita (da 1.0 a 0 in circa 1 secondo)
+    };
+}
+
 export function drawStartScreen(ctx, bgImage, introImage) {
-    // 1. Pulizia e Sfondo
+    // 1. Pulizia e Sfondo (Tuo codice originale)
     if (bgImage.complete && bgImage.naturalWidth !== 0) {
         ctx.drawImage(bgImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     } else {
@@ -10,23 +26,51 @@ export function drawStartScreen(ctx, bgImage, introImage) {
     }
 
     // 2. Disegno dell'immagine Intro (Libro)
+    let imgWidth, imgHeight, xPos, yPos;
+    
     if (introImage.complete && introImage.naturalWidth !== 0) {
-        // Calcoliamo le proporzioni originali dell'immagine
         const aspectRatio = introImage.height / introImage.width;
-        
-        // Decidi quanto deve essere grande il libro (es. il 60% della larghezza del canvas)
-        const imgWidth = CONFIG.CANVAS_WIDTH * 0.8; 
-        const imgHeight = imgWidth * aspectRatio;
+        imgWidth = CONFIG.CANVAS_WIDTH * 0.8; 
+        imgHeight = imgWidth * aspectRatio;
+        xPos = (CONFIG.CANVAS_WIDTH - imgWidth) / 2;
+        yPos = CONFIG.CANVAS_HEIGHT - imgHeight - 20;
 
-        // Posizionamento centrato orizzontalmente e verso il basso
-        const xPos = (CONFIG.CANVAS_WIDTH - imgWidth) / 2;
-        const yPos = CONFIG.CANVAS_HEIGHT - imgHeight - 20; // 20px di margine dal fondo
-
-        // Applichiamo un leggero bagliore o ci assicuriamo che non ci siano filtri attivi
-        ctx.globalAlpha = 1.0; // Reset della trasparenza per evitare che sia "oscurato"
-        ctx.shadowBlur = 0;    // Reset di eventuali ombre residue
-        
+        ctx.globalAlpha = 1.0;
+        ctx.shadowBlur = 0;
         ctx.drawImage(introImage, xPos, yPos, imgWidth, imgHeight);
+
+        // --- LOGICA DELLE SCINTILLE ---
+        
+        // Aggiungiamo una nuova scintilla ogni frame (o ogni tot frame per non esagerare)
+        if (Math.random() > 0.8) { 
+            sparkles.push(createSparkle(xPos, yPos, imgWidth));
+        }
+
+        // Disegniamo e aggiorniamo ogni scintilla
+        ctx.fillStyle = "#FFFFAA"; // Giallo magico pixelato
+        
+        for (let i = sparkles.length - 1; i >= 0; i--) {
+            let s = sparkles[i];
+
+            // Applichiamo l'opacità attuale
+            ctx.globalAlpha = s.alpha;
+            
+            // Disegniamo il "pixel" (un piccolo rettangolo)
+            ctx.fillRect(s.x, s.y, s.size, s.size);
+
+            // Aggiorniamo posizione e vita
+            s.y += s.speedY;
+            s.x += s.speedX;
+            s.alpha -= 0.015; // Diminuisce per sparire in circa 60 frame (1 sec a 60fps)
+
+            // Rimuoviamo la scintilla se è invisibile
+            if (s.alpha <= 0) {
+                sparkles.splice(i, 1);
+            }
+        }
+        
+        // Reset finale dell'alpha per non influenzare altri disegni
+        ctx.globalAlpha = 1.0;
     }
 }
 
