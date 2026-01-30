@@ -14,9 +14,9 @@ export const CONFIG = {
     BOSS_ATTACKS: {
         RADIAL_INTERVAL: [5000, 8000],
         DASH_INTERVAL: [9000, 15000], 
-        DASH_SPEED: 14,                
-        RADIAL_BULLET_COUNT: 12,       
-        RADIAL_BULLET_SPEED: 5         
+        DASH_SPEED: 15,                
+        RADIAL_BULLET_COUNT: 18,       
+        RADIAL_BULLET_SPEED: 8         
     },
     
     PLAYER_MAX_HP: 100,
