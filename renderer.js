@@ -262,22 +262,35 @@ export function spawnEnemies(count) {
             x: Math.random() * (CONFIG.CANVAS_WIDTH - 60) + 30, 
             y: -100 - (Math.random() * 300), 
             size: size,
-            speed: 2 + Math.random() * 2, // I fantasmi solitamente sono più lenti e costanti
-            color: '#8a2be2'
+            speed: 2 + Math.random() * 2,
+            color: '#8a2be2',
+            hp: 100,              // Vita del nemico
+            lastShot: Date.now(), // Timer per sparare
+            shootDelay: 1500 + Math.random() * 2000 // Spara ogni 1.5 - 3.5 secondi
         });
     }
 }
-
 /**
  * Aggiorna la posizione
  */
 export function updateEnemies() {
-    gameState.enemies = gameState.enemies.filter(enemy => {
+    gameState.enemies.forEach(enemy => {
+        // Movimento verso il basso
         enemy.y += enemy.speed;
-        // Aggiungiamo un leggero movimento oscillatorio orizzontale (floating)
-        enemy.x += Math.sin(enemy.y / 30) * 0.5; 
-        
-        return enemy.y < CONFIG.CANVAS_HEIGHT + 100;
+
+        // Logica di sparo
+        const now = Date.now();
+        if (now - enemy.lastShot > enemy.shootDelay) {
+            // Assicurati di avere un array gameState.enemyBullets
+            gameState.enemyBullets.push({
+                x: enemy.x,
+                y: enemy.y + enemy.size / 2,
+                size: 8,
+                speed: 5,
+                color: '#ff00ff' // Proiettile viola/fucsia spettrale
+            });
+            enemy.lastShot = now;
+        }
     });
 }
 export function createExplosion(x, y, color = '#FFC300') { // Giallo/Arancione come default
