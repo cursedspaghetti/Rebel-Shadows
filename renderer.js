@@ -9,27 +9,32 @@ export function drawStartScreen(ctx, bgImage, introImage) {
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 
-    // 2. Disegno dell'immagine Intro (Libro al 30%)
+    // 2. Disegno dell'immagine Intro (Libro)
     if (introImage.complete && introImage.naturalWidth !== 0) {
-        // Calcoliamo le proporzioni originali
-        const aspectRatio = introImage.height / introImage.width;
+        // Usa naturalWidth e naturalHeight per ottenere le proporzioni originali esatte
+        const originalWidth = introImage.naturalWidth;
+        const originalHeight = introImage.naturalHeight;
+        const aspectRatio = originalHeight / originalWidth;
         
-        // Dimensione ridotta al 30% della larghezza del canvas
+        // Impostiamo la larghezza desiderata (20% del canvas)
         const imgWidth = CONFIG.CANVAS_WIDTH * 0.2; 
+        
+        // Calcoliamo l'altezza mantenendo il rapporto originale
         const imgHeight = imgWidth * aspectRatio;
 
-        // Posizionamento centrato e verso il basso
+        // Posizionamento centrato
         const xPos = (CONFIG.CANVAS_WIDTH - imgWidth) / 2;
+        // Posizionamento verticale (50px dal fondo)
         const yPos = CONFIG.CANVAS_HEIGHT - imgHeight - 50; 
 
-        // Reset dei parametri di disegno per sicurezza
+        // Pulizia filtri e disegno
         ctx.globalAlpha = 1.0;
         ctx.shadowBlur = 0;
         
+        // Disegniamo con le dimensioni calcolate
         ctx.drawImage(introImage, xPos, yPos, imgWidth, imgHeight);
     }
 }
-
 // PLAYERS
 
 export function drawPlayer(ctx, img) {
