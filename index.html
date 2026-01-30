@@ -1,38 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Rebel Shadows</title>
+    <title>Deep in Shadows</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <div id="game-container">
+        
         <canvas id="gameCanvas" width="393" height="852"></canvas>
         
         <div id="startScreen">
-            <h1>REBEL SHADOWS</h1>
-            <div>
-                <p>The ritual fractured.</p>
-                <p>Few Shadows fled into the minds of the living.</p>
-                <p>Only the Book of Shadows remains to bind them.</p>
+            <div id="title">
+                <h1>REBEL SHADOWS</h1>
+                <h4>After the summoning ritual, several Rebel Shadows slipped through the cracks of reality to take refuge in the dream world and haunt the thoughts of the living.</h4> 
+                <h4>Only the Book of Shadows can track them down and imprison that which should never have seen the light.</h4>
             </div>
-            <button id="startButton" style="margin-top: 30px;">START</button>
+            
+            <button id="startButton">START GAME</button>
         </div>
 
-        <div id="powerUpScreen">
-            <h2>Choose power-ups:</h2>
+        <div id="powerUpScreen" style="display: none;">
+            <h1>BOSS DEFEATED!</h1>
+            <h2>CHOOSE POWER-UP</h2>
             <div class="power-up-options">
-                <button id="pu-fireRate">+ fire rate</button>
-                <button id="pu-bullets">+ bullets</button>
-                <button id="pu-speed">+ speed</button>
-                <button id="pu-void-beam">void beam</button>
-                <button id="pu-glacial-void">glacial void</button>
+                <button id="pu-fireRate" class="power-up-btn">IMPROVE FIRE RATE</button>
+                <button id="pu-special" class="power-up-btn">IMPROVE SPECIAL ATTACK</button>
             </div>
         </div>
+        
     </div>
 
     <script type="module" src="main.js"></script>
+
 </body>
 </html>
