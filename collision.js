@@ -1,4 +1,6 @@
-function handleAllCollisions() {
+import { CONFIG, gameState } from './config.js';
+
+export function handleAllCollisions() {
     const BOSS_HITBOX_RAD = 80; 
     const PLAYER_HITBOX_RAD = 15;
     const BULLET_DAMAGE = 25; // Con 100 HP, servono 4 colpi per ogni nemico
@@ -137,3 +139,5 @@ function handleAllCollisions() {
         }
     }
 }
+
+
