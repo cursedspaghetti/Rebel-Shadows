@@ -15,7 +15,7 @@ export function handleAllCollisions() {
             const dist = Math.hypot(bullet.x - gameState.boss.x, bullet.y - gameState.boss.y);
             if (dist < BOSS_HITBOX_RAD + bullet.size) {
                 gameState.boss.hp -= 1;
-                Renderer.createExplosion(bullet.x, bullet.y, '#ffffff');
+                createExplosion(bullet.x, bullet.y, '#ffffff');
                 gameState.bullets.splice(b, 1);
                 continue; // Passa al prossimo proiettile
             }
@@ -31,11 +31,11 @@ export function handleAllCollisions() {
                 enemy.hp -= BULLET_DAMAGE;
                 
                 // Crea una piccola scintilla per il feedback del colpo
-                Renderer.createExplosion(bullet.x, bullet.y, '#00ffff');
+                createExplosion(bullet.x, bullet.y, '#00ffff');
                 
                 // Se la vita scende a zero o meno, esplode e viene rimosso
                 if (enemy.hp <= 0) {
-                    Renderer.createExplosion(enemy.x, enemy.y, enemy.color || '#fff');
+                    createExplosion(enemy.x, enemy.y, enemy.color || '#fff');
                     gameState.enemies.splice(e, 1);
                 }
 
@@ -55,7 +55,7 @@ export function handleAllCollisions() {
                 if (!gameState.isInvulnerable && !gameState.shieldActive) {
                     applyDamage(10, 15);
                 }
-                Renderer.createExplosion(b.x, b.y, b.color);
+                createExplosion(b.x, b.y, b.color);
                 gameState.bossBullets.splice(i, 1);
             }
         }
@@ -71,7 +71,7 @@ export function handleAllCollisions() {
                 if (!gameState.isInvulnerable && !gameState.shieldActive) {
                     applyDamage(5, 10); // Danno dei nemici base
                 }
-                Renderer.createExplosion(eb.x, eb.y, eb.color || '#ff00ff');
+                createExplosion(eb.x, eb.y, eb.color || '#ff00ff');
                 gameState.enemyBullets.splice(i, 1);
             }
         }
@@ -92,11 +92,11 @@ export function handleAllCollisions() {
                     enemy.hp -= 2; // Danno rapido nel tempo
                     
                     if (enemy.hp <= 0) {
-                        Renderer.createExplosion(enemy.x, enemy.y, '#ffffff');
+                        createExplosion(enemy.x, enemy.y, '#ffffff');
                         gameState.enemies.splice(e, 1);
                     } else if (Math.random() > 0.9) {
                         // Effetto visivo di bruciatura
-                        Renderer.createExplosion(enemy.x, enemy.y, '#cyan');
+                       createExplosion(enemy.x, enemy.y, '#cyan');
                     }
                 }
             }
@@ -107,7 +107,7 @@ export function handleAllCollisions() {
                 if (Math.abs(gameState.boss.x - ray.x) < hitBoxWidth && gameState.boss.y < gameState.playerY) {
                     gameState.boss.hp -= 5; 
                     if (Math.random() > 0.8) {
-                        Renderer.createExplosion(
+                        createExplosion(
                             gameState.boss.x + (Math.random() - 0.5) * 40, 
                             gameState.boss.y + (Math.random() - 0.5) * 40, 
                             '#cyan'
@@ -126,7 +126,7 @@ export function handleAllCollisions() {
             if (Math.hypot(gameState.playerX - enemy.x, gameState.playerY - enemy.y) < PLAYER_HITBOX_RAD + enemy.size/2) {
                 applyDamage(5, 12);
                 // Il nemico esplode comunque se tocca il player
-                Renderer.createExplosion(enemy.x, enemy.y, enemy.color);
+                createExplosion(enemy.x, enemy.y, enemy.color);
                 gameState.enemies.splice(e, 1);
             }
         }
@@ -149,6 +149,34 @@ function applyDamage(amount, shakeIntensity) {
         alert("GAME OVER");
         location.reload(); 
     }
+}
+
+// --- ESPLOSIONI ---
+function createExplosion(x, y, color = '#FFC300') {
+    gameState.explosions.push({
+        x: x, y: y, radius: 5, maxRadius: 30,
+        alpha: 1, speed: 0.8, fadeSpeed: 0.05, color: color
+    });
+}
+
+export function updateExplosions() {
+    gameState.explosions = gameState.explosions.filter(exp => {
+        exp.radius += exp.speed;
+        exp.alpha -= exp.fadeSpeed;
+        return exp.alpha > 0;
+    });
+}
+
+export function drawExplosions(ctx) {
+    gameState.explosions.forEach(exp => {
+        ctx.save();
+        ctx.globalAlpha = exp.alpha;
+        ctx.fillStyle = exp.color;
+        ctx.beginPath();
+        ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+    });
 }
 
 
