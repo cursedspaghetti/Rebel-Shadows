@@ -9,34 +9,26 @@
 <body>
 
     <div id="game-container">
-        <div class="vignette"></div>
-        <div class="scanlines"></div>
-        
         <canvas id="gameCanvas" width="393" height="852"></canvas>
         
         <div id="startScreen">
-            <div id="title">
-                <h1 class="glitch" data-text="REBEL SHADOWS">REBEL SHADOWS</h1>
-                <div class="lore-text">
-                    <p>The ritual fractured.</p>
-                    <p>Few Shadows fled into the minds of the living.</p>
-                    <p>Only the Book of Shadows remains to bind them.</p>
-                </div>
+            <h1>REBEL SHADOWS</h1>
+            <div>
+                <p>The ritual fractured.</p>
+                <p>Few Shadows fled into the minds of the living.</p>
+                <p>Only the Book of Shadows remains to bind them.</p>
             </div>
-            
-            <div class="action-area">
-                <button id="startButton">START</button>
-            </div>
+            <button id="startButton" style="margin-top: 30px;">START</button>
         </div>
 
-        <div id="powerUpScreen" style="display: none;">
+        <div id="powerUpScreen">
             <h2>Choose power-ups:</h2>
             <div class="power-up-options">
-                <button id="pu-fireRate" class="power-up-btn">+ fire rate</button>
-                <button id="pu-fireRate" class="power-up-btn">+ bullets</button>
-                <button id="speed" class="power-up-btn">+ speed</button>
-                <button id="pu-void-beam" class="power-up-btn">void beam</button>
-                <button id="pu-glacial-void" class="power-up-btn">glacial void</button>
+                <button id="pu-fireRate">+ fire rate</button>
+                <button id="pu-bullets">+ bullets</button>
+                <button id="pu-speed">+ speed</button>
+                <button id="pu-void-beam">void beam</button>
+                <button id="pu-glacial-void">glacial void</button>
             </div>
         </div>
     </div>
