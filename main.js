@@ -45,7 +45,7 @@ function init() {
 
 function startScreenLoop() {
     if (gameState.currentScreen === 'start') {
-        Renderer.drawStartScreen(ctx, bgImage, introImage);
+        Renderer.drawStartScreen(ctx, bgParallax, introImage);
         requestAnimationFrame(startScreenLoop);
     }
 }
