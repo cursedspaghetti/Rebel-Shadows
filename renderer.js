@@ -1,23 +1,32 @@
 import { CONFIG, gameState } from './config.js';
 
-// START SCREEN
 export function drawStartScreen(ctx, bgImage, introImage) {
-    // 1. Disegna lo sfondo (EmptySpace)
-    if (bgImage.complete) {
+    // 1. Pulizia e Sfondo
+    if (bgImage.complete && bgImage.naturalWidth !== 0) {
         ctx.drawImage(bgImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     } else {
-        ctx.fillStyle = '#000033'; // Colore di fallback
+        ctx.fillStyle = '#000033'; 
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 
-    // 2. Sovrapponi l'immagine intro (shadow_intro) nella parte bassa
-    if (introImage.complete) {
-        // Calcoliamo le proporzioni per farla stare in basso
-        const imgWidth = CONFIG.CANVAS_WIDTH;
-        const imgHeight = (introImage.height / introImage.width) * imgWidth;
-        const yPos = CONFIG.CANVAS_HEIGHT - imgHeight;
+    // 2. Disegno dell'immagine Intro (Libro)
+    if (introImage.complete && introImage.naturalWidth !== 0) {
+        // Calcoliamo le proporzioni originali dell'immagine
+        const aspectRatio = introImage.height / introImage.width;
+        
+        // Decidi quanto deve essere grande il libro (es. il 60% della larghezza del canvas)
+        const imgWidth = CONFIG.CANVAS_WIDTH * 0.8; 
+        const imgHeight = imgWidth * aspectRatio;
 
-        ctx.drawImage(introImage, 0, yPos, imgWidth, imgHeight);
+        // Posizionamento centrato orizzontalmente e verso il basso
+        const xPos = (CONFIG.CANVAS_WIDTH - imgWidth) / 2;
+        const yPos = CONFIG.CANVAS_HEIGHT - imgHeight - 20; // 20px di margine dal fondo
+
+        // Applichiamo un leggero bagliore o ci assicuriamo che non ci siano filtri attivi
+        ctx.globalAlpha = 1.0; // Reset della trasparenza per evitare che sia "oscurato"
+        ctx.shadowBlur = 0;    // Reset di eventuali ombre residue
+        
+        ctx.drawImage(introImage, xPos, yPos, imgWidth, imgHeight);
     }
 }
 
