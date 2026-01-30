@@ -14,16 +14,27 @@
         
         <canvas id="gameCanvas" width="393" height="852"></canvas>
         
-        <div id="startScreen">
-            <div id="title">
-                <h1>Rebel Shadows</h1>
-                <h4>After the summoning ritual, several Rebel Shadows slipped through the cracks of reality to take refuge in the dream world and haunt the thoughts of the living.</h4> 
-                <h4>Only the Book of Shadows can track them down and imprison that which should never have seen the light.</h4>
+        <div id="startScreen" class="obscure-theme">
+    <div class="vignette"></div>
+    <div class="scanlines"></div>
 
+    <div class="content">
+        <header>
+            <h1 class="glitch-text" data-text="REBEL SHADOWS">REBEL SHADOWS</h1>
+            <div class="manifesto">
+                <p>The ritual fractured.</p>
+                <p>The Dream World bleeds.</p>
+                <p>Only the Book can bind what was unleashed.</p>
             </div>
-            
-            <div id="ringChoices"></div> <button id="startButton" disabled>START GAME</button>
+        </header>
+
+        <div class="action-zone">
+            <button id="startButton">
+                <span class="static-effect">ENTER THE VOID</span>
+            </button>
         </div>
+    </div>
+</div>
 
         <div id="powerUpScreen">
             <h1>BOSS DEFEATED!</h1>
