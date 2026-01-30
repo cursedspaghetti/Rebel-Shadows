@@ -1,7 +1,7 @@
 import { CONFIG, gameState } from './config.js';
 
+// --- SCHERMATA INIZIALE ---
 export function drawStartScreen(ctx, bgParallax, introImage) {
-    // 1. Pulizia e Sfondo
     if (bgParallax.complete && bgParallax.naturalWidth !== 0) {
         ctx.drawImage(bgParallax, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     } else {
@@ -9,50 +9,35 @@ export function drawStartScreen(ctx, bgParallax, introImage) {
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 
-    // 2. Disegno dell'immagine Intro (Libro)
     if (introImage.complete && introImage.naturalWidth !== 0) {
-        // Usa naturalWidth e naturalHeight per ottenere le proporzioni originali esatte
         const originalWidth = introImage.naturalWidth;
         const originalHeight = introImage.naturalHeight;
         const aspectRatio = originalHeight / originalWidth;
-        
-        // Impostiamo la larghezza desiderata (20% del canvas)
         const imgWidth = CONFIG.CANVAS_WIDTH * 0.2; 
-        
-        // Calcoliamo l'altezza mantenendo il rapporto originale
         const imgHeight = imgWidth * aspectRatio;
-
-        // Posizionamento centrato
         const xPos = (CONFIG.CANVAS_WIDTH - imgWidth) / 2;
-        // Posizionamento verticale (50px dal fondo)
         const yPos = CONFIG.CANVAS_HEIGHT - imgHeight - 50; 
 
-        // Pulizia filtri e disegno
         ctx.globalAlpha = 1.0;
         ctx.shadowBlur = 0;
-        
-        // Disegniamo con le dimensioni calcolate
         ctx.drawImage(introImage, xPos, yPos, imgWidth, imgHeight);
     }
 }
-// PLAYERS
 
+// --- GIOCATORE ---
 export function drawPlayer(ctx, img) {
     if (!img.complete) return; 
 
     const frameWidth = 512;  
     const frameHeight = 349; 
-    
     const scaleX = 0.09;      
     const scaleY = 0.13;        
-    
     const totalFrames = 13; 
     const animationSpeed = 150;
     const frameIndex = Math.floor(Date.now() / animationSpeed) % totalFrames;
 
     ctx.save();
     ctx.translate(gameState.playerX, gameState.playerY);
-
     ctx.drawImage(
         img,
         frameIndex * frameWidth, 0, 
@@ -64,67 +49,48 @@ export function drawPlayer(ctx, img) {
     );
     ctx.restore();
 }
-// Barra Vita
+
+// --- UI E BARRA VITA ---
 export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
-    const barWidth = 12; // Slightly wider for better visibility
+    const barWidth = 12;
     const barHeight = 150;
     const padding = 20;
-    
     const x = canvasWidth - barWidth - padding;
     const y = 50; 
 
-    // 1. Outer Border (Pixel Outline)
     ctx.fillStyle = '#000000';
     ctx.fillRect(x - 2, y - 2, barWidth + 4, barHeight + 4);
-
-    // 2. Empty Background
     ctx.fillStyle = '#333333';
     ctx.fillRect(x, y, barWidth, barHeight);
 
-    // 3. Health Calculation
     const healthPercentage = Math.max(0, currentHp / maxHp);
     const currentHealthHeight = barHeight * healthPercentage;
 
-    // 4. Dynamic Color Logic
-    let healthColor = '#49eb34'; // Green
-    if (healthPercentage < 0.25) {
-        healthColor = '#eb3434'; // Red
-    } else if (healthPercentage < 0.5) {
-        healthColor = '#ebca34'; // Yellow
-    }
+    let healthColor = '#49eb34';
+    if (healthPercentage < 0.25) healthColor = '#eb3434';
+    else if (healthPercentage < 0.5) healthColor = '#ebca34';
 
-    // 5. Draw Health (Bottom-up)
     const healthY = y + (barHeight - currentHealthHeight);
     ctx.fillStyle = healthColor;
     ctx.fillRect(x, healthY, barWidth, currentHealthHeight);
 
-    // 6. Visual Polish: Simple Highlight (Left side of the bar)
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.fillRect(x, healthY, 3, currentHealthHeight);
 
-    // --- UI TEXT ---
     ctx.fillStyle = '#FFFFFF';
     ctx.textAlign = 'center';
-    
-    // HP Numbers
-    ctx.font = '12px "Courier New", Courier, monospace';
+    ctx.font = '12px "Courier New"';
     ctx.fillText(`${Math.ceil(currentHp)}`, x + (barWidth / 2), y + barHeight + 20);
-
-    // HP Label
-    ctx.font = 'bold 14px "Courier New", Courier, monospace';
+    ctx.font = 'bold 14px "Courier New"';
     ctx.fillText("HP", x + (barWidth / 2), y + barHeight + 38);
 }
-// BULLETS
+
+// --- PROIETTILI PLAYER ---
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
-        
-        // Colori pixel art (niente sfumature trasparenti)
         const coreColor = '#ffffff';
         const edgeColor = '#e0e0e0';
-        const pixelSize = 2; // La dimensione del "pixel" virtuale
-        
-        // Ridotto il gap orizzontale per farli sembrare un unico fascio o molto vicini
         const horizontalGap = 2; 
         const bulletWidth = 4;
         const bulletHeight = 12;
@@ -132,23 +98,15 @@ export function drawBullets(ctx) {
         const drawPixelBullet = (offsetX) => {
             const posX = bullet.x + offsetX - (bulletWidth / 2);
             const posY = bullet.y - (bulletHeight / 2);
-
-            // Corpo del proiettile (Rettangolo solido per pixel art)
             ctx.fillStyle = edgeColor;
             ctx.fillRect(posX, posY, bulletWidth, bulletHeight);
-            
-            // "Highlight" centrale per dare profondità 8-bit
             ctx.fillStyle = coreColor;
             ctx.fillRect(posX + 1, posY + 1, bulletWidth - 2, bulletHeight - 4);
         };
 
-        // Rimuoviamo shadowBlur per un look pulito pixel art
         ctx.shadowBlur = 0; 
-
-        // Disegniamo i due filamenti vicini
         drawPixelBullet(-horizontalGap / 2);
         drawPixelBullet(horizontalGap / 2);
-
         ctx.restore();
     });
 }
@@ -161,12 +119,8 @@ export function autoFire() {
 
     if (now - gameState.lastShotTime >= currentFireRate) {
         const missileCount = gameState.bulletLevel === 1 ? 1 : (gameState.bulletLevel === 2 ? 3 : 5);
-        
-        // --- MODIFICHE QUI ---
-        const spacing = 8; // Ridotto da 18 a 8 per averli molto vicini
-        const verticalStagger = 6; // Ridotto lo sfasamento verticale per coerenza
-        // ---------------------
-
+        const spacing = 8;
+        const verticalStagger = 6;
         const totalWidth = (missileCount - 1) * spacing;
         let startX = gameState.playerX - (totalWidth / 2);
         const centerIndex = Math.floor(missileCount / 2);
@@ -176,10 +130,8 @@ export function autoFire() {
             gameState.bullets.push({
                 x: startX + i * spacing,
                 y: (gameState.playerY - 20) + (distFromCenter * verticalStagger),
-                speed: 12, // Leggermente più veloce per un feeling arcade
-                size: 8,
-                color: gameState.selectedRingColor,
-                isSpecial: false
+                speed: 12,
+                size: 8
             });
         }
         gameState.lastShotTime = now;
@@ -187,74 +139,43 @@ export function autoFire() {
 }
 
 export function updateBullets() {
+    // Rimuove proiettili che escono sopra lo schermo
     gameState.bullets = gameState.bullets.filter(bullet => {
         bullet.y -= bullet.speed;
-        return bullet.y > 0;
+        return bullet.y > -20;
     });
 }
 
-// ENEMIES
-
-/**
- * Disegna i nemici come entità spettrali (nucleo d'ombra ed energia oscura)
- */
+// --- NEMICI ---
 export function drawEnemies(ctx) {
     gameState.enemies.forEach(enemy => {
         ctx.save();
-
-        // 1. ALONE SPETTRALE ESTERNO (Nebbia oscura)
-        const ghostGlow = ctx.createRadialGradient(
-            enemy.x, enemy.y, 0,
-            enemy.x, enemy.y, enemy.size
-        );
-        ghostGlow.addColorStop(0, 'rgba(138, 43, 226, 0.6)'); // Viola elettrico al centro
-        ghostGlow.addColorStop(0.5, 'rgba(75, 0, 130, 0.3)');  // Indigo sfumato
-        ghostGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');         // Dissolvenza nel nero
+        const ghostGlow = ctx.createRadialGradient(enemy.x, enemy.y, 0, enemy.x, enemy.y, enemy.size);
+        ghostGlow.addColorStop(0, 'rgba(138, 43, 226, 0.6)');
+        ghostGlow.addColorStop(0.5, 'rgba(75, 0, 130, 0.3)');
+        ghostGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
         ctx.fillStyle = ghostGlow;
         ctx.beginPath();
         ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
         ctx.fill();
 
-        // 2. IL NUCLEO D'OMBRA (Il "vuoto")
-        // Creiamo un gradiente che va dal nero totale a un bordo luminoso spettrale
-        const voidCore = ctx.createRadialGradient(
-            enemy.x, enemy.y, enemy.size * 0.1, // Centro del vuoto
-            enemy.x, enemy.y, enemy.size * 0.4  // Limite del nucleo
-        );
-        voidCore.addColorStop(0, '#000000');           // Il centro è puro vuoto (nero)
-        voidCore.addColorStop(0.7, '#1a0033');         // Viola scurissimo
-        voidCore.addColorStop(1, '#00ffff');           // Bordo ciano "elettrico" (effetto spettrale)
+        const voidCore = ctx.createRadialGradient(enemy.x, enemy.y, enemy.size * 0.1, enemy.x, enemy.y, enemy.size * 0.4);
+        voidCore.addColorStop(0, '#000000');
+        voidCore.addColorStop(0.7, '#1a0033');
+        voidCore.addColorStop(1, '#00ffff');
 
-        // Effetto bagliore esterno per il bordo del vuoto
         ctx.shadowBlur = 15;
         ctx.shadowColor = '#8a2be2';
-        
         ctx.fillStyle = voidCore;
         ctx.beginPath();
         ctx.arc(enemy.x, enemy.y, enemy.size * 0.4, 0, Math.PI * 2);
         ctx.fill();
 
-        // 3. PARTICELLE DI ENERGIA (Piccoli punti luminosi attorno al nucleo)
-        ctx.fillStyle = 'rgba(0, 255, 255, 0.8)';
-        for (let i = 0; i < 3; i++) {
-            const angle = (Date.now() / 500) + (i * 2);
-            const dist = (enemy.size * 0.4) + Math.sin(Date.now() / 200) * 5;
-            const px = enemy.x + Math.cos(angle) * dist;
-            const py = enemy.y + Math.sin(angle) * dist;
-            
-            ctx.beginPath();
-            ctx.arc(px, py, 2, 0, Math.PI * 2);
-            ctx.fill();
-        }
-
         ctx.restore();
     });
 }
 
-/**
- * Genera i nemici spettrali
- */
 export function spawnEnemies(count) {
     for (let i = 0; i < count; i++) {
         const size = 60 + Math.random() * 40; 
@@ -263,64 +184,65 @@ export function spawnEnemies(count) {
             y: -100 - (Math.random() * 300), 
             size: size,
             speed: 2 + Math.random() * 2,
-            color: '#8a2be2',
-            hp: 100,              // Vita del nemico
-            lastShot: Date.now(), // Timer per sparare
-            shootDelay: 1500 + Math.random() * 2000 // Spara ogni 1.5 - 3.5 secondi
+            hp: 100,
+            lastShot: Date.now(),
+            shootDelay: 1500 + Math.random() * 2000
         });
     }
 }
-/**
- * Aggiorna la posizione
- */
+
 export function updateEnemies() {
-    gameState.enemies.forEach(enemy => {
-        // Movimento verso il basso
+    // Rimuove nemici che escono dal fondo dello schermo
+    gameState.enemies = gameState.enemies.filter(enemy => {
         enemy.y += enemy.speed;
 
-        // Logica di sparo
         const now = Date.now();
         if (now - enemy.lastShot > enemy.shootDelay) {
-            // Assicurati di avere un array gameState.enemyBullets
             gameState.enemyBullets.push({
                 x: enemy.x,
                 y: enemy.y + enemy.size / 2,
                 size: 8,
                 speed: 5,
-                color: '#ff00ff' // Proiettile viola/fucsia spettrale
+                color: '#ff00ff'
             });
             enemy.lastShot = now;
         }
+        return enemy.y < CONFIG.CANVAS_HEIGHT + 100;
     });
 }
-export function createExplosion(x, y, color = '#FFC300') { // Giallo/Arancione come default
+
+export function updateEnemyBullets() {
+    if (!gameState.enemyBullets) return;
+    // Rimuove proiettili nemici che escono dal fondo
+    gameState.enemyBullets = gameState.enemyBullets.filter(eb => {
+        eb.y += eb.speed;
+        return eb.y < CONFIG.CANVAS_HEIGHT + 50;
+    });
+}
+
+// --- ESPLOSIONI ---
+export function createExplosion(x, y, color = '#FFC300') {
     gameState.explosions.push({
-        x: x,
-        y: y,
-        radius: 5,         // Raggio iniziale
-        maxRadius: 30,     // Raggio massimo
-        alpha: 1,          // Opacità iniziale
-        speed: 0.8,        // Velocità di espansione
-        fadeSpeed: 0.05,   // Velocità di dissolvenza
-        color: color
+        x: x, y: y, radius: 5, maxRadius: 30,
+        alpha: 1, speed: 0.8, fadeSpeed: 0.05, color: color
     });
 }
 
 export function updateExplosions() {
-    gameState.explosions = gameState.explosions.filter(explosion => {
-        explosion.radius += explosion.speed;
-        explosion.alpha -= explosion.fadeSpeed;
-        return explosion.alpha > 0 && explosion.radius < explosion.maxRadius;
+    gameState.explosions = gameState.explosions.filter(exp => {
+        exp.radius += exp.speed;
+        exp.alpha -= exp.fadeSpeed;
+        return exp.alpha > 0;
     });
 }
 
 export function drawExplosions(ctx) {
-    gameState.explosions.forEach(explosion => {
+    gameState.explosions.forEach(exp => {
         ctx.save();
-        ctx.globalAlpha = explosion.alpha;
-        ctx.fillStyle = explosion.color;
+        ctx.globalAlpha = exp.alpha;
+        ctx.fillStyle = exp.color;
         ctx.beginPath();
-        ctx.arc(explosion.x, explosion.y, explosion.radius, 0, Math.PI * 2);
+        ctx.arc(exp.x, exp.y, exp.radius, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
     });
