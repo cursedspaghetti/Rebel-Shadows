@@ -202,8 +202,34 @@ function handleAllCollisions() {
             }
         }
     }
+    
+  // 3. RAGGI SPECIALI vs Nemici/Boss
+    const activeRays = [
+        { active: gameState.specialRay?.active, x: gameState.playerX, width: 40 },
+        { active: gameState.specialRay2?.active2, x: gameState.playerX, width: 40 }
+    ];
 
-    // 3. PLAYER vs CORPO NEMICI/BOSS
+    activeRays.forEach(ray => {
+        if (ray.active) {
+            // Nemici normali
+            for (let e = gameState.enemies.length - 1; e >= 0; e--) {
+                const enemy = gameState.enemies[e];
+                if (Math.abs(enemy.x - ray.x) < (ray.width / 2 + enemy.size / 2)) {
+                    Renderer.createExplosion(enemy.x, enemy.y, '#ffffff');
+                    gameState.enemies.splice(e, 1);
+                }
+            }
+            // Boss
+            if (gameState.bossActive && gameState.boss) {
+                if (Math.abs(gameState.boss.x - ray.x) < (BOSS_HITBOX_RAD + ray.width / 2)) {
+                    gameState.boss.hp -= 0.5; // Danno a frame (aggiustato per bilanciamento)
+                }
+            }
+        }
+    });
+
+    
+    // 4. PLAYER vs CORPO NEMICI/BOSS
     if (!gameState.isInvulnerable && !gameState.shieldActive) {
         // vs Nemici
         gameState.enemies.forEach((enemy, index) => {
