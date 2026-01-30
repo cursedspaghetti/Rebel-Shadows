@@ -127,6 +127,7 @@ function gameLoop() {
 
     // 9. UI FISSA
     Renderer.drawUI(ctx);
+    Renderer.drawHealthBar(ctx, gameState.hp, CONFIG.PLAYER_MAX_HP, CONFIG.CANVAS_WIDTH);
     requestAnimationFrame(gameLoop);
 }
 
