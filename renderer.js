@@ -1,7 +1,8 @@
 import { CONFIG, gameState } from './config.js';
 
 // --- SCHERMATA INIZIALE ---
-export function drawStartScreen(ctx, bgParallax, introImage) {
+// Aggiungi 'timestamp' ai parametri della funzione
+export function drawStartScreen(ctx, bgParallax, introImage, timestamp) {
     if (bgParallax.complete && bgParallax.naturalWidth !== 0) {
         ctx.drawImage(bgParallax, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     } else {
@@ -15,8 +16,15 @@ export function drawStartScreen(ctx, bgParallax, introImage) {
         const aspectRatio = originalHeight / originalWidth;
         const imgWidth = CONFIG.CANVAS_WIDTH * 0.2; 
         const imgHeight = imgWidth * aspectRatio;
+        
+        // --- LOGICA DI FLUTTUAZIONE ---
+        const amplitude = 15; // Quanti pixel si muove in alto/basso
+        const speed = 0.002;  // Velocità dell'oscillazione
+        const hoverOffset = Math.sin(timestamp * speed) * amplitude;
+        
         const xPos = (CONFIG.CANVAS_WIDTH - imgWidth) / 2;
-        const yPos = CONFIG.CANVAS_HEIGHT - imgHeight - 50; 
+        // Aggiungiamo hoverOffset alla posizione Y
+        const yPos = (CONFIG.CANVAS_HEIGHT - imgHeight - 50) + hoverOffset; 
 
         ctx.globalAlpha = 1.0;
         ctx.shadowBlur = 0;
