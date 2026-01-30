@@ -82,7 +82,7 @@ export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
     
     // 5. Valore numerico (es. 75/100) posizionato subito sotto la barra
     ctx.font = '12px "Courier New", Courier, monospace'; // Font leggermente più piccolo per i numeri
-    const hpStatus = `${Math.ceil(currentHp)}/${maxHp}`;
+    const hpStatus = `${Math.ceil(currentHp)}`;
     ctx.fillText(hpStatus, x + (barWidth / 2), y + barHeight + 20);
 
     // 6. Testo "HP" sotto il valore numerico
