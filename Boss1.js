@@ -112,12 +112,18 @@ function updateRadialBurst(boss, now) {
         const bulletsPerWave = 15;
         const currentBulletIdx = bulletsPerWave - boss.radialBulletsRemaining;
         
-        // Angolo tra 0 e PI (180 gradi verso il basso)
+        // Conversione in radianti per l'angolo ristretto (20° a 160°)
+        const startAngle = (20 * Math.PI) / 180;
+        const endAngle = (160 * Math.PI) / 180;
+        const totalArc = endAngle - startAngle;
+
         let angle;
         if (boss.radialDirection === 1) {
-            angle = (Math.PI / (bulletsPerWave - 1)) * currentBulletIdx;
+            // Da 20° a 160°
+            angle = startAngle + (totalArc / (bulletsPerWave - 1)) * currentBulletIdx;
         } else {
-            angle = Math.PI - ((Math.PI / (bulletsPerWave - 1)) * currentBulletIdx);
+            // Da 160° a 20°
+            angle = endAngle - (totalArc / (bulletsPerWave - 1)) * currentBulletIdx;
         }
         
         const speed = (CONFIG.BOSS_ATTACKS.RADIAL_BULLET_SPEED || 4) + (boss.phase === 2 ? 2 : 0);
@@ -132,14 +138,14 @@ function updateRadialBurst(boss, now) {
         });
 
         boss.radialBulletsRemaining--;
-        boss.nextRadialBulletTime = now + 100; // Delay 0.1s tra proiettili
+        boss.nextRadialBulletTime = now + 100;
 
         if (boss.radialBulletsRemaining <= 0) {
             boss.radialWavesRemaining--;
             if (boss.radialWavesRemaining > 0) {
                 boss.radialBulletsRemaining = bulletsPerWave;
-                boss.radialDirection *= -1; // Inverte la sventagliata
-                boss.nextRadialBulletTime = now + 400; // Pausa tra le raffiche
+                boss.radialDirection *= -1;
+                boss.nextRadialBulletTime = now + 400;
             }
         }
     }
