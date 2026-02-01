@@ -109,7 +109,8 @@ function startRadialBurst(boss) {
 
 function updateRadialBurst(boss, now) {
     if (boss.radialWavesRemaining > 0 && now > (boss.nextRadialBulletTime || 0)) {
-        const bulletsPerWave = 15;
+        // Aumentato a 25 per rendere la sventagliata più corposa data la velocità
+        const bulletsPerWave = 25; 
         const currentBulletIdx = bulletsPerWave - boss.radialBulletsRemaining;
         
         // Conversione in radianti per l'angolo ristretto (20° a 160°)
@@ -119,10 +120,10 @@ function updateRadialBurst(boss, now) {
 
         let angle;
         if (boss.radialDirection === 1) {
-            // Da 20° a 160°
+            // Da 20° a 160° (Destra -> Sinistra)
             angle = startAngle + (totalArc / (bulletsPerWave - 1)) * currentBulletIdx;
         } else {
-            // Da 160° a 20°
+            // Da 160° a 20° (Sinistra -> Destra)
             angle = endAngle - (totalArc / (bulletsPerWave - 1)) * currentBulletIdx;
         }
         
@@ -138,14 +139,16 @@ function updateRadialBurst(boss, now) {
         });
 
         boss.radialBulletsRemaining--;
-        boss.nextRadialBulletTime = now + 100;
+        // Delay impostato a 0.02 secondi
+        boss.nextRadialBulletTime = now + 20; 
 
         if (boss.radialBulletsRemaining <= 0) {
             boss.radialWavesRemaining--;
             if (boss.radialWavesRemaining > 0) {
                 boss.radialBulletsRemaining = bulletsPerWave;
                 boss.radialDirection *= -1;
-                boss.nextRadialBulletTime = now + 400;
+                // Pausa tra le sventagliate (leggermente ridotta per mantenere il ritmo)
+                boss.nextRadialBulletTime = now + 300; 
             }
         }
     }
