@@ -1,5 +1,44 @@
 import { CONFIG, gameState } from './config.js';
 
+// --- SISTEMA DI CACHING PER PIXEL ART ---
+const bulletCache = {};
+
+/**
+ * Crea o recupera un proiettile pixelato pre-renderizzato.
+ * Ottimizza le prestazioni evitando migliaia di fillRect ogni frame.
+ */
+function getPixelBullet(color, size) {
+    const key = `${color}-${size}`;
+    if (bulletCache[key]) return bulletCache[key];
+
+    const canvas = document.createElement('canvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    
+    const pSize = 4; // Dimensione del "pixel"
+    const r = size / 2;
+
+    ctx.fillStyle = color;
+    // Disegno della sagoma pixelata
+    for (let py = 0; py < size; py += pSize) {
+        for (let px = 0; px < size; px += pSize) {
+            const dx = px - r;
+            const dy = py - r;
+            if (dx * dx + dy * dy <= r * r) {
+                ctx.fillRect(px, py, pSize, pSize);
+            }
+        }
+    }
+    
+    // Core centrale bianco per stile arcade
+    ctx.fillStyle = 'white';
+    ctx.fillRect(Math.floor(r - pSize / 2), Math.floor(r - pSize / 2), pSize, pSize);
+
+    bulletCache[key] = canvas;
+    return canvas;
+}
+
 /**
  * LOGICA PRINCIPALE: Aggiorna movimento, attacchi e proiettili del boss
  */
@@ -8,17 +47,16 @@ export function updateBoss(boss) {
 
     const now = Date.now();
 
-    // 0. CONTROLLO CAMBIO FASE (Soglia 50% da CONFIG)
+    // 0. CONTROLLO CAMBIO FASE
     if (boss.phase === 1 && boss.hp <= boss.maxHp * CONFIG.BOSS_PHASE_2_THRESHOLD) {
         boss.phase = 2;
-        gameState.screenShake = 15; // Feedback impatto visivo
+        gameState.screenShake = 15;
     }
 
-    // Modificatori dinamici basati sulla fase
     const phaseSpeedMult = boss.phase === 2 ? 1.5 : 1.0;
     const cooldownMult = boss.phase === 2 ? 0.6 : 1.0;
 
-    // 1. GESTIONE MOVIMENTO (DASH vs FLOATING)
+    // 1. GESTIONE MOVIMENTO
     if (boss.isDashing) {
         boss.x += boss.dashVX * (boss.phase === 2 ? 1.2 : 1);
         boss.y += boss.dashVY * (boss.phase === 2 ? 1.2 : 1);
@@ -29,7 +67,6 @@ export function updateBoss(boss) {
             boss.targetX = CONFIG.CANVAS_WIDTH / 2;
         }
     } else {
-        // Entrata in scena e movimento fluttuante
         if (boss.y < 150) boss.y += 4;
         else boss.y = 150;
 
@@ -38,9 +75,7 @@ export function updateBoss(boss) {
         }
         boss.x += (boss.targetX - boss.x) * (0.02 * phaseSpeedMult);
 
-        // 2. LOGICA ATTACCHI (Burst e Standard)
-
-        // Raffica 3 Raggiere (Fase 2: Intervalli ridotti)
+        // 2. LOGICA ATTACCHI
         const radialInterval = (CONFIG.BOSS_ATTACKS.RADIAL_INTERVAL[0]) * cooldownMult;
         if (now - (boss.lastRadialBurst || 0) > radialInterval) {
             startRadialBurst(boss);
@@ -48,7 +83,6 @@ export function updateBoss(boss) {
         }
         updateRadialBurst(boss, now);
 
-        // Raffica 5 Proiettili Mirati (Burst veloce al player)
         const targetedInterval = 4000 * cooldownMult;
         if (now - (boss.lastTargetBurst || 0) > targetedInterval) {
             startTargetedBurst(boss);
@@ -56,34 +90,18 @@ export function updateBoss(boss) {
         }
         updateTargetedBurst(boss, now);
 
-        // Carica (Dash)
         const dashInterval = (CONFIG.BOSS_ATTACKS.DASH_INTERVAL[0] + Math.random() * 6000) * cooldownMult;
         if (now - boss.lastDash > dashInterval) {
             startDash(boss);
             boss.lastDash = now;
         }
-
-        //DA VALUTARE IN FUTURO per creare una nuva sequanze se il livello è superiore  
-        
-        // Colpo standard frontale
-       /* if (now - boss.lastShot > (2000 * cooldownMult)) {
-            spawnBossBullet(boss.x, boss.y + 20);
-            boss.lastShot = now;
-        }
-       */
-        
-      } 
+    } 
    
-    // 3. AGGIORNAMENTO FISICA PROIETTILI
     updateBossBullets();
 }
 
-/**
- * AGGIORNAMENTO FISICA PROIETTILI
- */
 function updateBossBullets() {
     if (!gameState.bossBullets) return;
-
     for (let i = gameState.bossBullets.length - 1; i >= 0; i--) {
         const b = gameState.bossBullets[i];
         b.x += b.vx;
@@ -96,7 +114,7 @@ function updateBossBullets() {
 }
 
 /**
- * RENDERING: Disegna il boss, la UI e i suoi proiettili
+ * RENDERING
  */
 export function drawBossShadow(ctx, boss, img) {
     if (!img.complete || boss.hp <= 0) return;
@@ -119,15 +137,8 @@ export function drawBossShadow(ctx, boss, img) {
     }
 
     ctx.scale(0.6, 0.6); 
-
     const sx = Math.floor(frameIndex * originalSize);
-    ctx.drawImage(
-        img,
-        sx, 0,                                    
-        originalSize, originalSize,            
-        -originalSize / 2, -originalSize / 2,  
-        originalSize, originalSize            
-    );
+    ctx.drawImage(img, sx, 0, originalSize, originalSize, -originalSize / 2, -originalSize / 2, originalSize, originalSize);
     ctx.restore();
 
     drawBossUI(ctx, boss);
@@ -137,20 +148,18 @@ function drawBossBullets(ctx) {
     if (!gameState.bossBullets) return;
 
     gameState.bossBullets.forEach(b => {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.size / 2, 0, Math.PI * 2);
+        const bulletImg = getPixelBullet(b.color, b.size);
         
-        ctx.fillStyle = b.color;
-        ctx.shadowBlur = 15;
+        ctx.save();
+        // Glow esterno per far risaltare il neon
+        ctx.shadowBlur = 10;
         ctx.shadowColor = b.color;
         
-        ctx.fill();
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        ctx.closePath();
+        ctx.drawImage(
+            bulletImg, 
+            Math.floor(b.x - b.size / 2), 
+            Math.floor(b.y - b.size / 2)
+        );
         ctx.restore();
     });
 }
@@ -166,7 +175,6 @@ function drawBossUI(ctx, boss) {
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(x, y, barWidth, barHeight);
 
-    // Feedback visivo Fase 2: la barra diventa rossa pulsante
     if (boss.phase === 2) {
         const pulse = Math.abs(Math.sin(Date.now() * 0.01));
         ctx.fillStyle = `rgb(${150 + pulse * 105}, 0, ${pulse * 50})`;
@@ -187,7 +195,7 @@ function drawBossUI(ctx, boss) {
     ctx.restore();
 }
 
-// --- FUNZIONI DI SUPPORTO ATTACCHI ---
+// --- SUPPORT FUNCTIONS (ATTACKS) ---
 
 function startDash(boss) {
     boss.isDashing = true;
@@ -195,12 +203,10 @@ function startDash(boss) {
     const dy = gameState.playerY - boss.y;
     const angle = Math.atan2(dy, dx);
     const speed = CONFIG.BOSS_ATTACKS.DASH_SPEED || 14;
-    
     boss.dashVX = Math.cos(angle) * speed;
     boss.dashVY = Math.sin(angle) * speed;
 }
 
-// Gestione Burst Raggera
 function startRadialBurst(boss) {
     boss.radialCount = boss.phase === 2 ? 4 : 3;
     boss.nextRadialTime = 0;
@@ -214,7 +220,6 @@ function updateRadialBurst(boss, now) {
     }
 }
 
-// Gestione Burst Mirato al Player
 function startTargetedBurst(boss) {
     boss.targetedCount = boss.phase === 2 ? 8 : 5;
     boss.nextTargetedTime = 0;
@@ -231,17 +236,13 @@ function updateTargetedBurst(boss, now) {
 function spawnRadialAttack(startX, startY, extraSpeed = 0) {
     const numBullets = CONFIG.BOSS_ATTACKS.RADIAL_BULLET_COUNT || 12;
     const speed = (CONFIG.BOSS_ATTACKS.RADIAL_BULLET_SPEED || 4) + extraSpeed;
-    
     for (let i = 0; i < numBullets; i++) {
         const angle = (Math.PI * 2 / numBullets) * i;
         gameState.bossBullets.push({
-            x: startX,
-            y: startY,
+            x: startX, y: startY,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
-            size: 20,
-            color: '#ff00ff',
-            type: 'radial'
+            size: 20, color: '#ff00ff'
         });
     }
 }
@@ -251,28 +252,10 @@ function spawnTargetedBullet(boss) {
     const dy = gameState.playerY - boss.y;
     const angle = Math.atan2(dy, dx);
     const speed = boss.phase === 2 ? 9 : 7;
-
     gameState.bossBullets.push({
-        x: boss.x,
-        y: boss.y + 20,
+        x: boss.x, y: boss.y + 20,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        size: 18,
-        color: '#00ffff',
-        type: 'targeted'
+        size: 18, color: '#00ffff'
     });
 }
-
- 
-function spawnBossBullet(x, y) {
-    gameState.bossBullets.push({
-        x: x,
-        y: y,
-        vx: 0,
-        vy: 6,
-        size: 25,
-        color: '#8a2be2',
-        type: 'standard'
-    });
-}
-
