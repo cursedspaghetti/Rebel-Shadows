@@ -14,19 +14,39 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
     const margin = 10; 
     const sideImageSize = CONFIG.CANVAS_WIDTH * 0.5; 
     const bookSize = CONFIG.CANVAS_WIDTH * 0.2;    
+    const isWizardSelected = (introImage.complete && introImage.naturalWidth !== 0);
+    const fadeSpeed = 0.02; // Velocità del fade (circa 1 secondo a 60fps)
 
-    // --- AGGIORNAMENTO CONTATORE ---
+    // --- LOGICA FADE SEQUENZIALE ---
+    if (!isWizardSelected) {
+        // Fase iniziale: Primo fumetto appare, secondo sparisce/resta a 0
+        if (gameState.bubbleAlpha1 < 1) gameState.bubbleAlpha1 += fadeSpeed;
+        gameState.bubbleAlpha2 = 0;
+    } else {
+        // Fase selezione: Primo fumetto sparisce
+        if (gameState.bubbleAlpha1 > 0) {
+            gameState.bubbleAlpha1 -= fadeSpeed;
+        } 
+        // Il secondo inizia il fade in solo quando il primo è quasi sparito
+        else if (gameState.bubbleAlpha2 < 1) {
+            gameState.bubbleAlpha2 += fadeSpeed;
+        }
+    }
+
+    // Aggiornamento animazione libro
     hoverCounter = (hoverCounter + 0.04) % (Math.PI * 2);
 
     // 2. WIZ1 (BASSO A SINISTRA)
     if (wiz1.complete) {
         const wizX = margin;
         const wizY = CONFIG.CANVAS_HEIGHT - sideImageSize - margin;
-        
         ctx.drawImage(wiz1, wizX, wizY, sideImageSize, sideImageSize);
 
-        const speechText = "Rebel Shadows slipped through the cracks of reality...\n\nHurry up, I need a wizard who can handle the Book of Shadows!";
-        drawPixelBubble(ctx, wizX + sideImageSize * 0.4, wizY - 20, speechText);
+        if (gameState.bubbleAlpha1 > 0) {
+            const speechText = "Rebel Shadows slipped through the cracks of reality...\n\nHurry up, I need a wizard who can handle the Book of Shadows!";
+            // Posizionato più in alto e a sinistra rispetto a prima
+            drawPixelBubble(ctx, wizX + sideImageSize * 0.3, wizY - 40, speechText, gameState.bubbleAlpha1, "left");
+        }
     }
 
     // 3. BOOK1 (BASSO AL CENTRO)
@@ -42,49 +62,39 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
     }
 
     // 4. WIZARD ID NFT (BASSO A DESTRA)
-    // Se introImage è caricata e valida (l'utente ha inserito l'ID), disegna wizard e vignetta
-    if (introImage.complete && introImage.naturalWidth !== 0) {
+    if (isWizardSelected) {
         const nftX = CONFIG.CANVAS_WIDTH - sideImageSize - margin;
         const nftY = CONFIG.CANVAS_HEIGHT - sideImageSize - margin;
 
-        ctx.save();
         ctx.drawImage(introImage, nftX, nftY, sideImageSize, sideImageSize);
-        ctx.restore();
 
-        // --- NUOVA VIGNETTA PER IL WIZARD NFT ---
-        const nftSpeech = "A wizard is never late, nor is he early, he arrives precisely when he means to.";
-        
-        // Posizioniamo la vignetta sopra il secondo wizard (allineata a destra)
-        // Usiamo una coordinata X che sposti il fumetto un po' a sinistra per non farlo uscire dal canvas
-        drawPixelBubble(ctx, nftX - 50, nftY - 20, nftSpeech);
+        if (gameState.bubbleAlpha2 > 0) {
+            const nftSpeech = "A wizard is never late, nor is he early, he arrives precisely when he means to.";
+            // Posizionato per puntare al wizard di DESTRA (spostato a sinistra del wizard)
+            drawPixelBubble(ctx, nftX - 160, nftY - 20, nftSpeech, gameState.bubbleAlpha2, "right");
+        }
     }
 }
-
 /**
  * Funzione di supporto per disegnare una vignetta stile Pixel Art
  */
 /**
  * Funzione di supporto per disegnare una vignetta stile Pixel Art Smussata
  */
-function drawPixelBubble(ctx, x, y, text) {
+function drawPixelBubble(ctx, x, y, text, alpha = 1, tailSide = "left") {
     const maxWidth = 250;
     const lineHeight = 18;
+    ctx.save();
+    ctx.globalAlpha = alpha; // Applica il fade
+    
     ctx.font = "14px 'Press Start 2P', monospace";
     
-    // 1. Dividiamo prima per i \n manuali
     const manualLines = text.split('\n');
     let lines = [];
-
-    // 2. Per ogni riga manuale, applichiamo il wrapping automatico per la larghezza
     manualLines.forEach(line => {
-        if (line.trim() === "") {
-            lines.push(""); // Gestisce le righe vuote come spaziatori
-            return;
-        }
-        
+        if (line.trim() === "") { lines.push(""); return; }
         const words = line.split(' ');
         let currentLine = words[0];
-
         for (let i = 1; i < words.length; i++) {
             let testLine = currentLine + " " + words[i];
             if (ctx.measureText(testLine).width > maxWidth) {
@@ -97,49 +107,44 @@ function drawPixelBubble(ctx, x, y, text) {
         lines.push(currentLine);
     });
 
-    // --- LOGICA DI DISEGNO (Grigio e Smussato come richiesto) ---
     const bubbleHeight = lines.length * lineHeight + 20;
     const bubbleWidth = maxWidth + 20;
     const finalY = y - bubbleHeight - 10;
-    const lightGray = "rgba(211, 211, 211, 0.9)"; 
 
-    ctx.strokeStyle = lightGray;
-    ctx.fillStyle = "rgba(0, 0, 0, 0.4)"; 
+    // Colori con alpha dinamico
+    ctx.strokeStyle = `rgba(211, 211, 211, ${alpha})`;
+    ctx.fillStyle = `rgba(0, 0, 0, ${0.4 * alpha})`;
     ctx.lineWidth = 3;
 
-    // Disegno box smussato
+    // Box smussato
     const radius = 10;
     ctx.beginPath();
-    ctx.moveTo(x + radius, finalY);
-    ctx.lineTo(x + bubbleWidth - radius, finalY);
-    ctx.quadraticCurveTo(x + bubbleWidth, finalY, x + bubbleWidth, finalY + radius);
-    ctx.lineTo(x + bubbleWidth, finalY + bubbleHeight - radius);
-    ctx.quadraticCurveTo(x + bubbleWidth, finalY + bubbleHeight, x + bubbleWidth - radius, finalY + bubbleHeight);
-    ctx.lineTo(x + radius, finalY + bubbleHeight);
-    ctx.quadraticCurveTo(x, finalY + bubbleHeight, x, finalY + bubbleHeight - radius);
-    ctx.lineTo(x, finalY + radius);
-    ctx.quadraticCurveTo(x, finalY, x + radius, finalY);
-    ctx.closePath();
+    ctx.roundRect(x, finalY, bubbleWidth, bubbleHeight, radius); // Metodo moderno più pulito
     ctx.fill();
     ctx.stroke();
 
     // Testo
-    ctx.fillStyle = "#D3D3D3";
+    ctx.fillStyle = `rgba(211, 211, 211, ${alpha})`;
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
-    
     lines.forEach((line, index) => {
-        if (line !== "") {
-            ctx.fillText(line, x + 10, finalY + 10 + (index * lineHeight));
-        }
+        if (line !== "") ctx.fillText(line, x + 10, finalY + 10 + (index * lineHeight));
     });
 
-    // Punta
+    // Punta Dinamica
     ctx.beginPath();
-    ctx.moveTo(x + 20, finalY + bubbleHeight);
-    ctx.lineTo(x + 10, finalY + bubbleHeight + 15);
-    ctx.lineTo(x + 35, finalY + bubbleHeight);
+    if (tailSide === "left") {
+        ctx.moveTo(x + 20, finalY + bubbleHeight);
+        ctx.lineTo(x + 10, finalY + bubbleHeight + 15);
+        ctx.lineTo(x + 35, finalY + bubbleHeight);
+    } else {
+        // Punta che guarda a destra verso l'NFT
+        ctx.moveTo(x + bubbleWidth - 40, finalY + bubbleHeight);
+        ctx.lineTo(x + bubbleWidth - 10, finalY + bubbleHeight + 15);
+        ctx.lineTo(x + bubbleWidth - 20, finalY + bubbleHeight);
+    }
     ctx.stroke();
+    ctx.restore();
 }
 
 
