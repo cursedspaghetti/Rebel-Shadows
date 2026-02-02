@@ -110,15 +110,6 @@ function startScreenLoop() {
 
 init();
 
-function startScreenLoop() {
-    if (gameState.currentScreen === 'start') {
-        // Passiamo gli stessi parametri, ora introImage contiene il Wizard
-        Renderer.drawStartScreen(ctx, bgParallax, introImage);
-        requestAnimationFrame(startScreenLoop);
-    }
-}
-
-
 // --- GAME LOOP ---
 function gameLoop() {
     if (gameState.currentScreen !== 'playing') return;
