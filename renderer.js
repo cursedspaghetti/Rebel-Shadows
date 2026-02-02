@@ -86,7 +86,7 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
             // - Y: Uguale alla vignetta 1 (wizY - 40) per simmetria
             // - X: nftX - 220 per spostarla più a sinistra e non coprire il wizard
             const wizY = CONFIG.CANVAS_HEIGHT - sideImageSize - margin; 
-            drawPixelBubble(ctx, nftX - 10, wizY - 40, nftSpeech, gameState.bubbleAlpha2, "right");
+            drawPixelBubble(ctx, nftX - 100, wizY - 40, nftSpeech, gameState.bubbleAlpha2, "right");
         }
     }
 }
