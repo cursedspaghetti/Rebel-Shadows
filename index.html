@@ -15,14 +15,20 @@
         <canvas id="gameCanvas" width="393" height="852"></canvas>
         
         <div id="startScreen">
-            <div id="title">
-                <h1>REBEL SHADOWS</h1>
-                <h4>After the summoning ritual, several Rebel Shadows slipped through the cracks of reality to take refuge in the dream world and haunt the thoughts of the living.</h4> 
-                <h4>Only the Book of Shadows can track them down and imprison that which should never have seen the light.</h4>
-            </div>
-            
-            <button id="startButton">START GAME</button>
-        </div>
+    <div id="title">
+        <h1>REBEL SHADOWS</h1>
+        <h4>After the summoning ritual, several Rebel Shadows slipped through the cracks of reality...</h4> 
+        <h4>Only the Book of Shadows can track them down...</h4>
+    </div>
+
+    <div id="wizardSelector" style="margin-bottom: 20px;">
+        <input type="number" id="wizardIdInput" placeholder="Enter Wizard ID (e.g. 557)" 
+               style="padding: 10px; border-radius: 5px; border: none; width: 150px;">
+        <button id="loadWizardButton" style="padding: 10px; cursor: pointer;">LOAD WIZARD</button>
+    </div>
+    
+    <button id="startButton">START GAME</button>
+</div>
 
         <div id="powerUpScreen" style="display: none;">
             <h1>BOSS DEFEATED!</h1>
