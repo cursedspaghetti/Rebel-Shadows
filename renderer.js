@@ -50,7 +50,7 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
         ctx.drawImage(wiz1, wizX, wizY, sideImageSize, sideImageSize);
 
         if (gameState.bubbleAlpha1 > 0) {
-            const speechText = "Rebel Shadows slipped through the cracks of reality...\n\nHurry up, I need a wizard!";
+            const speechText = "Rebel Shadows slipped through the cracks of reality...\n\nHurry up, I need a wizard who can hadle the Book of Shadows!";
             drawPixelBubble(ctx, wizX + sideImageSize * 0.3, wizY - 40, speechText, gameState.bubbleAlpha1, "left");
         }
     }
@@ -81,12 +81,12 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
         ctx.restore();
 
         if (gameState.bubbleAlpha2 > 0) {
-            const nftSpeech = "A wizard is never late, nor is he early...";
+            const nftSpeech = "A wizard is never late, nor is he early, he arrives precisely when he means to";
             // COORDINATE MODIFICATE: 
             // - Y: Uguale alla vignetta 1 (wizY - 40) per simmetria
             // - X: nftX - 220 per spostarla più a sinistra e non coprire il wizard
             const wizY = CONFIG.CANVAS_HEIGHT - sideImageSize - margin; 
-            drawPixelBubble(ctx, nftX - 220, wizY - 40, nftSpeech, gameState.bubbleAlpha2, "right");
+            drawPixelBubble(ctx, nftX - 10, wizY - 40, nftSpeech, gameState.bubbleAlpha2, "right");
         }
     }
 }
