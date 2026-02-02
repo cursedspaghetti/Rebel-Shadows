@@ -97,11 +97,11 @@ function drawPixelBubble(ctx, x, y, text, alpha = 1, tailSide = "left") {
     const maxWidth = 250;
     const lineHeight = 18;
     ctx.save();
-    ctx.globalAlpha = alpha;
+    ctx.globalAlpha = alpha; 
     
     ctx.font = "14px 'Press Start 2P', monospace";
     
-    // Logica wrapping testo (invariata)
+    // Gestione del testo (wrapping)
     const manualLines = text.split('\n');
     let lines = [];
     manualLines.forEach(line => {
@@ -120,43 +120,44 @@ function drawPixelBubble(ctx, x, y, text, alpha = 1, tailSide = "left") {
         lines.push(currentLine);
     });
 
-    const bubbleWidth = maxWidth + 20;
     const bubbleHeight = lines.length * lineHeight + 20;
+    const bubbleWidth = maxWidth + 20;
     
-    // 1. ALZARE LA VIGNETTA: Aumentiamo l'offset negativo da y (es. -25 invece di -10)
+    // Alzata la vignetta: aumentato l'offset da 10 a 25 pixel sopra il punto y
     const finalY = y - bubbleHeight - 25; 
-    
-    // 2. CENTRARE LA VIGNETTA: Sottraiamo metà larghezza alla X di disegno
-    const drawX = x - (bubbleWidth / 2);
 
+    // Colori
     ctx.strokeStyle = `rgba(211, 211, 211, ${alpha})`;
     ctx.fillStyle = `rgba(0, 0, 0, ${0.4 * alpha})`;
     ctx.lineWidth = 3;
 
-    // Box smussato centrato su drawX
+    // Box della vignetta
     const radius = 10;
     ctx.beginPath();
-    ctx.roundRect(drawX, finalY, bubbleWidth, bubbleHeight, radius);
+    // Nota: il box parte da x, ma la punta sarà centrata su x
+    ctx.roundRect(x - (bubbleWidth / 2), finalY, bubbleWidth, bubbleHeight, radius); 
     ctx.fill();
     ctx.stroke();
 
-    // Testo centrato nel box
+    // Testo
     ctx.fillStyle = `rgba(211, 211, 211, ${alpha})`;
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     lines.forEach((line, index) => {
-        if (line !== "") ctx.fillText(line, drawX + 10, finalY + 10 + (index * lineHeight));
+        if (line !== "") {
+            // Allinea il testo all'interno del box spostato
+            ctx.fillText(line, (x - (bubbleWidth / 2)) + 10, finalY + 10 + (index * lineHeight));
+        }
     });
 
-    // 3. PUNTA SEMPRE AL CENTRO DELLA X
+    // PUNTA CENTRATA SULLA X
+    // Il vertice inferiore della punta tocca esattamente la coordinata X passata
     ctx.beginPath();
-    // La punta parte dalla base del box e finisce esattamente su x, y - offset
-    ctx.moveTo(x - 10, finalY + bubbleHeight); // Lato sinistro della punta
-    ctx.lineTo(x, finalY + bubbleHeight + 15);  // Vertice della punta (esattamente su X)
-    ctx.lineTo(x + 10, finalY + bubbleHeight); // Lato destro della punta
+    ctx.moveTo(x - 10, finalY + bubbleHeight); // Lato sinistro base punta
+    ctx.lineTo(x, finalY + bubbleHeight + 15);  // Vertice (Punta su X)
+    ctx.lineTo(x + 10, finalY + bubbleHeight); // Lato destro base punta
     
-    // Nota: tailSide ora influisce meno visivamente sulla posizione 
-    // ma possiamo usarlo per inclinare leggermente la punta se vuoi
+    // Chiudiamo il percorso della punta per evitare buchi nel bordo
     ctx.stroke();
     
     ctx.restore();
