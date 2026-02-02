@@ -6,9 +6,9 @@ import * as collision from './collision.js';
 
 // --- CONFIGURAZIONE TOUCH ---
 const TOUCH_SETTINGS = {
-    LERP: 0.5,             // Fluidità inseguimento
-    OFFSET_Y: 80,          // Distanza sopra il dito
-    TAP_DELAY: 250         // Tempo per distinguere Single/Double Tap
+    LERP: 0.5,
+    OFFSET_Y: 80,
+    TAP_DELAY: 250
 };
 
 let secondFingerTimer = null;
@@ -22,15 +22,12 @@ const startScreen = document.getElementById('startScreen');
 const powerUpScreen = document.getElementById('powerUpScreen');
 const startButton = document.getElementById('startButton');
 
+// Nuovi elementi DOM (Assicurati che esistano nell'HTML!)
 const wizardIdInput = document.getElementById('wizardIdInput');
 const loadWizardButton = document.getElementById('loadWizardButton');
 
 // --- ASSET LOADING ---
-//const introImage = new Image();
-//introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
 const introImage = new Image();
-// Rimuoviamo il .src statico qui, lo gestiremo in init()
-
 const bgImage = new Image();
 bgImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpaceVoid.png';
 const bgParallax = new Image();
@@ -41,23 +38,7 @@ playerSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotte
 export const chargeImg = new Image();
 chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bookfull.png";
 
-const shadowImg = new Image();
-shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png';
-
-// --- INITIALIZATION ---
-//function init() {
-//    startButton.disabled = false;
-//    requestAnimationFrame(startScreenLoop);
-// }
-
-//function startScreenLoop() {
-  //  if (gameState.currentScreen === 'start') {
-    //    Renderer.drawStartScreen(ctx, bgParallax, introImage);
-      //  requestAnimationFrame(startScreenLoop);
-   // }
-// }
-
-// --- LOGICA WIZARD API ---
+// --- FUNZIONI WIZARD ---
 function getWizardImageUrl(wizardId) {
     return `https://forgottenrunes.com/api/art/wizards/${wizardId}.png`;
 }
@@ -66,27 +47,27 @@ async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
     
     if (!wizardId) {
-        alert("Per favore, inserisci un ID Wizard valido");
+        alert("Inserisci un ID numerico!");
         return;
     }
 
-    // Feedback visivo: disabilita bottoni durante il caricamento
+    // Feedback visivo
     loadWizardButton.innerText = "LOADING...";
     loadWizardButton.disabled = true;
     startButton.disabled = true;
 
-    const wizardUrl = getWizardImageUrl(wizardId);
-    introImage.src = wizardUrl;
+    // Cambia la sorgente dell'immagine
+    introImage.src = getWizardImageUrl(wizardId);
 
     introImage.onload = () => {
-        console.log(`Wizard ${wizardId} caricato con successo!`);
+        console.log(`Wizard ${wizardId} caricato!`);
         loadWizardButton.innerText = "LOAD WIZARD";
         loadWizardButton.disabled = false;
         startButton.disabled = false;
     };
 
     introImage.onerror = () => {
-        console.warn("Immagine Wizard non trovata, uso il fallback.");
+        console.warn("Immagine non trovata, uso il fallback.");
         introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
         loadWizardButton.innerText = "LOAD WIZARD";
         loadWizardButton.disabled = false;
@@ -96,20 +77,24 @@ async function handleLoadWizard() {
 
 // --- INITIALIZATION ---
 async function init() {
-    // Carichiamo un'immagine di default (il libro) all'avvio
+    // 1. Imposta immagine iniziale
     introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
 
-    // Listener per il caricamento manuale
+    // 2. LISTENER PER CARICARE IL WIZARD (Click e Invio)
     loadWizardButton.addEventListener('click', handleLoadWizard);
     
-    // Listener per avviare il gioco
-    startButton.addEventListener('click', () => {
-        // Qui andrebbe la tua logica per nascondere lo startScreen e avviare il gioco
-        gameState.currentScreen = 'playing';
-        startScreen.style.display = 'none';
-        // startGameLoop(); // Assumendo che tu abbia una funzione di avvio
+    wizardIdInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleLoadWizard();
     });
 
+    // 3. LISTENER PER START GAME
+    startButton.addEventListener('click', () => {
+        gameState.currentScreen = 'playing';
+        startScreen.style.display = 'none';
+        // Se hai una funzione per far partire il gioco, chiamala qui.
+    });
+
+    // 4. Avvia il loop della schermata iniziale
     introImage.onload = () => {
         startButton.disabled = false;
         requestAnimationFrame(startScreenLoop);
@@ -123,10 +108,7 @@ function startScreenLoop() {
     }
 }
 
-// Avvia l'app
 init();
-
-// Rimuovi l'init() che avevi in fondo al file per evitare doppie esecuzioni!
 
 function startScreenLoop() {
     if (gameState.currentScreen === 'start') {
