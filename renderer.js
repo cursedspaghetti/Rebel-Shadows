@@ -25,7 +25,7 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
         
         ctx.drawImage(wiz1, wizX, wizY, sideImageSize, sideImageSize);
 
-        const speechText = "Several Rebel Shadows slipped through the cracks of reality... Hurry up, I need a powerful wizard!";
+        const speechText = "Rebel Shadows slipped through the cracks of reality...\n\nHurry up, I need a wizard who can handle the Book of Shadows!";
         drawPixelBubble(ctx, wizX + sideImageSize * 0.4, wizY - 20, speechText);
     }
 
@@ -68,37 +68,46 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
  */
 function drawPixelBubble(ctx, x, y, text) {
     const maxWidth = 250;
-    const lineHeight = 18; // Leggermente aumentato per leggibilità
+    const lineHeight = 18;
     ctx.font = "14px 'Press Start 2P', monospace";
     
-    // Split del testo per andare a capo
-    const words = text.split(' ');
+    // 1. Dividiamo prima per i \n manuali
+    const manualLines = text.split('\n');
     let lines = [];
-    let currentLine = words[0];
 
-    for (let i = 1; i < words.length; i++) {
-        let testLine = currentLine + " " + words[i];
-        if (ctx.measureText(testLine).width > maxWidth) {
-            lines.push(currentLine);
-            currentLine = words[i];
-        } else {
-            currentLine = testLine;
+    // 2. Per ogni riga manuale, applichiamo il wrapping automatico per la larghezza
+    manualLines.forEach(line => {
+        if (line.trim() === "") {
+            lines.push(""); // Gestisce le righe vuote come spaziatori
+            return;
         }
-    }
-    lines.push(currentLine);
+        
+        const words = line.split(' ');
+        let currentLine = words[0];
 
+        for (let i = 1; i < words.length; i++) {
+            let testLine = currentLine + " " + words[i];
+            if (ctx.measureText(testLine).width > maxWidth) {
+                lines.push(currentLine);
+                currentLine = words[i];
+            } else {
+                currentLine = testLine;
+            }
+        }
+        lines.push(currentLine);
+    });
+
+    // --- LOGICA DI DISEGNO (Grigio e Smussato come richiesto) ---
     const bubbleHeight = lines.length * lineHeight + 20;
     const bubbleWidth = maxWidth + 20;
     const finalY = y - bubbleHeight - 10;
+    const lightGray = "rgba(211, 211, 211, 0.9)"; 
 
-    // --- DISEGNO BOX SMUSSATO ---
-    // Colore Grigio Chiaro con Trasparenza
-    const lightGray = "rgba(200, 200, 200, 0.8)"; 
     ctx.strokeStyle = lightGray;
-    ctx.fillStyle = "rgba(0, 0, 0, 0.4)"; // Sfondo scuro semitrasparente per far leggere il testo grigio
+    ctx.fillStyle = "rgba(0, 0, 0, 0.4)"; 
     ctx.lineWidth = 3;
 
-    // Disegno rettangolo con angoli arrotondati (smussati)
+    // Disegno box smussato
     const radius = 10;
     ctx.beginPath();
     ctx.moveTo(x + radius, finalY);
@@ -111,27 +120,29 @@ function drawPixelBubble(ctx, x, y, text) {
     ctx.lineTo(x, finalY + radius);
     ctx.quadraticCurveTo(x, finalY, x + radius, finalY);
     ctx.closePath();
-    
-    ctx.fill();   // Riempimento opzionale (trasparente)
-    ctx.stroke(); // Bordo grigio chiaro
+    ctx.fill();
+    ctx.stroke();
 
-    // --- TESTO GRIGIO CHIARO ---
-    ctx.fillStyle = "#D3D3D3"; // LightGray
+    // Testo
+    ctx.fillStyle = "#D3D3D3";
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     
     lines.forEach((line, index) => {
-        ctx.fillText(line, x + 10, finalY + 10 + (index * lineHeight));
+        if (line !== "") {
+            ctx.fillText(line, x + 10, finalY + 10 + (index * lineHeight));
+        }
     });
 
-    // --- PUNTA DELLA VIGNETTA ---
+    // Punta
     ctx.beginPath();
     ctx.moveTo(x + 20, finalY + bubbleHeight);
     ctx.lineTo(x + 10, finalY + bubbleHeight + 15);
     ctx.lineTo(x + 35, finalY + bubbleHeight);
-    ctx.strokeStyle = lightGray;
     ctx.stroke();
 }
+
+
 // --- GIOCATORE ---
 export function drawPlayer(ctx, img) {
     if (!img.complete) return; 
