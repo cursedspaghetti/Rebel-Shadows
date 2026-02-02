@@ -45,6 +45,47 @@ playerSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotte
 export const chargeImg = new Image();
 chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bookfull.png";
 
+// rimozione sfondo
+function makeTransparent(img) {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    
+    ctx.drawImage(img, 0, 0);
+    
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    
+    // Il colore da rimuovere è quello del primo pixel (0,0)
+    const rTarget = data[0];
+    const gTarget = data[1];
+    const bTarget = data[2];
+    
+    // Soglia di tolleranza per i bordi
+    const threshold = 50; 
+
+    for (let i = 0; i < data.length; i += 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        
+        // Calcola la distanza tra il colore del pixel e quello del background
+        const distance = Math.sqrt(
+            Math.pow(r - rTarget, 2) + 
+            Math.pow(g - gTarget, 2) + 
+            Math.pow(b - bTarget, 2)
+        );
+
+        if (distance < threshold) {
+            data[i + 3] = 0; // Trasparenza totale
+        }
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
+    return canvas.toDataURL(); // Restituisce l'immagine pulita
+}
+
 // Modifica questa funzione per richiedere l'immagine trasparente
 function getWizardImageUrl(wizardId) {
     // Aggiungendo ?background=false chiediamo all'API di rimuovere lo sfondo
@@ -57,40 +98,24 @@ let lastLoadedId = "";
 
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
-    
-    // Se l'ID è lo stesso di prima, non facciamo nulla
-    if (wizardId === lastLoadedId) return;
-    
-    // Se l'input è vuoto, svuotiamo l'immagine e usciamo
-    if (!wizardId) {
-        introImage.src = ""; 
-        introImage.dataset.loaded = "false";
-        lastLoadedId = "";
-        return;
-    }
+    if (wizardId === lastLoadedId || !wizardId) return;
 
     lastLoadedId = wizardId;
     
-    // Opzionale: puoi aggiungere qui un feedback visivo "Caricamento..." 
-    // modificando una label o lo stato di un elemento grafico.
+    const rawImg = new Image();
+    // Importante: permette al JS di leggere i pixel
+    rawImg.crossOrigin = "anonymous"; 
+    rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
 
-    const newWizardImg = new Image();
-    newWizardImg.src = getWizardImageUrl(wizardId);
-
-    newWizardImg.onload = () => {
-        // Solo se l'ID nel campo è ancora quello che abbiamo caricato
-        // (evita problemi di latenza se l'utente cancella e riscrive velocemente)
+    rawImg.onload = () => {
         if (wizardIdInput.value.trim() === wizardId) {
-            introImage.src = newWizardImg.src;
+            // Puliamo l'immagine e otteniamo un DataURL trasparente
+            const transparentSrc = makeTransparent(rawImg);
+            
+            introImage.src = transparentSrc;
             introImage.dataset.loaded = "true";
-            console.log(`Wizard ${wizardId} caricato con successo.`);
+            console.log(`Wizard ${wizardId} pulito con successo!`);
         }
-    };
-
-    newWizardImg.onerror = () => {
-        console.warn("Wizard non trovato o errore di rete.");
-        introImage.src = ""; 
-        introImage.dataset.loaded = "false";
     };
 }
 
