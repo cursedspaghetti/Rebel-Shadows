@@ -120,28 +120,52 @@ async function handleLoadWizard() {
 
 // --- INITIALIZATION ---
 async function init() {
-    // 1. All'inizio l'immagine è vuota
+    // 1. Setup iniziale: l'immagine parte vuota e il pulsante è nascosto
     introImage.src = "";
     introImage.dataset.loaded = "false";
+    startButton.classList.remove('visible');
 
-    // 2. Listener REATTIVO all'input dell'utente
+    // 2. Listener per il CARICAMENTO dell'immagine
+    // Questo evento scatta solo quando l'immagine è stata scaricata con successo
+    introImage.addEventListener('load', () => {
+        // Aggiungiamo la classe .visible. 
+        // L'animazione e il delay di 1s sono gestiti dal CSS
+        startButton.classList.add('visible');
+        introImage.dataset.loaded = "true";
+    });
+
+    // Opzionale: gestione errore se l'ID del mago non esiste
+    introImage.addEventListener('error', () => {
+        console.warn("Immagine non trovata per questo ID.");
+        startButton.classList.remove('visible');
+        introImage.dataset.loaded = "false";
+    });
+
+    // 3. Listener REATTIVO all'input dell'utente (Debounce)
     wizardIdInput.addEventListener('input', () => {
-        // Ogni volta che l'utente scrive, resettiamo il timer
+        // Se l'utente scrive, nascondiamo subito il pulsante (se era apparso)
+        startButton.classList.remove('visible');
+        
+        // Resettiamo il timer del debounce
         clearTimeout(debounceTimer);
         
-        // Avviamo il caricamento solo dopo 500ms di inattività
+        // Avviamo la chiamata al caricamento dopo 500ms di inattività
         debounceTimer = setTimeout(() => {
-            handleLoadWizard();
+            handleLoadWizard(); 
         }, 500);
     });
 
-    // 3. Start Game (sempre abilitato)
+    // 4. Gestione Click su Start Game
     startButton.addEventListener('click', () => {
+        // Passaggio alla modalità gioco
         gameState.currentScreen = 'playing';
         startScreen.style.display = 'none';
+        
+        // Se hai una musica di sottofondo o logica di avvio, chiamala qui
+        // startGame();
     });
 
-    // 4. Avvia il loop grafico immediatamente
+    // 5. Avvia il loop grafico della schermata iniziale
     requestAnimationFrame(startScreenLoop);
 }
 
