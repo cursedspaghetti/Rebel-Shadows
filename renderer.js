@@ -25,9 +25,8 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
         
         ctx.drawImage(wiz1, wizX, wizY, sideImageSize, sideImageSize);
 
-        // --- AGGIUNTA VIGNETTA (SPEECH BUBBLE) ---
-        const speechText = "Several Rebel Shadows slipped through the cracks of reality... Hurry up, I need a powerful wizard who can handle the Book of Shadows to track them down...";
-        drawPixelBubble(ctx, wizX + sideImageSize * 0.6, wizY - 20, speechText);
+        const speechText = "Several Rebel Shadows slipped through the cracks of reality... Hurry up, I need a powerful wizard!";
+        drawPixelBubble(ctx, wizX + sideImageSize * 0.4, wizY - 20, speechText);
     }
 
     // 3. BOOK1 (BASSO AL CENTRO)
@@ -43,16 +42,21 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
     }
 
     // 4. WIZARD ID NFT (BASSO A DESTRA)
+    // Se introImage è caricata e valida (l'utente ha inserito l'ID), disegna wizard e vignetta
     if (introImage.complete && introImage.naturalWidth !== 0) {
+        const nftX = CONFIG.CANVAS_WIDTH - sideImageSize - margin;
+        const nftY = CONFIG.CANVAS_HEIGHT - sideImageSize - margin;
+
         ctx.save();
-        ctx.drawImage(
-            introImage, 
-            CONFIG.CANVAS_WIDTH - sideImageSize - margin, 
-            CONFIG.CANVAS_HEIGHT - sideImageSize - margin, 
-            sideImageSize, 
-            sideImageSize
-        );
+        ctx.drawImage(introImage, nftX, nftY, sideImageSize, sideImageSize);
         ctx.restore();
+
+        // --- NUOVA VIGNETTA PER IL WIZARD NFT ---
+        const nftSpeech = "A wizard is never late, nor is he early, he arrives precisely when he means to.";
+        
+        // Posizioniamo la vignetta sopra il secondo wizard (allineata a destra)
+        // Usiamo una coordinata X che sposti il fumetto un po' a sinistra per non farlo uscire dal canvas
+        drawPixelBubble(ctx, nftX - 50, nftY - 20, nftSpeech);
     }
 }
 
