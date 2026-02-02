@@ -63,10 +63,13 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
 /**
  * Funzione di supporto per disegnare una vignetta stile Pixel Art
  */
+/**
+ * Funzione di supporto per disegnare una vignetta stile Pixel Art Smussata
+ */
 function drawPixelBubble(ctx, x, y, text) {
     const maxWidth = 250;
-    const lineHeight = 16;
-    ctx.font = "14px 'Press Start 2P', monospace"; // Font pixel art consigliato
+    const lineHeight = 18; // Leggermente aumentato per leggibilità
+    ctx.font = "14px 'Press Start 2P', monospace";
     
     // Split del testo per andare a capo
     const words = text.split(' ');
@@ -86,20 +89,34 @@ function drawPixelBubble(ctx, x, y, text) {
 
     const bubbleHeight = lines.length * lineHeight + 20;
     const bubbleWidth = maxWidth + 20;
+    const finalY = y - bubbleHeight - 10;
 
-    // Disegno Box (Pixel Style)
-    ctx.fillStyle = "white";
-    ctx.strokeStyle = "black";
-    ctx.lineWidth = 4;
+    // --- DISEGNO BOX SMUSSATO ---
+    // Colore Grigio Chiaro con Trasparenza
+    const lightGray = "rgba(200, 200, 200, 0.8)"; 
+    ctx.strokeStyle = lightGray;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.4)"; // Sfondo scuro semitrasparente per far leggere il testo grigio
+    ctx.lineWidth = 3;
+
+    // Disegno rettangolo con angoli arrotondati (smussati)
+    const radius = 10;
+    ctx.beginPath();
+    ctx.moveTo(x + radius, finalY);
+    ctx.lineTo(x + bubbleWidth - radius, finalY);
+    ctx.quadraticCurveTo(x + bubbleWidth, finalY, x + bubbleWidth, finalY + radius);
+    ctx.lineTo(x + bubbleWidth, finalY + bubbleHeight - radius);
+    ctx.quadraticCurveTo(x + bubbleWidth, finalY + bubbleHeight, x + bubbleWidth - radius, finalY + bubbleHeight);
+    ctx.lineTo(x + radius, finalY + bubbleHeight);
+    ctx.quadraticCurveTo(x, finalY + bubbleHeight, x, finalY + bubbleHeight - radius);
+    ctx.lineTo(x, finalY + radius);
+    ctx.quadraticCurveTo(x, finalY, x + radius, finalY);
+    ctx.closePath();
     
-    // Spostiamo la y verso l'alto in base all'altezza del testo
-    const finalY = y - bubbleHeight;
+    ctx.fill();   // Riempimento opzionale (trasparente)
+    ctx.stroke(); // Bordo grigio chiaro
 
-    ctx.fillRect(x, finalY, bubbleWidth, bubbleHeight);
-    ctx.strokeRect(x, finalY, bubbleWidth, bubbleHeight);
-
-    // Testo
-    ctx.fillStyle = "black";
+    // --- TESTO GRIGIO CHIARO ---
+    ctx.fillStyle = "#D3D3D3"; // LightGray
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     
@@ -107,16 +124,14 @@ function drawPixelBubble(ctx, x, y, text) {
         ctx.fillText(line, x + 10, finalY + 10 + (index * lineHeight));
     });
 
-    // Punta della vignetta
+    // --- PUNTA DELLA VIGNETTA ---
     ctx.beginPath();
     ctx.moveTo(x + 20, finalY + bubbleHeight);
     ctx.lineTo(x + 10, finalY + bubbleHeight + 15);
-    ctx.lineTo(x + 40, finalY + bubbleHeight);
-    ctx.fillStyle = "white";
-    ctx.fill();
+    ctx.lineTo(x + 35, finalY + bubbleHeight);
+    ctx.strokeStyle = lightGray;
     ctx.stroke();
 }
-
 // --- GIOCATORE ---
 export function drawPlayer(ctx, img) {
     if (!img.complete) return; 
