@@ -107,10 +107,10 @@ async function init() {
         requestAnimationFrame(startScreenLoop);
     };
 }
-
 function startScreenLoop() {
     if (gameState.currentScreen === 'start') {
-        Renderer.drawStartScreen(ctx, bgParallax, introImage);
+        // Passiamo anche Wiz1 e bookImg (che sono già definiti sopra nel main)
+        Renderer.drawStartScreen(ctx, bgParallax, introImage, Wiz1, bookImg);
         requestAnimationFrame(startScreenLoop);
     }
 }
