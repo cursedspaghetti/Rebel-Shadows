@@ -46,7 +46,7 @@ body {
     background: transparent; 
 }
 
-/* 3. SCHERMATA INIZIALE */
+/* --- 3. SCHERMATA INIZIALE --- */
 #startScreen {
     position: absolute;
     top: 0;
@@ -67,12 +67,27 @@ body {
     box-sizing: border-box;
 }
 
-/* Specifichiamo l'animazione SOLO per lo startButton */
 #wizardIdInput {
     opacity: 0;
     animation: fadeIn 1.5s ease-out forwards;
-    animation-delay: 1s; /* Appare dopo che il testo è leggibile */
+    animation-delay: 1s;
 }
+
+/* MODIFICA QUI: Usiamo una classe per gestire l'attivazione */
+#startButton {
+    display: none; /* Rimosso dal flusso finché non serve */
+    opacity: 0;
+}
+
+#startButton.visible {
+    display: block; 
+    /* L'animazione parte non appena la classe viene aggiunta */
+    animation: fadeIn 1.5s ease-out forwards;
+    /* Riduciamo il delay a 0.1s se vuoi che il secondo di attesa sia gestito dal JS, 
+       oppure lascialo a 1s se vuoi che il JS lo attivi subito e il CSS aspetti. */
+    animation-delay: 1s; 
+}
+
 
 /* 4. SCHERMATA POWER-UP */
 #powerUpScreen {
