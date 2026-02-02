@@ -125,7 +125,7 @@ function gameLoop() {
     Renderer.autoFire();
     Renderer.updateBullets();
     Renderer.updateEnemies();
-    Renderer.updateEnemyBullets() 
+    Renderer.updateEnemyBullets();
     collision.updateExplosions(); 
     SpecialAttacks.updateSpecialRay();
     SpecialAttacks.updateSpecialRay2();
@@ -305,4 +305,4 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
 
 startButton.addEventListener('click', startGame);
-init();
+//init();
