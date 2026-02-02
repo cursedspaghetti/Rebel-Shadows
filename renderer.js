@@ -11,11 +11,11 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 
-    const margin = 20; // Margine dai bordi
-    const sideImageSize = CONFIG.CANVAS_WIDTH * 0.2; // Dimensione immagini laterali (20% canvas)
+    const margin = 20; 
+    const sideImageSize = CONFIG.CANVAS_WIDTH * 0.3; // Maghi grandi
+    const bookSize = CONFIG.CANVAS_WIDTH * 0.25;    // Libro dimensione originale
 
-    // --- ANIMAZIONE FLUTTUAZIONE (Comune a tutti) ---
-    const hoverOffset = Math.sin(hoverCounter) * 15;
+    // --- AGGIORNAMENTO CONTATORE ---
     hoverCounter = (hoverCounter + 0.04) % (Math.PI * 2);
 
     // 2. WIZ1 (BASSO A SINISTRA)
@@ -23,19 +23,20 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
         ctx.drawImage(
             wiz1, 
             margin, 
-            CONFIG.CANVAS_HEIGHT - sideImageSize - margin + hoverOffset, 
+            CONFIG.CANVAS_HEIGHT - sideImageSize - margin, 
             sideImageSize, 
             sideImageSize
         );
     }
 
-    // 3. BOOK1 (AL CENTRO)
+    // 3. BOOK1 (BASSO AL CENTRO) - FLUTTUANTE
     if (bookImg.complete) {
-        const bookSize = CONFIG.CANVAS_WIDTH * 0.25;
+        const hoverOffset = Math.sin(hoverCounter) * 15;
         ctx.drawImage(
             bookImg, 
             (CONFIG.CANVAS_WIDTH - bookSize) / 2, 
-            (CONFIG.CANVAS_HEIGHT - bookSize) / 2 + hoverOffset, 
+            // Spostato più in basso (stesso margine dei maghi)
+            CONFIG.CANVAS_HEIGHT - bookSize - margin + hoverOffset, 
             bookSize, 
             bookSize
         );
@@ -44,13 +45,13 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
     // 4. WIZARD ID NFT (BASSO A DESTRA)
     if (introImage.complete && introImage.naturalWidth !== 0) {
         ctx.save();
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = "rgba(0, 150, 255, 0.5)";
+        ctx.shadowBlur = 25;
+        ctx.shadowColor = "rgba(0, 150, 255, 0.6)";
         
         ctx.drawImage(
             introImage, 
             CONFIG.CANVAS_WIDTH - sideImageSize - margin, 
-            CONFIG.CANVAS_HEIGHT - sideImageSize - margin + hoverOffset, 
+            CONFIG.CANVAS_HEIGHT - sideImageSize - margin, 
             sideImageSize, 
             sideImageSize
         );
