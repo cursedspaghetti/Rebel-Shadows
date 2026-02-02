@@ -45,7 +45,6 @@ playerSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotte
 export const chargeImg = new Image();
 chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bookfull.png";
 
-// --- FUNZIONI WIZARD ---
 function getWizardImageUrl(wizardId) {
     return `https://forgottenrunes.com/api/art/wizards/${wizardId}.png`;
 }
@@ -53,63 +52,61 @@ function getWizardImageUrl(wizardId) {
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
     
+    // Se l'input è vuoto, svuotiamo l'immagine e usciamo
     if (!wizardId) {
-        alert("Inserisci un ID numerico!");
+        introImage.src = ""; 
+        introImage.dataset.loaded = "false"; // Segnaliamo che non c'è immagine
         return;
     }
 
-    // Feedback visivo
     loadWizardButton.innerText = "LOADING...";
     loadWizardButton.disabled = true;
-    startButton.disabled = true;
 
-    // Cambia la sorgente dell'immagine
-    introImage.src = getWizardImageUrl(wizardId);
+    const newWizardImg = new Image();
+    newWizardImg.src = getWizardImageUrl(wizardId);
 
-    introImage.onload = () => {
-        console.log(`Wizard ${wizardId} caricato!`);
+    newWizardImg.onload = () => {
+        introImage.src = newWizardImg.src;
+        introImage.dataset.loaded = "true"; // Immagine caricata correttamente
         loadWizardButton.innerText = "LOAD WIZARD";
         loadWizardButton.disabled = false;
-        startButton.disabled = false;
     };
 
-    introImage.onerror = () => {
-        console.warn("Immagine non trovata, uso il fallback.");
-        introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
+    newWizardImg.onerror = () => {
+        console.warn("Wizard non trovato.");
+        introImage.src = ""; // In caso di errore, non mostriamo nulla
+        introImage.dataset.loaded = "false";
         loadWizardButton.innerText = "LOAD WIZARD";
         loadWizardButton.disabled = false;
-        startButton.disabled = false;
     };
 }
 
 // --- INITIALIZATION ---
 async function init() {
-    // 1. Imposta immagine iniziale
-    introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
+    // 1. All'inizio l'immagine è vuota (niente libro, niente aloni)
+    introImage.src = "";
+    introImage.dataset.loaded = "false";
 
-    // 2. LISTENER PER CARICARE IL WIZARD (Click e Invio)
+    // 2. Listener per caricamento
     loadWizardButton.addEventListener('click', handleLoadWizard);
-    
     wizardIdInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleLoadWizard();
     });
 
-    // 3. LISTENER PER START GAME
+    // 3. Start Game (sempre abilitato)
     startButton.addEventListener('click', () => {
         gameState.currentScreen = 'playing';
         startScreen.style.display = 'none';
-        // Se hai una funzione per far partire il gioco, chiamala qui.
     });
 
-    // 4. Avvia il loop della schermata iniziale
-    introImage.onload = () => {
-        startButton.disabled = false;
-        requestAnimationFrame(startScreenLoop);
-    };
+    // 4. Avvia il loop grafico immediatamente
+    requestAnimationFrame(startScreenLoop);
 }
+
 function startScreenLoop() {
     if (gameState.currentScreen === 'start') {
-        // Passiamo anche Wiz1 e bookImg (che sono già definiti sopra nel main)
+        // Puliamo il canvas o disegniamo lo sfondo
+        // Se introImage.src è vuoto, il Renderer non disegnerà nulla in quel punto
         Renderer.drawStartScreen(ctx, bgParallax, introImage, Wiz1, bookImg);
         requestAnimationFrame(startScreenLoop);
     }
