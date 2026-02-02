@@ -1,82 +1,62 @@
 import { CONFIG, gameState } from './config.js';
 
+
+// Variabile esterna per gestire l'animazione in modo persistente
 let hoverCounter = 0;
-let introImage = new Image();
-let isImageLoaded = false;
 
-/**
- * 1. LOGICA DI CARICAMENTO NFT (ERC-721)
- * Recupera l'immagine del Wizard tramite l'API pubblica di Forgotten Runes
- */
-export async function loadWizardToken(wizardId) {
-    try {
-        // API ufficiale che restituisce i metadata del token
-        const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
-        const data = await response.json();
-        
-        // L'URL dell'immagine solitamente è in data.image
-        introImage.src = data.image;
-        
-        introImage.onload = () => {
-            isImageLoaded = true;
-            console.log(`Wizard #${wizardId} caricato con successo!`);
-        };
-    } catch (error) {
-        console.error("Errore nel recupero del token:", error);
-        // Fallback: un'immagine di default se il token non esiste o l'API è giù
-        introImage.src = 'https://via.placeholder.com/400?text=Wizard+Not+Found';
-    }
-}
+// Importiamo CONFIG se necessario, oppure assicurati che sia passato o globale
+// import { CONFIG } from './config.js'; 
 
-/**
- * 2. FUNZIONE DI DISEGNO (Aggiornata)
- */
-export function drawStartScreen(ctx, bgParallax) {
-    // --- GESTIONE SFONDO ---
-    if (bgParallax && bgParallax.complete && bgParallax.naturalWidth !== 0) {
+export function drawStartScreen(ctx, bgParallax, introImage) {
+    // 1. PULIZIA E SFONDO
+    // Disegniamo lo sfondo parallax se caricato
+    if (bgParallax.complete && bgParallax.naturalWidth !== 0) {
         ctx.drawImage(bgParallax, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     } else {
-        ctx.fillStyle = '#050510'; // Un blu notte molto scuro
+        ctx.fillStyle = '#000033'; 
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 
-    // --- GESTIONE NFT WIZARD ---
-    if (isImageLoaded) {
-        // Calcoli dimensionali mantenendo le proporzioni
+    // 2. GESTIONE WIZARD NFT (introImage)
+    if (introImage.complete && introImage.naturalWidth !== 0) {
+        // Calcoli proporzioni per non stretchare l'NFT
         const originalWidth = introImage.naturalWidth;
         const originalHeight = introImage.naturalHeight;
         const aspectRatio = originalHeight / originalWidth;
         
-        // Dimensioni desiderate (es. 25% della larghezza canvas)
-        const imgWidth = CONFIG.CANVAS_WIDTH * 0.25; 
+        // Definiamo la dimensione (es. il 30% della larghezza del canvas)
+        const imgWidth = CONFIG.CANVAS_WIDTH * 0.3; 
         const imgHeight = imgWidth * aspectRatio;
 
         // --- LOGICA DI FLUTTUAZIONE ---
-        const amplitude = 10; 
-        const speed = 0.05;   
+        const amplitude = 15; // Pixel di movimento
+        const speed = 0.04;   // Velocità oscillazione
+        
         const hoverOffset = Math.sin(hoverCounter) * amplitude;
         hoverCounter = (hoverCounter + speed) % (Math.PI * 2);
 
-        // Posizionamento centrato
+        // Posizionamento: Centro orizzontale, Centro verticale (con offset)
         const xPos = (CONFIG.CANVAS_WIDTH - imgWidth) / 2;
         const yPos = (CONFIG.CANVAS_HEIGHT - imgHeight) / 2 + hoverOffset;
 
-        // Rendering con effetti visivi
+        // Rendering dell'immagine con effetti
         ctx.save();
         
-        // Aggiungiamo un leggero bagliore esterno tipico dei Wizard
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = "rgba(100, 50, 255, 0.6)"; 
+        // Aggiungiamo un'ombra soffusa per distaccarlo dallo sfondo
+        ctx.shadowBlur = 25;
+        ctx.shadowColor = "rgba(0, 150, 255, 0.5)"; // Bagliore magico bluastro
         
         ctx.drawImage(introImage, xPos, yPos, imgWidth, imgHeight);
         
         ctx.restore();
-    } else {
-        // Testo di caricamento opzionale
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.fillText("Summoning Wizard...", CONFIG.CANVAS_WIDTH / 2, CONFIG.CANVAS_HEIGHT / 2);
     }
+
+    // 3. OVERLAY TESTO (Opzionale)
+    // Se vuoi aggiungere scritte sopra il rendering
+    ctx.fillStyle = "white";
+    ctx.font = "20px Arial";
+    ctx.textAlign = "center";
+    // ctx.fillText("Forgotten Runes Wizard Cult", CONFIG.CANVAS_WIDTH / 2, 50);
 }
 
 // --- GIOCATORE ---
