@@ -68,10 +68,10 @@ body {
 }
 
 /* Specifichiamo l'animazione SOLO per lo startButton */
-#startButton {
+#wizardIdInput {
     opacity: 0;
     animation: fadeIn 1.5s ease-out forwards;
-    animation-delay: 3s; /* Appare dopo che il testo è leggibile */
+    animation-delay: 1s; /* Appare dopo che il testo è leggibile */
 }
 
 /* 4. SCHERMATA POWER-UP */
