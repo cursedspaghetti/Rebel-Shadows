@@ -1,45 +1,81 @@
 import { CONFIG, gameState } from './config.js';
 
-// Variabile esterna per gestire l'animazione in modo persistente tra i frame
 let hoverCounter = 0;
-export function drawStartScreen(ctx, bgParallax, introImage) {
-    // 1. GESTIONE SFONDO
-    if (bgParallax.complete && bgParallax.naturalWidth !== 0) {
+let introImage = new Image();
+let isImageLoaded = false;
+
+/**
+ * 1. LOGICA DI CARICAMENTO NFT (ERC-721)
+ * Recupera l'immagine del Wizard tramite l'API pubblica di Forgotten Runes
+ */
+export async function loadWizardToken(wizardId) {
+    try {
+        // API ufficiale che restituisce i metadata del token
+        const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
+        const data = await response.json();
+        
+        // L'URL dell'immagine solitamente è in data.image
+        introImage.src = data.image;
+        
+        introImage.onload = () => {
+            isImageLoaded = true;
+            console.log(`Wizard #${wizardId} caricato con successo!`);
+        };
+    } catch (error) {
+        console.error("Errore nel recupero del token:", error);
+        // Fallback: un'immagine di default se il token non esiste o l'API è giù
+        introImage.src = 'https://via.placeholder.com/400?text=Wizard+Not+Found';
+    }
+}
+
+/**
+ * 2. FUNZIONE DI DISEGNO (Aggiornata)
+ */
+export function drawStartScreen(ctx, bgParallax) {
+    // --- GESTIONE SFONDO ---
+    if (bgParallax && bgParallax.complete && bgParallax.naturalWidth !== 0) {
         ctx.drawImage(bgParallax, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     } else {
-        ctx.fillStyle = '#000033'; 
+        ctx.fillStyle = '#050510'; // Un blu notte molto scuro
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 
-    // 2. GESTIONE IMMAGINE INTRO CON EFFETTO FLUTTUANTE
-    if (introImage.complete && introImage.naturalWidth !== 0) {
-        // Calcoli dimensionali
+    // --- GESTIONE NFT WIZARD ---
+    if (isImageLoaded) {
+        // Calcoli dimensionali mantenendo le proporzioni
         const originalWidth = introImage.naturalWidth;
         const originalHeight = introImage.naturalHeight;
         const aspectRatio = originalHeight / originalWidth;
-        const imgWidth = CONFIG.CANVAS_WIDTH * 0.2; 
+        
+        // Dimensioni desiderate (es. 25% della larghezza canvas)
+        const imgWidth = CONFIG.CANVAS_WIDTH * 0.25; 
         const imgHeight = imgWidth * aspectRatio;
 
         // --- LOGICA DI FLUTTUAZIONE ---
-        const amplitude = 12; // Pixel di spostamento (su/giù)
-        const speed = 0.04;   // Velocità del movimento
-        
-        // Calcolo dell'offset verticale usando il seno
+        const amplitude = 10; 
+        const speed = 0.05;   
         const hoverOffset = Math.sin(hoverCounter) * amplitude;
-        
-        // Incremento e Reset del contatore (mantiene il valore tra 0 e 2*PI)
         hoverCounter = (hoverCounter + speed) % (Math.PI * 2);
 
-        // Posizionamento (il valore 50 è il margine dal fondo)
+        // Posizionamento centrato
         const xPos = (CONFIG.CANVAS_WIDTH - imgWidth) / 2;
-        const yPos = (CONFIG.CANVAS_HEIGHT - imgHeight - 50) + hoverOffset;
+        const yPos = (CONFIG.CANVAS_HEIGHT - imgHeight) / 2 + hoverOffset;
 
-        // Rendering dell'immagine
-        ctx.save(); // Buona pratica per non influenzare altri disegni
-        ctx.globalAlpha = 1.0;
-        ctx.shadowBlur = 0;
+        // Rendering con effetti visivi
+        ctx.save();
+        
+        // Aggiungiamo un leggero bagliore esterno tipico dei Wizard
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = "rgba(100, 50, 255, 0.6)"; 
+        
         ctx.drawImage(introImage, xPos, yPos, imgWidth, imgHeight);
+        
         ctx.restore();
+    } else {
+        // Testo di caricamento opzionale
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        ctx.fillText("Summoning Wizard...", CONFIG.CANVAS_WIDTH / 2, CONFIG.CANVAS_HEIGHT / 2);
     }
 }
 
