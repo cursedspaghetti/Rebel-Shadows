@@ -12,42 +12,39 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
     }
 
     const margin = 10; 
-    // Raddoppiata la grandezza dei maghi (da 0.3 a 0.6)
     const sideImageSize = CONFIG.CANVAS_WIDTH * 0.5; 
-    // Dimezzata la grandezza del libro (da 0.25 a 0.125)
     const bookSize = CONFIG.CANVAS_WIDTH * 0.2;    
 
     // --- AGGIORNAMENTO CONTATORE ---
     hoverCounter = (hoverCounter + 0.04) % (Math.PI * 2);
 
-    // 2. WIZ1 (BASSO A SINISTRA) - Ingrandito
+    // 2. WIZ1 (BASSO A SINISTRA)
     if (wiz1.complete) {
-        ctx.drawImage(
-            wiz1, 
-            margin, 
-            CONFIG.CANVAS_HEIGHT - sideImageSize - margin, 
-            sideImageSize, 
-            sideImageSize
-        );
+        const wizX = margin;
+        const wizY = CONFIG.CANVAS_HEIGHT - sideImageSize - margin;
+        
+        ctx.drawImage(wiz1, wizX, wizY, sideImageSize, sideImageSize);
+
+        // --- AGGIUNTA VIGNETTA (SPEECH BUBBLE) ---
+        const speechText = "Several Rebel Shadows slipped through the cracks of reality... Hurry up, I need a powerful wizard who can handle the Book of Shadows to track them down...";
+        drawPixelBubble(ctx, wizX + sideImageSize * 0.6, wizY - 20, speechText);
     }
 
-    // 3. BOOK1 (BASSO AL CENTRO) - Più piccolo e più in alto
+    // 3. BOOK1 (BASSO AL CENTRO)
     if (bookImg.complete) {
         const hoverOffset = Math.sin(hoverCounter) * 15;
         ctx.drawImage(
             bookImg, 
             (CONFIG.CANVAS_WIDTH - bookSize) / 2, 
-            // Sottratto un ulteriore offset di 50px per portarlo più in alto
             CONFIG.CANVAS_HEIGHT - bookSize - margin - 150 + hoverOffset, 
             bookSize, 
             bookSize
         );
     }
 
-    // 4. WIZARD ID NFT (BASSO A DESTRA) - Ingrandito e senza aloni
+    // 4. WIZARD ID NFT (BASSO A DESTRA)
     if (introImage.complete && introImage.naturalWidth !== 0) {
         ctx.save();
-        // Rimosse le proprietà shadow per eliminare l'alone blu
         ctx.drawImage(
             introImage, 
             CONFIG.CANVAS_WIDTH - sideImageSize - margin, 
@@ -57,6 +54,63 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
         );
         ctx.restore();
     }
+}
+
+/**
+ * Funzione di supporto per disegnare una vignetta stile Pixel Art
+ */
+function drawPixelBubble(ctx, x, y, text) {
+    const maxWidth = 250;
+    const lineHeight = 16;
+    ctx.font = "14px 'Press Start 2P', monospace"; // Font pixel art consigliato
+    
+    // Split del testo per andare a capo
+    const words = text.split(' ');
+    let lines = [];
+    let currentLine = words[0];
+
+    for (let i = 1; i < words.length; i++) {
+        let testLine = currentLine + " " + words[i];
+        if (ctx.measureText(testLine).width > maxWidth) {
+            lines.push(currentLine);
+            currentLine = words[i];
+        } else {
+            currentLine = testLine;
+        }
+    }
+    lines.push(currentLine);
+
+    const bubbleHeight = lines.length * lineHeight + 20;
+    const bubbleWidth = maxWidth + 20;
+
+    // Disegno Box (Pixel Style)
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 4;
+    
+    // Spostiamo la y verso l'alto in base all'altezza del testo
+    const finalY = y - bubbleHeight;
+
+    ctx.fillRect(x, finalY, bubbleWidth, bubbleHeight);
+    ctx.strokeRect(x, finalY, bubbleWidth, bubbleHeight);
+
+    // Testo
+    ctx.fillStyle = "black";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    
+    lines.forEach((line, index) => {
+        ctx.fillText(line, x + 10, finalY + 10 + (index * lineHeight));
+    });
+
+    // Punta della vignetta
+    ctx.beginPath();
+    ctx.moveTo(x + 20, finalY + bubbleHeight);
+    ctx.lineTo(x + 10, finalY + bubbleHeight + 15);
+    ctx.lineTo(x + 40, finalY + bubbleHeight);
+    ctx.fillStyle = "white";
+    ctx.fill();
+    ctx.stroke();
 }
 
 // --- GIOCATORE ---
