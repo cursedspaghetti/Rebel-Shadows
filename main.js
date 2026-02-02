@@ -45,9 +45,10 @@ playerSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotte
 export const chargeImg = new Image();
 chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bookfull.png";
 
-// --- CONFIGURATION & UTILS ---
+// Modifica questa funzione per richiedere l'immagine trasparente
 function getWizardImageUrl(wizardId) {
-    return `https://forgottenrunes.com/api/art/wizards/${wizardId}.png`;
+    // Aggiungendo ?background=false chiediamo all'API di rimuovere lo sfondo
+    return `https://forgottenrunes.com/api/art/wizards/${wizardId}.png?background=false`;
 }
 
 // Variabile globale per gestire il ritardo del caricamento (debounce)
