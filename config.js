@@ -42,6 +42,11 @@ export const CONFIG = {
  * GLOBAL GAME STATE
  */
 export let gameState = {
+    
+ bubbleAlpha1: 0,
+ bubbleAlpha2: 0,
+ fadeSpeed: 0.016, // Circa 1 secondo a 60fps (1 / 60)
+    
     currentScreen: 'start', 
     screenShake: 0,         
     
