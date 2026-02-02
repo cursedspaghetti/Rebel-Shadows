@@ -23,8 +23,11 @@ const powerUpScreen = document.getElementById('powerUpScreen');
 const startButton = document.getElementById('startButton');
 
 // --- ASSET LOADING ---
+//const introImage = new Image();
+//introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
 const introImage = new Image();
-introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
+// Rimuoviamo il .src statico qui, lo gestiremo in init()
+
 const bgImage = new Image();
 bgImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpaceVoid.png';
 const bgParallax = new Image();
@@ -39,17 +42,57 @@ const shadowImg = new Image();
 shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png';
 
 // --- INITIALIZATION ---
-function init() {
-    startButton.disabled = false;
-    requestAnimationFrame(startScreenLoop);
+//function init() {
+//    startButton.disabled = false;
+//    requestAnimationFrame(startScreenLoop);
+// }
+
+//function startScreenLoop() {
+  //  if (gameState.currentScreen === 'start') {
+    //    Renderer.drawStartScreen(ctx, bgParallax, introImage);
+      //  requestAnimationFrame(startScreenLoop);
+   // }
+// }
+
+async function fetchWizardMetadata(wizardId) {
+    try {
+        const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
+        const data = await response.json();
+        return data.image; // Restituisce l'URL dell'immagine del Wizard
+    } catch (error) {
+        console.error("Errore API Forgotten Runes:", error);
+        // Fallback: carichiamo l'immagine del libro originale se l'API fallisce
+        return 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
+    }
 }
+
+// --- INITIALIZATION ---
+async function init() {
+    // 1. Definisci quale Wizard vuoi mostrare (es. ID 1 o uno random)
+    const wizardId = 557; // Puoi cambiare questo numero o renderlo dinamico
+    
+    // 2. Recupera l'URL dal metadata e assegnalo a introImage
+    const wizardUrl = await fetchWizardMetadata(wizardId);
+    introImage.src = wizardUrl;
+
+    // 3. Attendi che l'immagine sia caricata prima di abilitare il gioco
+    introImage.onload = () => {
+        startButton.disabled = false;
+        requestAnimationFrame(startScreenLoop);
+    };
+}
+
+// Avvia l'inizializzazione
+init();
 
 function startScreenLoop() {
     if (gameState.currentScreen === 'start') {
+        // Passiamo gli stessi parametri, ora introImage contiene il Wizard
         Renderer.drawStartScreen(ctx, bgParallax, introImage);
         requestAnimationFrame(startScreenLoop);
     }
 }
+
 
 // --- GAME LOOP ---
 function gameLoop() {
