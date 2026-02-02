@@ -12,13 +12,15 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
     }
 
     const margin = 20; 
-    const sideImageSize = CONFIG.CANVAS_WIDTH * 0.3; // Maghi grandi
-    const bookSize = CONFIG.CANVAS_WIDTH * 0.25;    // Libro dimensione originale
+    // Raddoppiata la grandezza dei maghi (da 0.3 a 0.6)
+    const sideImageSize = CONFIG.CANVAS_WIDTH * 0.6; 
+    // Dimezzata la grandezza del libro (da 0.25 a 0.125)
+    const bookSize = CONFIG.CANVAS_WIDTH * 0.125;    
 
     // --- AGGIORNAMENTO CONTATORE ---
     hoverCounter = (hoverCounter + 0.04) % (Math.PI * 2);
 
-    // 2. WIZ1 (BASSO A SINISTRA)
+    // 2. WIZ1 (BASSO A SINISTRA) - Ingrandito
     if (wiz1.complete) {
         ctx.drawImage(
             wiz1, 
@@ -29,25 +31,23 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
         );
     }
 
-    // 3. BOOK1 (BASSO AL CENTRO) - FLUTTUANTE
+    // 3. BOOK1 (BASSO AL CENTRO) - Più piccolo e più in alto
     if (bookImg.complete) {
         const hoverOffset = Math.sin(hoverCounter) * 15;
         ctx.drawImage(
             bookImg, 
             (CONFIG.CANVAS_WIDTH - bookSize) / 2, 
-            // Spostato più in basso (stesso margine dei maghi)
-            CONFIG.CANVAS_HEIGHT - bookSize - margin + hoverOffset, 
+            // Sottratto un ulteriore offset di 50px per portarlo più in alto
+            CONFIG.CANVAS_HEIGHT - bookSize - margin - 50 + hoverOffset, 
             bookSize, 
             bookSize
         );
     }
 
-    // 4. WIZARD ID NFT (BASSO A DESTRA)
+    // 4. WIZARD ID NFT (BASSO A DESTRA) - Ingrandito e senza aloni
     if (introImage.complete && introImage.naturalWidth !== 0) {
         ctx.save();
-        ctx.shadowBlur = 25;
-        ctx.shadowColor = "rgba(0, 150, 255, 0.6)";
-        
+        // Rimosse le proprietà shadow per eliminare l'alone blu
         ctx.drawImage(
             introImage, 
             CONFIG.CANVAS_WIDTH - sideImageSize - margin, 
