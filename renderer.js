@@ -11,11 +11,11 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 
-    const margin = 20; 
+    const margin = 10; 
     // Raddoppiata la grandezza dei maghi (da 0.3 a 0.6)
-    const sideImageSize = CONFIG.CANVAS_WIDTH * 0.6; 
+    const sideImageSize = CONFIG.CANVAS_WIDTH * 0.5; 
     // Dimezzata la grandezza del libro (da 0.25 a 0.125)
-    const bookSize = CONFIG.CANVAS_WIDTH * 0.125;    
+    const bookSize = CONFIG.CANVAS_WIDTH * 0.2;    
 
     // --- AGGIORNAMENTO CONTATORE ---
     hoverCounter = (hoverCounter + 0.04) % (Math.PI * 2);
@@ -38,7 +38,7 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
             bookImg, 
             (CONFIG.CANVAS_WIDTH - bookSize) / 2, 
             // Sottratto un ulteriore offset di 50px per portarlo più in alto
-            CONFIG.CANVAS_HEIGHT - bookSize - margin - 50 + hoverOffset, 
+            CONFIG.CANVAS_HEIGHT - bookSize - margin - 150 + hoverOffset, 
             bookSize, 
             bookSize
         );
