@@ -15,43 +15,39 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
     const sideImageSize = CONFIG.CANVAS_WIDTH * 0.5; 
     const bookSize = CONFIG.CANVAS_WIDTH * 0.2;    
     const isWizardSelected = (introImage.complete && introImage.naturalWidth !== 0);
-    const fadeSpeed = 0.02; // Circa 1 secondo a 60fps
+    const fadeSpeed = 0.02;
+    
+    // Centro orizzontale del Canvas per posizionare le vignette
+    const canvasCenterX = CONFIG.CANVAS_WIDTH / 2;
 
     // --- LOGICA FADE SEQUENZIALE ---
-    
-    // Gestione Wizard 1 e sua vignetta
     if (!isWizardSelected) {
         if (gameState.bubbleAlpha1 < 1) gameState.bubbleAlpha1 += fadeSpeed;
         gameState.bubbleAlpha2 = 0;
-        gameState.wizIdAlpha = 0; // Reset se deselezionato
+        gameState.wizIdAlpha = 0;
     } else {
         if (gameState.bubbleAlpha1 > 0) gameState.bubbleAlpha1 -= fadeSpeed;
-        
-        // Fade in Wizard ID (1 secondo)
         if (gameState.wizIdAlpha < 1) gameState.wizIdAlpha += fadeSpeed;
-
-        // La vignetta 2 parte solo quando il Wizard ID è visibile (o quasi)
         if (gameState.wizIdAlpha > 0.5 && gameState.bubbleAlpha2 < 1) {
             gameState.bubbleAlpha2 += fadeSpeed;
         }
     }
 
-    // Gestione Libro (Fade in con 1 secondo di delay rispetto all'inizio)
-    // Se vuoi che appaia dopo un secondo dall'avvio:
-    if (gameState.bookAlpha < 1) gameState.bookAlpha += 0.015; // Leggermente più lento per il delay percepito
-
-    // Aggiornamento animazione hover
+    if (gameState.bookAlpha < 1) gameState.bookAlpha += 0.015;
     hoverCounter = (hoverCounter + 0.04) % (Math.PI * 2);
 
     // 2. WIZ1 (BASSO A SINISTRA)
     if (wiz1.complete) {
         const wizX = margin;
         const wizY = CONFIG.CANVAS_HEIGHT - sideImageSize - margin;
+        const wizCenterX = wizX + (sideImageSize / 2); // Punto target per la punta
+        
         ctx.drawImage(wiz1, wizX, wizY, sideImageSize, sideImageSize);
 
         if (gameState.bubbleAlpha1 > 0) {
-            const speechText = "Rebel Shadows slipped through the cracks of reality...\n\nHurry up, I need a wizard who can hadle the Book of Shadows!";
-            drawPixelBubble(ctx, wizX + sideImageSize * 0.3, wizY - 40, speechText, gameState.bubbleAlpha1, "left");
+            const speechText = "Rebel Shadows slipped through the cracks of reality...\n\nHurry up, I need a wizard who can handle the Book of Shadows!";
+            // x = centro canvas, y = bordo superiore wizard, targetX = centro wizard
+            drawPixelBubble(ctx, canvasCenterX, wizY, speechText, gameState.bubbleAlpha1, wizCenterX);
         }
     }
 
@@ -70,10 +66,11 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
         ctx.restore();
     }
 
-    // 4. WIZARD ID NFT (FADE IN + VIGNETTA ALLINEATA)
+    // 4. WIZARD ID NFT (BASSO A DESTRA)
     if (isWizardSelected && gameState.wizIdAlpha > 0) {
         const nftX = CONFIG.CANVAS_WIDTH - sideImageSize - margin;
         const nftY = CONFIG.CANVAS_HEIGHT - sideImageSize - margin;
+        const nftCenterX = nftX + (sideImageSize / 2); // Punto target per la punta
 
         ctx.save();
         ctx.globalAlpha = gameState.wizIdAlpha;
@@ -82,26 +79,30 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
 
         if (gameState.bubbleAlpha2 > 0) {
             const nftSpeech = "A wizard is never late, nor is he early, he arrives precisely when he means to";
-            // COORDINATE MODIFICATE: 
-            // - Y: Uguale alla vignetta 1 (wizY - 40) per simmetria
-            // - X: nftX - 220 per spostarla più a sinistra e non coprire il wizard
-            const wizY = CONFIG.CANVAS_HEIGHT - sideImageSize - margin; 
-            drawPixelBubble(ctx, nftX - 100, wizY - 40, nftSpeech, gameState.bubbleAlpha2, "right");
+            // x = centro canvas, y = bordo superiore NFT, targetX = centro NFT
+            drawPixelBubble(ctx, canvasCenterX, nftY, nftSpeech, gameState.bubbleAlpha2, nftCenterX);
         }
     }
 }
+
 /**
- * Funzione di supporto per disegnare una vignetta stile Pixel Art Smussata
+ * Funzione per disegnare una vignetta centrata con punta dinamica
+ * @param {CanvasRenderingContext2D} ctx 
+ * @param {number} x - Centro orizzontale del box (Canvas Center)
+ * @param {number} y - Coordinata Y di riferimento (bordo superiore immagine)
+ * @param {string} text - Testo da mostrare
+ * @param {number} alpha - Opacità
+ * @param {number} targetX - Punto X dove deve puntare la coda
  */
-function drawPixelBubble(ctx, x, y, text, alpha = 1, tailSide = "left") {
-    const maxWidth = 250;
+function drawPixelBubble(ctx, x, y, text, alpha = 1, targetX) {
+    const maxWidth = 300; // Larghezza box
     const lineHeight = 18;
     ctx.save();
     ctx.globalAlpha = alpha; 
     
     ctx.font = "14px 'Press Start 2P', monospace";
     
-    // Gestione del testo (wrapping)
+    // Wrapping del testo
     const manualLines = text.split('\n');
     let lines = [];
     manualLines.forEach(line => {
@@ -120,44 +121,43 @@ function drawPixelBubble(ctx, x, y, text, alpha = 1, tailSide = "left") {
         lines.push(currentLine);
     });
 
-    const bubbleHeight = lines.length * lineHeight + 20;
-    const bubbleWidth = maxWidth + 20;
-    
-    // Alzata la vignetta: aumentato l'offset da 10 a 25 pixel sopra il punto y
-    const finalY = y - bubbleHeight - 25; 
+    const bubbleHeight = lines.length * lineHeight + 25;
+    const bubbleWidth = maxWidth + 30;
+    const rectX = x - (bubbleWidth / 2); // Centra il rettangolo rispetto a X
+    const finalY = y - bubbleHeight - 25; // Alza la vignetta sopra l'immagine
 
-    // Colori
+    // Disegno Box
     ctx.strokeStyle = `rgba(211, 211, 211, ${alpha})`;
-    ctx.fillStyle = `rgba(0, 0, 0, ${0.4 * alpha})`;
+    ctx.fillStyle = `rgba(0, 0, 0, ${0.7 * alpha})`;
     ctx.lineWidth = 3;
 
-    // Box della vignetta
     const radius = 10;
     ctx.beginPath();
-    // Nota: il box parte da x, ma la punta sarà centrata su x
-    ctx.roundRect(x - (bubbleWidth / 2), finalY, bubbleWidth, bubbleHeight, radius); 
+    ctx.roundRect(rectX, finalY, bubbleWidth, bubbleHeight, radius); 
     ctx.fill();
     ctx.stroke();
 
-    // Testo
+    // Disegno Testo
     ctx.fillStyle = `rgba(211, 211, 211, ${alpha})`;
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     lines.forEach((line, index) => {
         if (line !== "") {
-            // Allinea il testo all'interno del box spostato
-            ctx.fillText(line, (x - (bubbleWidth / 2)) + 10, finalY + 10 + (index * lineHeight));
+            ctx.fillText(line, rectX + 15, finalY + 12 + (index * lineHeight));
         }
     });
 
-    // PUNTA CENTRATA SULLA X
-    // Il vertice inferiore della punta tocca esattamente la coordinata X passata
-    ctx.beginPath();
-    ctx.moveTo(x - 10, finalY + bubbleHeight); // Lato sinistro base punta
-    ctx.lineTo(x, finalY + bubbleHeight + 15);  // Vertice (Punta su X)
-    ctx.lineTo(x + 10, finalY + bubbleHeight); // Lato destro base punta
+    // Disegno Punta (Coda)
+    // La base della punta è ancorata al fondo del box, ma si sposta verso il targetX
+    const baseWidth = 12;
+    const tailBaseX = Math.max(rectX + baseWidth, Math.min(rectX + bubbleWidth - baseWidth, targetX));
     
-    // Chiudiamo il percorso della punta per evitare buchi nel bordo
+    ctx.beginPath();
+    ctx.moveTo(tailBaseX - baseWidth, finalY + bubbleHeight); 
+    ctx.lineTo(targetX, finalY + bubbleHeight + 15);   
+    ctx.lineTo(tailBaseX + baseWidth, finalY + bubbleHeight); 
+    ctx.closePath();
+    ctx.fill();
     ctx.stroke();
     
     ctx.restore();
