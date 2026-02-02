@@ -15,25 +15,32 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
     const sideImageSize = CONFIG.CANVAS_WIDTH * 0.5; 
     const bookSize = CONFIG.CANVAS_WIDTH * 0.2;    
     const isWizardSelected = (introImage.complete && introImage.naturalWidth !== 0);
-    const fadeSpeed = 0.02; // Velocità del fade (circa 1 secondo a 60fps)
+    const fadeSpeed = 0.02; // Circa 1 secondo a 60fps
 
     // --- LOGICA FADE SEQUENZIALE ---
+    
+    // Gestione Wizard 1 e sua vignetta
     if (!isWizardSelected) {
-        // Fase iniziale: Primo fumetto appare, secondo sparisce/resta a 0
         if (gameState.bubbleAlpha1 < 1) gameState.bubbleAlpha1 += fadeSpeed;
         gameState.bubbleAlpha2 = 0;
+        gameState.wizIdAlpha = 0; // Reset se deselezionato
     } else {
-        // Fase selezione: Primo fumetto sparisce
-        if (gameState.bubbleAlpha1 > 0) {
-            gameState.bubbleAlpha1 -= fadeSpeed;
-        } 
-        // Il secondo inizia il fade in solo quando il primo è quasi sparito
-        else if (gameState.bubbleAlpha2 < 1) {
+        if (gameState.bubbleAlpha1 > 0) gameState.bubbleAlpha1 -= fadeSpeed;
+        
+        // Fade in Wizard ID (1 secondo)
+        if (gameState.wizIdAlpha < 1) gameState.wizIdAlpha += fadeSpeed;
+
+        // La vignetta 2 parte solo quando il Wizard ID è visibile (o quasi)
+        if (gameState.wizIdAlpha > 0.5 && gameState.bubbleAlpha2 < 1) {
             gameState.bubbleAlpha2 += fadeSpeed;
         }
     }
 
-    // Aggiornamento animazione libro
+    // Gestione Libro (Fade in con 1 secondo di delay rispetto all'inizio)
+    // Se vuoi che appaia dopo un secondo dall'avvio:
+    if (gameState.bookAlpha < 1) gameState.bookAlpha += 0.015; // Leggermente più lento per il delay percepito
+
+    // Aggiornamento animazione hover
     hoverCounter = (hoverCounter + 0.04) % (Math.PI * 2);
 
     // 2. WIZ1 (BASSO A SINISTRA)
@@ -43,14 +50,15 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
         ctx.drawImage(wiz1, wizX, wizY, sideImageSize, sideImageSize);
 
         if (gameState.bubbleAlpha1 > 0) {
-            const speechText = "Rebel Shadows slipped through the cracks of reality...\n\nHurry up, I need a wizard who can handle the Book of Shadows!";
-            // Posizionato più in alto e a sinistra rispetto a prima
+            const speechText = "Rebel Shadows slipped through the cracks of reality...\n\nHurry up, I need a wizard!";
             drawPixelBubble(ctx, wizX + sideImageSize * 0.3, wizY - 40, speechText, gameState.bubbleAlpha1, "left");
         }
     }
 
-    // 3. BOOK1 (BASSO AL CENTRO)
-    if (bookImg.complete) {
+    // 3. BOOK1 (FADE IN + HOVER)
+    if (bookImg.complete && gameState.bookAlpha > 0) {
+        ctx.save();
+        ctx.globalAlpha = gameState.bookAlpha;
         const hoverOffset = Math.sin(hoverCounter) * 15;
         ctx.drawImage(
             bookImg, 
@@ -59,25 +67,29 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
             bookSize, 
             bookSize
         );
+        ctx.restore();
     }
 
-    // 4. WIZARD ID NFT (BASSO A DESTRA)
-    if (isWizardSelected) {
+    // 4. WIZARD ID NFT (FADE IN + VIGNETTA ALLINEATA)
+    if (isWizardSelected && gameState.wizIdAlpha > 0) {
         const nftX = CONFIG.CANVAS_WIDTH - sideImageSize - margin;
         const nftY = CONFIG.CANVAS_HEIGHT - sideImageSize - margin;
 
+        ctx.save();
+        ctx.globalAlpha = gameState.wizIdAlpha;
         ctx.drawImage(introImage, nftX, nftY, sideImageSize, sideImageSize);
+        ctx.restore();
 
         if (gameState.bubbleAlpha2 > 0) {
-            const nftSpeech = "A wizard is never late, nor is he early, he arrives precisely when he means to.";
-            // Posizionato per puntare al wizard di DESTRA (spostato a sinistra del wizard)
-            drawPixelBubble(ctx, nftX - 160, nftY - 20, nftSpeech, gameState.bubbleAlpha2, "right");
+            const nftSpeech = "A wizard is never late, nor is he early...";
+            // COORDINATE MODIFICATE: 
+            // - Y: Uguale alla vignetta 1 (wizY - 40) per simmetria
+            // - X: nftX - 220 per spostarla più a sinistra e non coprire il wizard
+            const wizY = CONFIG.CANVAS_HEIGHT - sideImageSize - margin; 
+            drawPixelBubble(ctx, nftX - 220, wizY - 40, nftSpeech, gameState.bubbleAlpha2, "right");
         }
     }
 }
-/**
- * Funzione di supporto per disegnare una vignetta stile Pixel Art
- */
 /**
  * Funzione di supporto per disegnare una vignetta stile Pixel Art Smussata
  */
