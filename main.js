@@ -24,7 +24,6 @@ const startButton = document.getElementById('startButton');
 
 // Nuovi elementi DOM (Assicurati che esistano nell'HTML!)
 const wizardIdInput = document.getElementById('wizardIdInput');
-const loadWizardButton = document.getElementById('loadWizardButton');
 
 // --- ASSET LOADING ---
 //INTRO
