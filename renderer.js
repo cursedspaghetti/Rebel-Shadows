@@ -97,10 +97,11 @@ function drawPixelBubble(ctx, x, y, text, alpha = 1, tailSide = "left") {
     const maxWidth = 250;
     const lineHeight = 18;
     ctx.save();
-    ctx.globalAlpha = alpha; // Applica il fade
+    ctx.globalAlpha = alpha;
     
     ctx.font = "14px 'Press Start 2P', monospace";
     
+    // Logica wrapping testo (invariata)
     const manualLines = text.split('\n');
     let lines = [];
     manualLines.forEach(line => {
@@ -119,46 +120,47 @@ function drawPixelBubble(ctx, x, y, text, alpha = 1, tailSide = "left") {
         lines.push(currentLine);
     });
 
-    const bubbleHeight = lines.length * lineHeight + 20;
     const bubbleWidth = maxWidth + 20;
-    const finalY = y - bubbleHeight - 10;
+    const bubbleHeight = lines.length * lineHeight + 20;
+    
+    // 1. ALZARE LA VIGNETTA: Aumentiamo l'offset negativo da y (es. -25 invece di -10)
+    const finalY = y - bubbleHeight - 25; 
+    
+    // 2. CENTRARE LA VIGNETTA: Sottraiamo metà larghezza alla X di disegno
+    const drawX = x - (bubbleWidth / 2);
 
-    // Colori con alpha dinamico
     ctx.strokeStyle = `rgba(211, 211, 211, ${alpha})`;
     ctx.fillStyle = `rgba(0, 0, 0, ${0.4 * alpha})`;
     ctx.lineWidth = 3;
 
-    // Box smussato
+    // Box smussato centrato su drawX
     const radius = 10;
     ctx.beginPath();
-    ctx.roundRect(x, finalY, bubbleWidth, bubbleHeight, radius); // Metodo moderno più pulito
+    ctx.roundRect(drawX, finalY, bubbleWidth, bubbleHeight, radius);
     ctx.fill();
     ctx.stroke();
 
-    // Testo
+    // Testo centrato nel box
     ctx.fillStyle = `rgba(211, 211, 211, ${alpha})`;
     ctx.textAlign = "left";
     ctx.textBaseline = "top";
     lines.forEach((line, index) => {
-        if (line !== "") ctx.fillText(line, x + 10, finalY + 10 + (index * lineHeight));
+        if (line !== "") ctx.fillText(line, drawX + 10, finalY + 10 + (index * lineHeight));
     });
 
-    // Punta Dinamica
+    // 3. PUNTA SEMPRE AL CENTRO DELLA X
     ctx.beginPath();
-    if (tailSide === "left") {
-        ctx.moveTo(x + 20, finalY + bubbleHeight);
-        ctx.lineTo(x + 10, finalY + bubbleHeight + 15);
-        ctx.lineTo(x + 35, finalY + bubbleHeight);
-    } else {
-        // Punta che guarda a destra verso l'NFT
-        ctx.moveTo(x + bubbleWidth - 40, finalY + bubbleHeight);
-        ctx.lineTo(x + bubbleWidth - 10, finalY + bubbleHeight + 15);
-        ctx.lineTo(x + bubbleWidth - 20, finalY + bubbleHeight);
-    }
+    // La punta parte dalla base del box e finisce esattamente su x, y - offset
+    ctx.moveTo(x - 10, finalY + bubbleHeight); // Lato sinistro della punta
+    ctx.lineTo(x, finalY + bubbleHeight + 15);  // Vertice della punta (esattamente su X)
+    ctx.lineTo(x + 10, finalY + bubbleHeight); // Lato destro della punta
+    
+    // Nota: tailSide ora influisce meno visivamente sulla posizione 
+    // ma possiamo usarlo per inclinare leggermente la punta se vuoi
     ctx.stroke();
+    
     ctx.restore();
 }
-
 
 // --- GIOCATORE ---
 export function drawPlayer(ctx, img) {
