@@ -22,6 +22,9 @@ const startScreen = document.getElementById('startScreen');
 const powerUpScreen = document.getElementById('powerUpScreen');
 const startButton = document.getElementById('startButton');
 
+const wizardIdInput = document.getElementById('wizardIdInput');
+const loadWizardButton = document.getElementById('loadWizardButton');
+
 // --- ASSET LOADING ---
 //const introImage = new Image();
 //introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
@@ -54,38 +57,73 @@ shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-W
    // }
 // }
 
-// --- MODIFICA ALLA FUNZIONE fetchWizardMetadata ---
-// Ora non facciamo più una richiesta fetch, ma generiamo direttamente l'URL
+// --- LOGICA WIZARD API ---
 function getWizardImageUrl(wizardId) {
-    // Costruiamo l'URL diretto dell'immagine
-    // Nota: Ho usato .png perché solitamente è il formato standard per i Wizard
     return `https://forgottenrunes.com/api/art/wizards/${wizardId}.png`;
 }
 
-// --- INITIALIZATION AGGIORNATA ---
-async function init() {
-    const wizardId = 557; // Il tuo ID specifico
+async function handleLoadWizard() {
+    const wizardId = wizardIdInput.value.trim();
     
-    // Otteniamo l'URL statico (niente await perché non c'è fetch)
+    if (!wizardId) {
+        alert("Per favore, inserisci un ID Wizard valido");
+        return;
+    }
+
+    // Feedback visivo: disabilita bottoni durante il caricamento
+    loadWizardButton.innerText = "LOADING...";
+    loadWizardButton.disabled = true;
+    startButton.disabled = true;
+
     const wizardUrl = getWizardImageUrl(wizardId);
-    
-    // Assegniamo l'URL all'immagine
     introImage.src = wizardUrl;
 
-    // Gestione del caricamento e fallback se l'immagine non esiste
     introImage.onload = () => {
-        console.log("Wizard image loaded successfully!");
+        console.log(`Wizard ${wizardId} caricato con successo!`);
+        loadWizardButton.innerText = "LOAD WIZARD";
+        loadWizardButton.disabled = false;
         startButton.disabled = false;
-        requestAnimationFrame(startScreenLoop);
     };
 
     introImage.onerror = () => {
-        console.warn("Wizard image not found, using fallback.");
+        console.warn("Immagine Wizard non trovata, uso il fallback.");
         introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
+        loadWizardButton.innerText = "LOAD WIZARD";
+        loadWizardButton.disabled = false;
+        startButton.disabled = false;
     };
 }
 
-// Avvia l'inizializzazione
+// --- INITIALIZATION ---
+async function init() {
+    // Carichiamo un'immagine di default (il libro) all'avvio
+    introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
+
+    // Listener per il caricamento manuale
+    loadWizardButton.addEventListener('click', handleLoadWizard);
+    
+    // Listener per avviare il gioco
+    startButton.addEventListener('click', () => {
+        // Qui andrebbe la tua logica per nascondere lo startScreen e avviare il gioco
+        gameState.currentScreen = 'playing';
+        startScreen.style.display = 'none';
+        // startGameLoop(); // Assumendo che tu abbia una funzione di avvio
+    });
+
+    introImage.onload = () => {
+        startButton.disabled = false;
+        requestAnimationFrame(startScreenLoop);
+    };
+}
+
+function startScreenLoop() {
+    if (gameState.currentScreen === 'start') {
+        Renderer.drawStartScreen(ctx, bgParallax, introImage);
+        requestAnimationFrame(startScreenLoop);
+    }
+}
+
+// Avvia l'app
 init();
 
 // Rimuovi l'init() che avevi in fondo al file per evitare doppie esecuzioni!
