@@ -54,36 +54,41 @@ shadowImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-W
    // }
 // }
 
-async function fetchWizardMetadata(wizardId) {
-    try {
-        const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
-        const data = await response.json();
-        return data.image; // Restituisce l'URL dell'immagine del Wizard
-    } catch (error) {
-        console.error("Errore API Forgotten Runes:", error);
-        // Fallback: carichiamo l'immagine del libro originale se l'API fallisce
-        return 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
-    }
+// --- MODIFICA ALLA FUNZIONE fetchWizardMetadata ---
+// Ora non facciamo più una richiesta fetch, ma generiamo direttamente l'URL
+function getWizardImageUrl(wizardId) {
+    // Costruiamo l'URL diretto dell'immagine
+    // Nota: Ho usato .png perché solitamente è il formato standard per i Wizard
+    return `https://forgottenrunes.com/api/art/wizards/${wizardId}.png`;
 }
 
-// --- INITIALIZATION ---
+// --- INITIALIZATION AGGIORNATA ---
 async function init() {
-    // 1. Definisci quale Wizard vuoi mostrare (es. ID 1 o uno random)
-    const wizardId = 557; // Puoi cambiare questo numero o renderlo dinamico
+    const wizardId = 557; // Il tuo ID specifico
     
-    // 2. Recupera l'URL dal metadata e assegnalo a introImage
-    const wizardUrl = await fetchWizardMetadata(wizardId);
+    // Otteniamo l'URL statico (niente await perché non c'è fetch)
+    const wizardUrl = getWizardImageUrl(wizardId);
+    
+    // Assegniamo l'URL all'immagine
     introImage.src = wizardUrl;
 
-    // 3. Attendi che l'immagine sia caricata prima di abilitare il gioco
+    // Gestione del caricamento e fallback se l'immagine non esiste
     introImage.onload = () => {
+        console.log("Wizard image loaded successfully!");
         startButton.disabled = false;
         requestAnimationFrame(startScreenLoop);
+    };
+
+    introImage.onerror = () => {
+        console.warn("Wizard image not found, using fallback.");
+        introImage.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
     };
 }
 
 // Avvia l'inizializzazione
 init();
+
+// Rimuovi l'init() che avevi in fondo al file per evitare doppie esecuzioni!
 
 function startScreenLoop() {
     if (gameState.currentScreen === 'start') {
