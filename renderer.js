@@ -1,15 +1,9 @@
 import { CONFIG, gameState } from './config.js';
 
-
-// Variabile esterna per gestire l'animazione in modo persistente
 let hoverCounter = 0;
 
-// Importiamo CONFIG se necessario, oppure assicurati che sia passato o globale
-// import { CONFIG } from './config.js'; 
-
-export function drawStartScreen(ctx, bgParallax, introImage) {
-    // 1. PULIZIA E SFONDO
-    // Disegniamo lo sfondo parallax se caricato
+export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
+    // 1. SFONDO
     if (bgParallax.complete && bgParallax.naturalWidth !== 0) {
         ctx.drawImage(bgParallax, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     } else {
@@ -17,46 +11,51 @@ export function drawStartScreen(ctx, bgParallax, introImage) {
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 
-    // 2. GESTIONE WIZARD NFT (introImage)
-    if (introImage.complete && introImage.naturalWidth !== 0) {
-        // Calcoli proporzioni per non stretchare l'NFT
-        const originalWidth = introImage.naturalWidth;
-        const originalHeight = introImage.naturalHeight;
-        const aspectRatio = originalHeight / originalWidth;
-        
-        // Definiamo la dimensione (es. il 30% della larghezza del canvas)
-        const imgWidth = CONFIG.CANVAS_WIDTH * 0.3; 
-        const imgHeight = imgWidth * aspectRatio;
+    const margin = 20; // Margine dai bordi
+    const sideImageSize = CONFIG.CANVAS_WIDTH * 0.2; // Dimensione immagini laterali (20% canvas)
 
-        // --- LOGICA DI FLUTTUAZIONE ---
-        const amplitude = 15; // Pixel di movimento
-        const speed = 0.04;   // Velocità oscillazione
-        
-        const hoverOffset = Math.sin(hoverCounter) * amplitude;
-        hoverCounter = (hoverCounter + speed) % (Math.PI * 2);
+    // --- ANIMAZIONE FLUTTUAZIONE (Comune a tutti) ---
+    const hoverOffset = Math.sin(hoverCounter) * 15;
+    hoverCounter = (hoverCounter + 0.04) % (Math.PI * 2);
 
-        // Posizionamento: Centro orizzontale, Centro verticale (con offset)
-        const xPos = (CONFIG.CANVAS_WIDTH - imgWidth) / 2;
-        const yPos = (CONFIG.CANVAS_HEIGHT - imgHeight) / 2 + hoverOffset;
-
-        // Rendering dell'immagine con effetti
-        ctx.save();
-        
-        // Aggiungiamo un'ombra soffusa per distaccarlo dallo sfondo
-        ctx.shadowBlur = 25;
-        ctx.shadowColor = "rgba(0, 150, 255, 0.5)"; // Bagliore magico bluastro
-        
-        ctx.drawImage(introImage, xPos, yPos, imgWidth, imgHeight);
-        
-        ctx.restore();
+    // 2. WIZ1 (BASSO A SINISTRA)
+    if (wiz1.complete) {
+        ctx.drawImage(
+            wiz1, 
+            margin, 
+            CONFIG.CANVAS_HEIGHT - sideImageSize - margin + hoverOffset, 
+            sideImageSize, 
+            sideImageSize
+        );
     }
 
-    // 3. OVERLAY TESTO (Opzionale)
-    // Se vuoi aggiungere scritte sopra il rendering
-    ctx.fillStyle = "white";
-    ctx.font = "20px Arial";
-    ctx.textAlign = "center";
-    // ctx.fillText("Forgotten Runes Wizard Cult", CONFIG.CANVAS_WIDTH / 2, 50);
+    // 3. BOOK1 (AL CENTRO)
+    if (bookImg.complete) {
+        const bookSize = CONFIG.CANVAS_WIDTH * 0.25;
+        ctx.drawImage(
+            bookImg, 
+            (CONFIG.CANVAS_WIDTH - bookSize) / 2, 
+            (CONFIG.CANVAS_HEIGHT - bookSize) / 2 + hoverOffset, 
+            bookSize, 
+            bookSize
+        );
+    }
+
+    // 4. WIZARD ID NFT (BASSO A DESTRA)
+    if (introImage.complete && introImage.naturalWidth !== 0) {
+        ctx.save();
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = "rgba(0, 150, 255, 0.5)";
+        
+        ctx.drawImage(
+            introImage, 
+            CONFIG.CANVAS_WIDTH - sideImageSize - margin, 
+            CONFIG.CANVAS_HEIGHT - sideImageSize - margin + hoverOffset, 
+            sideImageSize, 
+            sideImageSize
+        );
+        ctx.restore();
+    }
 }
 
 // --- GIOCATORE ---
