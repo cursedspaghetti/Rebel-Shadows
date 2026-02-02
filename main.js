@@ -45,52 +45,69 @@ playerSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotte
 export const chargeImg = new Image();
 chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bookfull.png";
 
+// --- CONFIGURATION & UTILS ---
 function getWizardImageUrl(wizardId) {
     return `https://forgottenrunes.com/api/art/wizards/${wizardId}.png`;
 }
 
+// Variabile globale per gestire il ritardo del caricamento (debounce)
+let debounceTimer;
+let lastLoadedId = "";
+
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
+    
+    // Se l'ID è lo stesso di prima, non facciamo nulla
+    if (wizardId === lastLoadedId) return;
     
     // Se l'input è vuoto, svuotiamo l'immagine e usciamo
     if (!wizardId) {
         introImage.src = ""; 
-        introImage.dataset.loaded = "false"; // Segnaliamo che non c'è immagine
+        introImage.dataset.loaded = "false";
+        lastLoadedId = "";
         return;
     }
 
-    loadWizardButton.innerText = "LOADING...";
-    loadWizardButton.disabled = true;
+    lastLoadedId = wizardId;
+    
+    // Opzionale: puoi aggiungere qui un feedback visivo "Caricamento..." 
+    // modificando una label o lo stato di un elemento grafico.
 
     const newWizardImg = new Image();
     newWizardImg.src = getWizardImageUrl(wizardId);
 
     newWizardImg.onload = () => {
-        introImage.src = newWizardImg.src;
-        introImage.dataset.loaded = "true"; // Immagine caricata correttamente
-        loadWizardButton.innerText = "LOAD WIZARD";
-        loadWizardButton.disabled = false;
+        // Solo se l'ID nel campo è ancora quello che abbiamo caricato
+        // (evita problemi di latenza se l'utente cancella e riscrive velocemente)
+        if (wizardIdInput.value.trim() === wizardId) {
+            introImage.src = newWizardImg.src;
+            introImage.dataset.loaded = "true";
+            console.log(`Wizard ${wizardId} caricato con successo.`);
+        }
     };
 
     newWizardImg.onerror = () => {
-        console.warn("Wizard non trovato.");
-        introImage.src = ""; // In caso di errore, non mostriamo nulla
+        console.warn("Wizard non trovato o errore di rete.");
+        introImage.src = ""; 
         introImage.dataset.loaded = "false";
-        loadWizardButton.innerText = "LOAD WIZARD";
-        loadWizardButton.disabled = false;
     };
 }
 
 // --- INITIALIZATION ---
 async function init() {
-    // 1. All'inizio l'immagine è vuota (niente libro, niente aloni)
+    // 1. All'inizio l'immagine è vuota
     introImage.src = "";
     introImage.dataset.loaded = "false";
 
-    // 2. Listener per caricamento
-    loadWizardButton.addEventListener('click', handleLoadWizard);
-    wizardIdInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') handleLoadWizard();
+    // 2. Listener REATTIVO all'input dell'utente
+    wizardIdInput.addEventListener('input', () => {
+        // Ogni volta che l'utente scrive, resettiamo il timer
+        clearTimeout(debounceTimer);
+        
+        // Avviamo il caricamento solo dopo 500ms di inattività
+        debounceTimer = setTimeout(() => {
+            handleLoadWizard();
+        }, 500);
     });
 
     // 3. Start Game (sempre abilitato)
@@ -105,13 +122,13 @@ async function init() {
 
 function startScreenLoop() {
     if (gameState.currentScreen === 'start') {
-        // Puliamo il canvas o disegniamo lo sfondo
-        // Se introImage.src è vuoto, il Renderer non disegnerà nulla in quel punto
+        // Se introImage.dataset.loaded è "false", il Renderer non disegnerà il Wizard
         Renderer.drawStartScreen(ctx, bgParallax, introImage, Wiz1, bookImg);
         requestAnimationFrame(startScreenLoop);
     }
 }
 
+// Avvio
 init();
 
 // --- GAME LOOP ---
