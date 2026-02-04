@@ -1,6 +1,16 @@
 /* 0. RESET GLOBALI */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
+* {
+    box-sizing: border-box;
+    /* Impedisce il menu contestuale al tocco prolungato e la selezione del testo */
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    /* Rende i tocchi più reattivi su alcuni browser mobile */
+    touch-action: manipulation;
+}
+
 html,
 body {
     margin: 0;
@@ -13,29 +23,26 @@ body {
     justify-content: center;
     align-items: center;
     font-family: 'Press Start 2P', cursive;
+    /* Blocca lo scrolling elastico su iOS */
+    position: fixed; 
 }
 
 /* --- ANIMAZIONE FADE IN --- */
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* 1. CONTENITORE GIOCO */
 #game-container {
     position: relative;
-    width: 393px;
-    height: 852px;
+    /* Usiamo dvw/dvh per gestire correttamente le barre degli strumenti del browser mobile */
+    width: 100dvw; 
+    max-width: 430px; /* Larghezza massima per non sgranare su tablet */
+    height: 100dvh;
     background-color: #000;
     overflow: hidden;
     image-rendering: pixelated;
-    image-rendering: crisp-edges;
 }
 
 /* 2. IL CANVAS */
@@ -43,112 +50,62 @@ body {
     display: block;
     width: 100%;
     height: 100%;
-    background: transparent; 
+    touch-action: none; /* Fondamentale: impedisce al browser di gestire i tocchi sul canvas */
 }
 
-/* --- 3. SCHERMATA INIZIALE --- */
-#startScreen {
+/* --- 3. SCHERMATE (Start & Power-Up) --- */
+#startScreen, #powerUpScreen {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0);
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
     align-items: center;
     color: white;
     text-align: center;
     z-index: 10;
-    padding-top: 100px;
-    padding-left: 20px;
-    padding-right: 20px;
-    box-sizing: border-box;
+    
+    /* Adattamento per Notch e Dynamic Island */
+    padding: env(safe-area-inset-top, 40px) 20px env(safe-area-inset-bottom, 20px) 20px;
 }
 
-#wizardIdInput {
-    opacity: 0;
-    animation: fadeIn 1.5s ease-out forwards;
-    animation-delay: 1s;
+#startScreen {
+    justify-content: center; /* Centrato verticalmente su mobile è più leggibile */
+    background-color: rgba(0, 0, 0, 0.7);
 }
 
-/* MODIFICA QUI: Usiamo una classe per gestire l'attivazione */
-#startButton {
-    display: none; /* Rimosso dal flusso finché non serve */
-    opacity: 0;
-}
-
-#startButton.visible {
-    display: block; 
-    /* L'animazione parte non appena la classe viene aggiunta */
-    animation: fadeIn 1.5s ease-out forwards;
-    /* Riduciamo il delay a 0.1s se vuoi che il secondo di attesa sia gestito dal JS, 
-       oppure lascialo a 1s se vuoi che il JS lo attivi subito e il CSS aspetti. */
-    animation-delay: 1s; 
-}
-
-
-/* 4. SCHERMATA POWER-UP */
-#powerUpScreen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.85);
-    display: none;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    z-index: 20;
-    color: gold;
-    padding-top: 120px;
-    box-sizing: border-box;
-}
-
-.power-up-options {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    margin-top: 40px;
-}
-
-/* 5. BOTTONI PIXEL ART (Stile Generale) */
+/* 5. BOTTONI PIXEL ART (Mobile Friendly) */
 button {
     font-family: 'Press Start 2P', cursive;
     background-color: #1b0190;
     color: white;
     border: 4px solid #fff;
-    padding: 15px;
+    padding: 20px; /* Aumentato per touch */
     cursor: pointer;
     box-shadow: 4px 4px 0px #000;
-    font-size: 10px;
+    font-size: 14px; /* Aumentato leggermente per leggibilità */
     transition: transform 0.1s;
+    min-width: 200px; /* Area di tocco minima garantita */
+    margin: 10px 0;
 }
 
-button:disabled {
-    background-color: #444;
-    color: #888;
-    border-color: #666;
-    cursor: not-allowed;
-    box-shadow: none;
+/* Input ottimizzato per mobile */
+input[type="text"] {
+    font-family: 'Press Start 2P', cursive;
+    padding: 10px;
+    margin-bottom: 20px;
+    width: 80%;
+    text-align: center;
+    font-size: 12px;
+    border: 2px solid white;
+    background: black;
+    color: white;
 }
 
-button:active:not(:disabled) {
-    transform: translate(4px, 4px);
-    box-shadow: 0px 0px 0px #000;
-}
-
-/* 6. RESPONSIVE PER MOBILE */
-@media (max-width: 450px) {
-    #game-container {
-        width: 100vw;
-        height: 100vh;
-        border: none;
-    }
-    
-    #startScreen, #powerUpScreen {
-        padding-top: 60px;
-    }
+/* Media Query specifica per telefoni piccoli o landscape */
+@media (max-height: 500px) {
+    #startScreen { padding-top: 20px; }
+    button { padding: 10px; font-size: 10px; }
 }
