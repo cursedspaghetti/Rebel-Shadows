@@ -3,11 +3,9 @@
 
 * {
     box-sizing: border-box;
-    /* Impedisce il menu contestuale al tocco prolungato e la selezione del testo */
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
-    /* Rende i tocchi più reattivi su alcuni browser mobile */
     touch-action: manipulation;
 }
 
@@ -23,23 +21,28 @@ body {
     justify-content: center;
     align-items: center;
     font-family: 'Press Start 2P', cursive;
-    /* Blocca lo scrolling elastico su iOS */
-    position: fixed; 
 }
 
 /* --- ANIMAZIONE FADE IN --- */
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* 1. CONTENITORE GIOCO */
 #game-container {
     position: relative;
-    /* Usiamo dvw/dvh per gestire correttamente le barre degli strumenti del browser mobile */
-    width: 100dvw; 
-    max-width: 430px; /* Larghezza massima per non sgranare su tablet */
-    height: 100dvh;
+    /* Usiamo aspect-ratio per evitare che le immagini si schiaccino */
+    width: 100dvw;
+    max-width: 393px; 
+    aspect-ratio: 393 / 852;
+    max-height: 100dvh;
     background-color: #000;
     overflow: hidden;
     image-rendering: pixelated;
@@ -50,62 +53,95 @@ body {
     display: block;
     width: 100%;
     height: 100%;
-    touch-action: none; /* Fondamentale: impedisce al browser di gestire i tocchi sul canvas */
+    /* Impedisce lo schiacciamento dell'immagine se le proporzioni cambiano */
+    object-fit: contain; 
+    background: transparent;
 }
 
-/* --- 3. SCHERMATE (Start & Power-Up) --- */
-#startScreen, #powerUpScreen {
+/* --- 3. SCHERMATA INIZIALE --- */
+#startScreen {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    /* Ritorno al layout originale dall'alto */
     display: flex;
     flex-direction: column;
+    justify-content: flex-start; 
     align-items: center;
     color: white;
     text-align: center;
     z-index: 10;
-    
-    /* Adattamento per Notch e Dynamic Island */
-    padding: env(safe-area-inset-top, 40px) 20px env(safe-area-inset-bottom, 20px) 20px;
+    /* Safe area per mobile senza scurire troppo */
+    padding-top: calc(env(safe-area-inset-top, 0px) + 100px);
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
-#startScreen {
-    justify-content: center; /* Centrato verticalmente su mobile è più leggibile */
-    background-color: rgba(0, 0, 0, 0.7);
+#wizardIdInput {
+    opacity: 0;
+    animation: fadeIn 1.5s ease-out forwards;
+    animation-delay: 1s;
 }
 
-/* 5. BOTTONI PIXEL ART (Mobile Friendly) */
+#startButton {
+    display: none;
+    opacity: 0;
+}
+
+#startButton.visible {
+    display: block; 
+    animation: fadeIn 1.5s ease-out forwards;
+    animation-delay: 1s; 
+}
+
+/* 4. SCHERMATA POWER-UP */
+#powerUpScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Manteniamo l'overlay leggero come da tua richiesta */
+    background-color: rgba(0, 0, 0, 0.8); 
+    display: none;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    z-index: 20;
+    color: gold;
+    padding-top: 120px;
+}
+
+/* 5. BOTTONI PIXEL ART */
 button {
     font-family: 'Press Start 2P', cursive;
     background-color: #1b0190;
     color: white;
     border: 4px solid #fff;
-    padding: 20px; /* Aumentato per touch */
+    padding: 15px;
     cursor: pointer;
     box-shadow: 4px 4px 0px #000;
-    font-size: 14px; /* Aumentato leggermente per leggibilità */
+    font-size: 10px;
     transition: transform 0.1s;
-    min-width: 200px; /* Area di tocco minima garantita */
-    margin: 10px 0;
+    /* Evita che il bottone sia troppo piccolo per il pollice */
+    min-height: 44px;
 }
 
-/* Input ottimizzato per mobile */
-input[type="text"] {
-    font-family: 'Press Start 2P', cursive;
-    padding: 10px;
-    margin-bottom: 20px;
-    width: 80%;
-    text-align: center;
-    font-size: 12px;
-    border: 2px solid white;
-    background: black;
-    color: white;
+button:active:not(:disabled) {
+    transform: translate(4px, 4px);
+    box-shadow: 0px 0px 0px #000;
 }
 
-/* Media Query specifica per telefoni piccoli o landscape */
-@media (max-height: 500px) {
-    #startScreen { padding-top: 20px; }
-    button { padding: 10px; font-size: 10px; }
+/* 6. CORREZIONE PER SCHERMI CORTI */
+@media (max-height: 700px) {
+    #startScreen {
+        padding-top: 40px;
+    }
+    #game-container {
+        /* Se lo schermo è troppo corto, ridimensiona proporzionalmente */
+        width: auto;
+        height: 100dvh;
+    }
 }
