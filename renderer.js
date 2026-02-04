@@ -89,20 +89,23 @@ export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
  * Funzione per disegnare una vignetta centrata con punta dinamica
  * @param {CanvasRenderingContext2D} ctx 
  * @param {number} x - Centro orizzontale del box (Canvas Center)
- * @param {number} y - Coordinata Y di riferimento (bordo superiore immagine)
+ * @param {number} y - Coordinata Y di riferimento (es. testa del personaggio)
  * @param {string} text - Testo da mostrare
  * @param {number} alpha - Opacità
  * @param {number} targetX - Punto X dove deve puntare la coda
  */
 function drawPixelBubble(ctx, x, y, text, alpha = 1, targetX) {
-    const maxWidth = 300; // Larghezza box
+    const maxWidth = 300; 
     const lineHeight = 18;
+    const padding = 20; // Spazio interno per il testo
+    const verticalOffset = 40; // <--- AUMENTA QUESTO per alzare ulteriormente la vignetta
+    
     ctx.save();
     ctx.globalAlpha = alpha; 
     
     ctx.font = "14px 'Press Start 2P', monospace";
     
-    // Wrapping del testo
+    // 1. Wrapping del testo
     const manualLines = text.split('\n');
     let lines = [];
     manualLines.forEach(line => {
@@ -121,14 +124,17 @@ function drawPixelBubble(ctx, x, y, text, alpha = 1, targetX) {
         lines.push(currentLine);
     });
 
-    const bubbleHeight = lines.length * lineHeight + 25;
-    const bubbleWidth = maxWidth + 30;
-    const rectX = x - (bubbleWidth / 2); // Centra il rettangolo rispetto a X
-    const finalY = y - bubbleHeight - 25; // Alza la vignetta sopra l'immagine
+    // 2. Calcolo dimensioni e posizione
+    const bubbleHeight = lines.length * lineHeight + (padding * 2);
+    const bubbleWidth = maxWidth + (padding * 2);
+    const rectX = x - (bubbleWidth / 2); 
+    
+    // Alziamo la vignetta aumentando la sottrazione da y
+    const finalY = y - bubbleHeight - verticalOffset; 
 
-    // Disegno Box
+    // 3. Disegno Box
     ctx.strokeStyle = `rgba(211, 211, 211, ${alpha})`;
-    ctx.fillStyle = `rgba(0, 0, 0, ${0.7 * alpha})`;
+    ctx.fillStyle = `rgba(0, 0, 0, ${0.8 * alpha})`;
     ctx.lineWidth = 3;
 
     const radius = 10;
@@ -137,20 +143,24 @@ function drawPixelBubble(ctx, x, y, text, alpha = 1, targetX) {
     ctx.fill();
     ctx.stroke();
 
-    // Disegno Testo
+    // 4. Disegno Testo Centrato
     ctx.fillStyle = `rgba(211, 211, 211, ${alpha})`;
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
+    ctx.textAlign = "center"; // Centra orizzontalmente rispetto al punto di fill
+    ctx.textBaseline = "middle"; // Aiuta per il centraggio verticale
+    
     lines.forEach((line, index) => {
         if (line !== "") {
-            ctx.fillText(line, rectX + 15, finalY + 12 + (index * lineHeight));
+            // Il punto X è il centro della vignetta (x)
+            // Il punto Y è finalY + padding + offset riga
+            const textY = finalY + padding + (index * lineHeight) + (lineHeight / 2);
+            ctx.fillText(line, x, textY);
         }
     });
 
-    // Disegno Punta (Coda)
-    // La base della punta è ancorata al fondo del box, ma si sposta verso il targetX
+    // 5. Disegno Punta (Coda)
     const baseWidth = 12;
-    const tailBaseX = Math.max(rectX + baseWidth, Math.min(rectX + bubbleWidth - baseWidth, targetX));
+    // Vincola la base della coda ai limiti del rettangolo
+    const tailBaseX = Math.max(rectX + baseWidth * 2, Math.min(rectX + bubbleWidth - baseWidth * 2, targetX));
     
     ctx.beginPath();
     ctx.moveTo(tailBaseX - baseWidth, finalY + bubbleHeight); 
@@ -163,31 +173,7 @@ function drawPixelBubble(ctx, x, y, text, alpha = 1, targetX) {
     ctx.restore();
 }
 
-// --- GIOCATORE ---
-export function drawPlayer(ctx, img) {
-    if (!img.complete) return; 
 
-    const frameWidth = 512;  
-    const frameHeight = 349; 
-    const scaleX = 0.09;      
-    const scaleY = 0.13;        
-    const totalFrames = 13; 
-    const animationSpeed = 150;
-    const frameIndex = Math.floor(Date.now() / animationSpeed) % totalFrames;
-
-    ctx.save();
-    ctx.translate(gameState.playerX, gameState.playerY);
-    ctx.drawImage(
-        img,
-        frameIndex * frameWidth, 0, 
-        frameWidth, frameHeight,    
-        - (frameWidth * scaleX) / 2, 
-        - (frameHeight * scaleY) / 2, 
-        frameWidth * scaleX,         
-        frameHeight * scaleY         
-    );
-    ctx.restore();
-}
 
 // --- UI E BARRA VITA ---
 export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
