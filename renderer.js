@@ -98,7 +98,7 @@ function drawPixelBubble(ctx, x, y, text, alpha = 1, targetX) {
     const maxWidth = 300; 
     const lineHeight = 18;
     const padding = 20; // Spazio interno per il testo
-    const verticalOffset = 40; // <--- AUMENTA QUESTO per alzare ulteriormente la vignetta
+    const verticalOffset = 65; // <--- AUMENTA QUESTO per alzare ulteriormente la vignetta
     
     ctx.save();
     ctx.globalAlpha = alpha; 
