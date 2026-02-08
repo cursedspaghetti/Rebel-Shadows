@@ -173,7 +173,33 @@ function drawPixelBubble(ctx, x, y, text, alpha = 1, targetX) {
     ctx.restore();
 }
 
+export function drawPlayer(ctx, img) {
+    if (!img.complete) return; 
 
+    const frameWidth = 512;  
+    const frameHeight = 349; 
+    
+    const scaleX = 0.09;      
+    const scaleY = 0.13;        
+    
+    const totalFrames = 13; 
+    const animationSpeed = 150;
+    const frameIndex = Math.floor(Date.now() / animationSpeed) % totalFrames;
+
+    ctx.save();
+    ctx.translate(gameState.playerX, gameState.playerY);
+
+    ctx.drawImage(
+        img,
+        frameIndex * frameWidth, 0, 
+        frameWidth, frameHeight,    
+        - (frameWidth * scaleX) / 2, 
+        - (frameHeight * scaleY) / 2, 
+        frameWidth * scaleX,         
+        frameHeight * scaleY         
+    );
+    ctx.restore();
+}
 
 // --- UI E BARRA VITA ---
 export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
