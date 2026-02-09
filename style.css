@@ -16,14 +16,12 @@ body {
     overflow: hidden;
     width: 100%;
     height: 100%;
-    background-color: #1a1a1a;
+    /* Sfondo nero per evitare lo stacco visivo con i bordi iPhone */
+    background-color: #000; 
     display: flex;
     justify-content: center;
     align-items: center;
     font-family: 'Press Start 2P', cursive;
-    /* Usa le costanti ambientali di iOS per annullare i margini */
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
 }
 
 /* --- ANIMAZIONE FADE IN --- */
@@ -41,15 +39,20 @@ body {
 /* 1. CONTENITORE GIOCO */
 #game-container {
     position: relative;
-    /* Usiamo aspect-ratio per evitare che le immagini si schiaccino */
+    /* Occupa tutta la larghezza disponibile... */
     width: 100dvw;
-    max-width: 393px; 
+    /* ...ma si allarga dinamicamente in base all'altezza per non lasciare bordi vuoti */
+    max-width: calc(100dvh * (393 / 852)); 
     aspect-ratio: 393 / 852;
-    margin: 0 auto; /* Centra il gioco orizzontalmente */
+    margin: 0 auto; 
     max-height: 100dvh;
     background-color: #000;
     overflow: hidden;
     image-rendering: pixelated;
+    
+    /* Ignora i margini di sicurezza per coprire tutto lo schermo su iPhone 16 */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
 }
 
 /* 2. IL CANVAS */
@@ -57,7 +60,7 @@ body {
     display: block;
     width: 100%;
     height: 100%;
-    /* Impedisce lo schiacciamento dell'immagine se le proporzioni cambiano */
+    /* Garantisce che i pixel non vengano mai distorti */
     object-fit: contain; 
     background: transparent;
 }
@@ -69,7 +72,6 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    /* Ritorno al layout originale dall'alto */
     display: flex;
     flex-direction: column;
     justify-content: flex-start; 
@@ -77,8 +79,8 @@ body {
     color: white;
     text-align: center;
     z-index: 10;
-    /* Safe area per mobile senza scurire troppo */
-    padding-top: calc(env(safe-area-inset-top, 0px) + 100px);
+    /* Padding dinamico: rispetta il notch dell'iPhone 16 */
+    padding-top: calc(env(safe-area-inset-top, 0px) + 60px);
     padding-left: 20px;
     padding-right: 20px;
 }
@@ -107,7 +109,6 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    /* Manteniamo l'overlay leggero come da tua richiesta */
     background-color: rgba(0, 0, 0, 0.8); 
     display: none;
     flex-direction: column;
@@ -115,7 +116,8 @@ body {
     align-items: center;
     z-index: 20;
     color: gold;
-    padding-top: 120px;
+    /* Padding dinamico anche qui */
+    padding-top: calc(env(safe-area-inset-top, 0px) + 80px);
 }
 
 /* 5. BOTTONI PIXEL ART */
@@ -129,22 +131,20 @@ button {
     box-shadow: 4px 4px 0px #000;
     font-size: 10px;
     transition: transform 0.1s;
-    /* Evita che il bottone sia troppo piccolo per il pollice */
     min-height: 44px;
 }
 
 button:active:not(:disabled) {
-    transform: translate(4px, 4px);
-    box-shadow: 0px 0px 0px #000;
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0px #000;
 }
 
 /* 6. CORREZIONE PER SCHERMI CORTI */
 @media (max-height: 700px) {
     #startScreen {
-        padding-top: 40px;
+        padding-top: calc(env(safe-area-inset-top, 0px) + 20px);
     }
     #game-container {
-        /* Se lo schermo è troppo corto, ridimensiona proporzionalmente */
         width: auto;
         height: 100dvh;
     }
