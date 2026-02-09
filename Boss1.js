@@ -1,53 +1,59 @@
 import { CONFIG, gameState } from './config.js';
 
-// --- SISTEMA DI CACHING ---
+// --- SISTEMA DI CACHING OTTIMIZZATO ---
 const bulletCache = {};
 
-// Genera il proiettile e lo salva in cache
 function getPixelBullet(color, size) {
     const key = `${color}-${size}`;
     if (bulletCache[key]) return bulletCache[key];
 
     const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
+    const padding = 10; // Spazio per il bagliore
+    canvas.width = size + padding * 2;
+    canvas.height = size + padding * 2;
     const ctx = canvas.getContext('2d');
     
+    const center = canvas.width / 2;
     const pSize = 4; 
     const r = size / 2;
 
+    // Disegno del Glow (solo una volta in cache)
+    ctx.shadowBlur = 8;
+    ctx.shadowColor = color;
     ctx.fillStyle = color;
+
     for (let py = 0; py < size; py += pSize) {
         for (let px = 0; px < size; px += pSize) {
             const dx = px - r;
             const dy = py - r;
             if (dx * dx + dy * dy <= r * r) {
-                ctx.fillRect(px, py, pSize, pSize);
+                ctx.fillRect(px + padding, py + padding, pSize, pSize);
             }
         }
     }
     
+    // Centro Bianco
+    ctx.shadowBlur = 0;
     ctx.fillStyle = 'white';
-    ctx.fillRect(Math.floor(r - pSize / 2), Math.floor(r - pSize / 2), pSize, pSize);
+    ctx.fillRect(Math.floor(center - pSize / 2), Math.floor(center - pSize / 2), pSize, pSize);
 
     bulletCache[key] = canvas;
     return canvas;
 }
 
-// Chiamala una volta all'avvio del gioco o al caricamento del boss
 export function preloadBossAssets() {
     getPixelBullet(CONFIG.BOSS.RADIAL.COLOR, CONFIG.BOSS.RADIAL.SIZE);
     getPixelBullet(CONFIG.BOSS.TARGETED.COLOR, CONFIG.BOSS.TARGETED.SIZE);
 }
 
 /**
- * LOGICA PRINCIPALE
+ * LOGICA DI AGGIORNAMENTO
  */
 export function updateBoss(boss) {
     if (!boss || boss.hp <= 0) return;
 
     const now = Date.now();
-    const c = CONFIG.BOSS; // Alias per brevità
+    const c = CONFIG.BOSS;
 
     // 0. CAMBIO FASE
     if (boss.phase === 1 && boss.hp <= boss.maxHp * c.PHASE_2_THRESHOLD) {
@@ -58,7 +64,7 @@ export function updateBoss(boss) {
     const isP2 = boss.phase === 2;
     const cooldownMult = isP2 ? c.RADIAL.COOLDOWN_P2 : 1.0;
 
-    // 1. GESTIONE MOVIMENTO
+    // 1. MOVIMENTO
     if (boss.isDashing) {
         const dashMult = isP2 ? c.DASH.SPEED_P2_MULT : 1;
         boss.x += boss.dashVX * dashMult;
@@ -70,20 +76,17 @@ export function updateBoss(boss) {
             boss.targetX = CONFIG.CANVAS_WIDTH / 2;
         }
     } else {
-        // Ingresso in scena
         if (boss.y < 150) boss.y += 4;
         else boss.y = 150;
 
-        // Movimento orizzontale fluido (Lerp)
         if (Math.abs(boss.x - boss.targetX) < 10) {
             boss.targetX = Math.random() * (CONFIG.CANVAS_WIDTH - 200) + 100;
         }
         const lerpSpeed = isP2 ? c.LERP_SPEED_P2 : c.LERP_SPEED;
         boss.x += (boss.targetX - boss.x) * lerpSpeed;
 
-        // 2. LOGICA ATTACCHI
-        
-        // Attacco a Raggera
+        // 2. ATTACCHI
+        // Radiale
         const radialInt = c.RADIAL.INTERVAL * cooldownMult;
         if (now - (boss.lastRadialBurst || 0) > radialInt && (boss.radialWavesRemaining || 0) <= 0) {
             startRadialBurst(boss);
@@ -91,7 +94,7 @@ export function updateBoss(boss) {
         }
         updateRadialBurst(boss, now);
 
-        // Attacco Mirato
+        // Mirato
         const targetedInt = c.TARGETED.INTERVAL * cooldownMult;
         if (now - (boss.lastTargetBurst || 0) > targetedInt) {
             startTargetedBurst(boss, isP2);
@@ -101,7 +104,7 @@ export function updateBoss(boss) {
 
         // Dash
         const dashInt = (c.DASH.INTERVAL_MIN + Math.random() * c.DASH.INTERVAL_VAR) * cooldownMult;
-        if (now - boss.lastDash > dashInt) {
+        if (now - (boss.lastDash || 0) > dashInt) {
             startDash(boss);
             boss.lastDash = now;
         }
@@ -110,11 +113,12 @@ export function updateBoss(boss) {
     updateBossBullets();
 }
 
-// --- LOGICA ATTACCHI ---
+// --- LOGICA ATTACCHI DETTAGLIATA ---
 
 function startRadialBurst(boss) {
-    boss.radialWavesRemaining = CONFIG.BOSS.RADIAL.WAVES;
-    boss.radialBulletsRemaining = CONFIG.BOSS.RADIAL.BULLETS_PER_WAVE; 
+    const cfg = CONFIG.BOSS.RADIAL;
+    boss.radialWavesRemaining = cfg.WAVES;
+    boss.radialBulletsRemaining = cfg.BULLETS_PER_WAVE; 
     boss.nextRadialBulletTime = 0;
     boss.radialDirection = 1; 
 }
@@ -237,14 +241,16 @@ export function drawBossShadow(ctx, boss, img) {
 
 function drawBossBullets(ctx) {
     if (!gameState.bossBullets) return;
-    gameState.bossBullets.forEach(b => {
+    for (let i = 0; i < gameState.bossBullets.length; i++) {
+        const b = gameState.bossBullets[i];
         const bulletImg = getPixelBullet(b.color, b.size);
-        ctx.save();
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = b.color;
-        ctx.drawImage(bulletImg, Math.floor(b.x - b.size / 2), Math.floor(b.y - b.size / 2));
-        ctx.restore();
-    });
+        // Disegno centrato considerando il padding della cache
+        ctx.drawImage(
+            bulletImg, 
+            Math.floor(b.x - bulletImg.width / 2), 
+            Math.floor(b.y - bulletImg.height / 2)
+        );
+    }
 }
 
 function drawBossUI(ctx, boss) {
