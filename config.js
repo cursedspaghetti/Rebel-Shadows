@@ -18,15 +18,17 @@ export const CONFIG = {
         // Attacco RADIALE (Sventagliata)
         RADIAL: {
             INTERVAL: 5000,
-            COOLDOWN_P2: 0.6, // Moltiplicatore tempo d'attesa in P2
+            COOLDOWN_P2: 0.6,
             WAVES: 4,
             BULLETS_PER_WAVE: 20,
             BULLET_SPEED: 4,
             BULLET_SPEED_P2: 5,
-            BULLET_DELAY: 20, // ms tra un proiettile e l'altro della sventagliata
-            WAVE_PAUSE: 300,  // ms tra una wave e l'altra
-            ARC_START: 40,    // gradi
-            ARC_END: 140      // gradi
+            BULLET_DELAY: 20,
+            WAVE_PAUSE: 300,
+            ARC_START: 40,
+            ARC_END: 140,
+            COLOR: '#ff00ff', // <--- MANCAVA: Aggiunto
+            SIZE: 20          // <--- MANCAVA: Aggiunto
         },
 
         // Attacco MIRATO
@@ -37,13 +39,15 @@ export const CONFIG = {
             SPEED_P1: 7,
             SPEED_P2: 9,
             DELAY_P1: 180,
-            DELAY_P2: 100
+            DELAY_P2: 100,
+            COLOR: '#00ffff', // <--- MANCAVA: Aggiunto
+            SIZE: 18          // <--- MANCAVA: Aggiunto
         },
 
         // DASH
         DASH: {
             INTERVAL_BASE: 9000,
-            INTERVAL_VAR: 6000, // Variabilità random
+            INTERVAL_VAR: 6000,
             SPEED: 15,
             SPEED_P2_MULT: 1.2
         }
