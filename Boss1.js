@@ -55,7 +55,6 @@ export function updateBoss(boss) {
     const now = Date.now();
     const c = CONFIG.BOSS;
 
-    // 0. CAMBIO FASE
     if (boss.phase === 1 && boss.hp <= boss.maxHp * c.PHASE_2_THRESHOLD) {
         boss.phase = 2;
         gameState.screenShake = 15;
@@ -64,31 +63,30 @@ export function updateBoss(boss) {
     const isP2 = boss.phase === 2;
     const cooldownMult = isP2 ? c.RADIAL.COOLDOWN_P2 : 1.0;
 
-    // 1. MOVIMENTO E LOGICA STATI
     if (boss.isDashing) {
-        // Logica Dash: si muove verso la direzione calcolata fino a uscire dai bordi
         const dashMult = isP2 ? c.DASH.SPEED_P2_MULT : 1;
         boss.x += boss.dashVX * dashMult;
         boss.y += boss.dashVY * dashMult;
 
         if (boss.y > CONFIG.CANVAS_HEIGHT + 150 || boss.x < -150 || boss.x > CONFIG.CANVAS_WIDTH + 150) {
             boss.isDashing = false;
-            boss.y = -150; // Resetta per rientrare dall'alto
+            boss.y = -150; 
             boss.targetX = CONFIG.CANVAS_WIDTH / 2;
         }
     } else {
-        // Rientro dall'alto o mantenimento altezza Y
         if (boss.y < 150) boss.y += 4;
         else boss.y = 150;
 
-        // --- MOVIMENTO ORIZZONTALE CONDIZIONALE ---
+        // --- MOVIMENTO ORIZZONTALE ---
+        // Se l'attacco radiale è pianificato o in corso
         if (boss.radialWavesRemaining > 0) {
-            // ATTACCO A RAGGERA ATTIVO: Forza la posizione centrale
             const centerX = CONFIG.CANVAS_WIDTH / 2;
-            const centerLerp = 0.08; // Velocità di riposizionamento al centro
-            boss.x += (centerX - boss.x) * centerLerp;
+            boss.x += (centerX - boss.x) * 0.1; // Si sposta al centro
+            
+            // Verifichiamo se è abbastanza vicino al centro per essere considerato "arrivato"
+            boss.isAtCenter = Math.abs(boss.x - centerX) < 5;
         } else {
-            // MOVIMENTO NORMALE: Segue il target casuale
+            boss.isAtCenter = false;
             if (Math.abs(boss.x - boss.targetX) < 10) {
                 boss.targetX = Math.random() * (CONFIG.CANVAS_WIDTH - 200) + 100;
             }
@@ -96,17 +94,15 @@ export function updateBoss(boss) {
             boss.x += (boss.targetX - boss.x) * lerpSpeed;
         }
 
-        // 2. GESTIONE ATTACCHI
-        
-        // Attacco Radiale (A raggera)
+        // --- GESTIONE ATTACCHI ---
         const radialInt = c.RADIAL.INTERVAL * cooldownMult;
         if (now - (boss.lastRadialBurst || 0) > radialInt && (boss.radialWavesRemaining || 0) <= 0) {
             startRadialBurst(boss);
             boss.lastRadialBurst = now;
         }
+        // Passiamo 'now' per gestire il timing dei colpi
         updateRadialBurst(boss, now);
 
-        // Attacco Mirato (Targeted)
         const targetedInt = c.TARGETED.INTERVAL * cooldownMult;
         if (now - (boss.lastTargetBurst || 0) > targetedInt) {
             startTargetedBurst(boss, isP2);
@@ -114,7 +110,6 @@ export function updateBoss(boss) {
         }
         updateTargetedBurst(boss, now, isP2);
 
-        // Dash (Scatto)
         const dashInt = (c.DASH.INTERVAL_MIN + Math.random() * c.DASH.INTERVAL_VAR) * cooldownMult;
         if (now - (boss.lastDash || 0) > dashInt) {
             startDash(boss);
@@ -136,7 +131,10 @@ function startRadialBurst(boss) {
 }
 
 function updateRadialBurst(boss, now) {
-    if (boss.radialWavesRemaining > 0 && now > (boss.nextRadialBulletTime || 0)) {
+    // Esci se non ci sono ondate rimaste o se il boss NON è ancora in posizione centrale
+    if (boss.radialWavesRemaining <= 0 || !boss.isAtCenter) return;
+
+    if (now > (boss.nextRadialBulletTime || 0)) {
         const cfg = CONFIG.BOSS.RADIAL;
         const currentIdx = cfg.BULLETS_PER_WAVE - boss.radialBulletsRemaining;
         
