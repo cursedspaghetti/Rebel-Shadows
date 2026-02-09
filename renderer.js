@@ -402,12 +402,7 @@ export function updateEnemyBullets() {
 //UI
 
 export function drawUI(ctx) {
-    ctx.save();
-    ctx.fillStyle = '#fff';
-    ctx.font = '20px "Courier New", monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText(`TIME: ${gameState.gameTimer}`, 10, 30);
-    ctx.restore();
+    // Il blocco relativo alla visualizzazione del tempo (gameState.gameTimer) è stato rimosso
 
     const now = Date.now() / 1000;
     
