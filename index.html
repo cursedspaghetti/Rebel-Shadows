@@ -11,9 +11,7 @@
 <body>
 
     <div id="game-container">
-        
-        <canvas id="gameCanvas" width="393" height="852"></canvas>
-        
+                
         <div id="startScreen">
     <div id="title">
         <h1>REBEL SHADOWS</h1>
@@ -21,9 +19,13 @@
     </div>
 
     <div id="wizardSelector" style="margin-bottom: 20px;">
-        <input type="number" id="wizardIdInput" placeholder="Enter Wizard ID" 
-               style="padding: 10px; border-radius: 5px; border: none; width: 150px;">
-    </div>
+    <input type="number" 
+           id="wizardIdInput" 
+           inputmode="numeric" 
+           pattern="[0-9]*" 
+           placeholder="Enter Wizard ID" 
+           style="padding: 10px; border-radius: 5px; border: none; width: 150px;">
+</div>
     
     <button id="startButton">START GAME</button>
 </div>
