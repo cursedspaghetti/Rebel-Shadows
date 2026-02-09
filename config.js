@@ -4,7 +4,7 @@
 export const CONFIG = {
     CANVAS_WIDTH: 393,
     CANVAS_HEIGHT: 852,
-    GAME_TIME: 60,            
+    GAME_TIME: 60,             
     SCROLL_SPEED: 2.5,
     PARALLAX_SPEED: 1,      
     
@@ -12,8 +12,9 @@ export const CONFIG = {
         MAX_HP: 5000,
         PHASE_2_THRESHOLD: 0.5,
         FLOAT_SPEED: 0.003,
-        FLOAT_AMPLITUDE: 15,
+        FLOAT_AMP: 15, // Rinominato da AMPLITUDE per coerenza con la logica
         LERP_SPEED: 0.02,
+        LERP_SPEED_P2: 0.04,
         
         // Attacco RADIALE (Sventagliata)
         RADIAL: {
@@ -21,14 +22,14 @@ export const CONFIG = {
             COOLDOWN_P2: 0.6,
             WAVES: 4,
             BULLETS_PER_WAVE: 20,
-            BULLET_SPEED: 4,
-            BULLET_SPEED_P2: 5,
-            BULLET_DELAY: 20,
-            WAVE_PAUSE: 300,
-            ARC_START: 40,
-            ARC_END: 140,
-            COLOR: '#ff00ff', // <--- MANCAVA: Aggiunto
-            SIZE: 20          // <--- MANCAVA: Aggiunto
+            SPEED_P1: 4,  // Rinominato da BULLET_SPEED
+            SPEED_P2: 5,  // Rinominato da BULLET_SPEED_P2
+            DELAY_BETWEEN_BULLETS: 20, // Rinominato da BULLET_DELAY
+            DELAY_BETWEEN_WAVES: 300,  // Rinominato da WAVE_PAUSE
+            ANGLE_START: 40, // Rinominato da ARC_START
+            ANGLE_END: 140,   // Rinominato da ARC_END
+            COLOR: '#ff00ff',
+            SIZE: 20          
         },
 
         // Attacco MIRATO
@@ -40,13 +41,13 @@ export const CONFIG = {
             SPEED_P2: 9,
             DELAY_P1: 180,
             DELAY_P2: 100,
-            COLOR: '#00ffff', // <--- MANCAVA: Aggiunto
-            SIZE: 18          // <--- MANCAVA: Aggiunto
+            COLOR: '#00ffff',
+            SIZE: 18          
         },
 
         // DASH
         DASH: {
-            INTERVAL_BASE: 9000,
+            INTERVAL_MIN: 9000, // Rinominato da INTERVAL_BASE
             INTERVAL_VAR: 6000,
             SPEED: 15,
             SPEED_P2_MULT: 1.2
@@ -57,7 +58,7 @@ export const CONFIG = {
     COLLISION_DAMAGE: 20,    
     INVULNERABILITY_TIME: 1500, 
     
-    SHAKE_DECAY: 0.9,       
+    SHAKE_DECAY: 0.9,        
     
     FIRE_RATE_LEVELS: {
         1: 200, 
@@ -76,15 +77,14 @@ export const CONFIG = {
  * GLOBAL GAME STATE
  */
 export let gameState = {
-    
- bubbleAlpha1: 0,
- bubbleAlpha2: 0,
- bookAlpha: 0,
- wizIdAlpha: 0,   
- fadeSpeed: 0.016, // Circa 1 secondo a 60fps (1 / 60)
+    bubbleAlpha1: 0,
+    bubbleAlpha2: 0,
+    bookAlpha: 0,
+    wizIdAlpha: 0,   
+    fadeSpeed: 0.016, 
     
     currentScreen: 'start', 
-    screenShake: 0,         
+    screenShake: 0,          
     
     hp: CONFIG.PLAYER_MAX_HP,
     isInvulnerable: false,
@@ -105,7 +105,7 @@ export let gameState = {
     fireRate: 200,
     lastShotTime: 0,
     bullets: [], 
-    enemyBullets: [], // <--- Gestione proiettili nemici base
+    enemyBullets: [], 
 
     shieldActive: false,
     shieldDuration: 5,
@@ -152,8 +152,8 @@ export let gameState = {
     boss: {
         x: CONFIG.CANVAS_WIDTH / 2,
         y: -200,
-        hp: CONFIG.BOSS_MAX_HP,
-        maxHp: CONFIG.BOSS_MAX_HP,
+        hp: CONFIG.BOSS.MAX_HP, // Corretto riferimento
+        maxHp: CONFIG.BOSS.MAX_HP, // Corretto riferimento
         targetX: CONFIG.CANVAS_WIDTH / 2,
         lastShot: 0,
         lastRadialShot: 0,    
@@ -168,45 +168,3 @@ export let gameState = {
     backgroundPositionY: 0,
     parallaxPositionY: 0
 };
-
-/**
- * HELPER: Reset State
- */
-export function resetGameState() {
-    gameState.hp = CONFIG.PLAYER_MAX_HP;
-    gameState.isInvulnerable = false;
-    gameState.lastDamageTime = 0;
-    gameState.screenShake = 0;
-    gameState.playerX = CONFIG.CANVAS_WIDTH / 2;
-    gameState.playerY = CONFIG.CANVAS_HEIGHT - 300;
-    
-    gameState.bullets = [];
-    gameState.enemies = [];
-    gameState.bossBullets = [];
-    gameState.enemyBullets = []; // <--- Reset aggiunto
-    gameState.explosions = [];
-    
-    gameState.gameTimer = CONFIG.GAME_TIME;
-    
-    gameState.bossActive = false;
-    gameState.boss = {
-        x: CONFIG.CANVAS_WIDTH / 2,
-        y: -200,
-        hp: CONFIG.BOSS_MAX_HP,
-        maxHp: CONFIG.BOSS_MAX_HP,
-        targetX: CONFIG.CANVAS_WIDTH / 2,
-        lastShot: 0,
-        lastRadialShot: Date.now(),
-        lastDash: Date.now(),
-        isDashing: false,
-        dashVX: 0,
-        dashVY: 0,
-        phase: 1
-    };
-
-    gameState.specialOnCooldown = false;
-    gameState.specialOnCooldown2 = false;
-    gameState.shieldActive = false;
-    gameState.shieldOnCooldown = false;
-    gameState.currentScreen = 'playing';
-}
