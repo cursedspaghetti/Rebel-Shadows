@@ -11,6 +11,7 @@ const TOUCH_SETTINGS = {
     TAP_DELAY: 250
 };
 
+
 let secondFingerTimer = null;
 gameState.isTouchActive = false;
 gameState.touchIdentifier = null;
@@ -18,6 +19,8 @@ gameState.touchIdentifier = null;
 // --- DOM ELEMENTS ---
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+canvas.width = 393;
+canvas.height = 852;
 const startScreen = document.getElementById('startScreen');
 const powerUpScreen = document.getElementById('powerUpScreen');
 const startButton = document.getElementById('startButton');
