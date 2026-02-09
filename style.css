@@ -21,6 +21,9 @@ body {
     justify-content: center;
     align-items: center;
     font-family: 'Press Start 2P', cursive;
+    /* Usa le costanti ambientali di iOS per annullare i margini */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
 }
 
 /* --- ANIMAZIONE FADE IN --- */
@@ -42,6 +45,7 @@ body {
     width: 100dvw;
     max-width: 393px; 
     aspect-ratio: 393 / 852;
+    margin: 0 auto; /* Centra il gioco orizzontalmente */
     max-height: 100dvh;
     background-color: #000;
     overflow: hidden;
