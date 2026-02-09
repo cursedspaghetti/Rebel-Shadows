@@ -173,70 +173,49 @@ function applyDamage(amount, shakeIntensity) {
 }
 
 // --- ESPLOSIONI ---
-// --- ESPLOSIONI PIXEL ART ---
+// --- ESPLOSIONI PIXEL ART MINIMALI ---
 
-/**
- * Crea un'esplosione composta da singoli pixel/frammenti
- * @param {number} x - Coordinata X dell'impatto
- * @param {number} y - Coordinata Y dell'impatto
- * @param {string} color - Colore primario dei frammenti
- */
 function createExplosion(x, y, color = '#FFC300') {
-    const particleCount = 10; // Numero di pixel/frammenti
+    // Solo 3 o 4 frammenti per un look pulito
+    const particleCount = 3 + Math.floor(Math.random() * 2); 
     
     for (let i = 0; i < particleCount; i++) {
         gameState.explosions.push({
             x: x,
             y: y,
-            // Dimensioni variabili per un look meno uniforme
-            size: Math.floor(Math.random() * 3) + 2, 
-            // Velocità casuale: espansione radiale
-            vx: (Math.random() - 0.5) * 5,
-            vy: (Math.random() - 0.5) * 5,
-            // Durata della particella
+            size: 2, // Dimensione fissa per coerenza pixel
+            vx: (Math.random() - 0.5) * 6, // Spinta iniziale forte
+            vy: (Math.random() - 0.5) * 6,
             life: 1.0,
-            decay: 0.02 + Math.random() * 0.04,
+            decay: 0.04, // Scompaiono più velocemente
             color: color
         });
     }
 }
 
-/**
- * Aggiorna la posizione e la vita di ogni frammento
- */
 export function updateExplosions() {
     gameState.explosions = gameState.explosions.filter(p => {
-        // Movimento
         p.x += p.vx;
         p.y += p.vy;
         
-        // Attrito (rallenta i frammenti col tempo)
-        p.vx *= 0.95;
-        p.vy *= 0.95;
+        // Rallentamento immediato (effetto "pop")
+        p.vx *= 0.9;
+        p.vy *= 0.9;
         
-        // Riduzione vita
         p.life -= p.decay;
-        
         return p.life > 0;
     });
 }
 
-/**
- * Disegna i frammenti sulla griglia di gioco
- */
 export function drawExplosions(ctx) {
     gameState.explosions.forEach(p => {
-        // Calcoliamo la dimensione attuale basata sulla vita residua
-        const currentSize = Math.max(1, Math.floor(p.size * p.life));
-        
         ctx.fillStyle = p.color;
-        
-        // Usiamo Math.floor per "agganciare" i frammenti alla griglia di pixel
+        // Disegno essenziale senza variazioni di dimensione
         ctx.fillRect(
             Math.floor(p.x), 
             Math.floor(p.y), 
-            currentSize, 
-            currentSize
+            p.size, 
+            p.size
         );
     });
 }
