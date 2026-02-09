@@ -21,7 +21,7 @@ export const CONFIG = {
             INTERVAL: 15000,
             COOLDOWN_P2: 0.6,
             WAVES: 4,
-            BULLETS_PER_WAVE: 15,
+            BULLETS_PER_WAVE: 13,
             SPEED_P1: 5,  // Rinominato da BULLET_SPEED
             SPEED_P2: 6,  // Rinominato da BULLET_SPEED_P2
             DELAY_BETWEEN_BULLETS: 30, // Rinominato da BULLET_DELAY
