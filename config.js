@@ -22,9 +22,9 @@ export const CONFIG = {
             COOLDOWN_P2: 0.6,
             WAVES: 4,
             BULLETS_PER_WAVE: 20,
-            SPEED_P1: 4,  // Rinominato da BULLET_SPEED
-            SPEED_P2: 5,  // Rinominato da BULLET_SPEED_P2
-            DELAY_BETWEEN_BULLETS: 20, // Rinominato da BULLET_DELAY
+            SPEED_P1: 5,  // Rinominato da BULLET_SPEED
+            SPEED_P2: 6,  // Rinominato da BULLET_SPEED_P2
+            DELAY_BETWEEN_BULLETS: 30, // Rinominato da BULLET_DELAY
             DELAY_BETWEEN_WAVES: 100,  // Rinominato da WAVE_PAUSE
             ANGLE_START: 40, // Rinominato da ARC_START
             ANGLE_END: 140,   // Rinominato da ARC_END
@@ -35,10 +35,10 @@ export const CONFIG = {
         // Attacco MIRATO
         TARGETED: {
             INTERVAL: 6000,
-            COUNT_P1: 5,
-            COUNT_P2: 8,
-            SPEED_P1: 7,
-            SPEED_P2: 9,
+            COUNT_P1: 7,
+            COUNT_P2: 14,
+            SPEED_P1: 10,
+            SPEED_P2: 13,
             DELAY_P1: 180,
             DELAY_P2: 100,
             COLOR: '#00ffff',
