@@ -43,7 +43,7 @@ body {
     width: 100dvw;
     /* ...ma si allarga dinamicamente in base all'altezza per non lasciare bordi vuoti */
     max-width: calc(100dvh * (393 / 852)); 
-    aspect-ratio: 393 / 852;
+    aspect-ratio: 500 / 852;
     margin: 0 auto; 
     max-height: 100dvh;
     background-color: #000;
