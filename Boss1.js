@@ -1,8 +1,9 @@
 import { CONFIG, gameState } from './config.js';
 
-// --- SISTEMA DI CACHING PER PIXEL ART ---
+// --- SISTEMA DI CACHING ---
 const bulletCache = {};
 
+// Genera il proiettile e lo salva in cache
 function getPixelBullet(color, size) {
     const key = `${color}-${size}`;
     if (bulletCache[key]) return bulletCache[key];
@@ -33,6 +34,12 @@ function getPixelBullet(color, size) {
     return canvas;
 }
 
+// Chiamala una volta all'avvio del gioco o al caricamento del boss
+export function preloadBossAssets() {
+    getPixelBullet(CONFIG.BOSS.RADIAL.COLOR, CONFIG.BOSS.RADIAL.SIZE);
+    getPixelBullet(CONFIG.BOSS.TARGETED.COLOR, CONFIG.BOSS.TARGETED.SIZE);
+}
+
 /**
  * LOGICA PRINCIPALE
  */
@@ -40,20 +47,22 @@ export function updateBoss(boss) {
     if (!boss || boss.hp <= 0) return;
 
     const now = Date.now();
+    const c = CONFIG.BOSS; // Alias per brevità
 
     // 0. CAMBIO FASE
-    if (boss.phase === 1 && boss.hp <= boss.maxHp * CONFIG.BOSS_PHASE_2_THRESHOLD) {
+    if (boss.phase === 1 && boss.hp <= boss.maxHp * c.PHASE_2_THRESHOLD) {
         boss.phase = 2;
         gameState.screenShake = 15;
     }
 
-    const phaseSpeedMult = boss.phase === 2 ? 1.5 : 1.0;
-    const cooldownMult = boss.phase === 2 ? 0.6 : 1.0;
+    const isP2 = boss.phase === 2;
+    const cooldownMult = isP2 ? c.RADIAL.COOLDOWN_P2 : 1.0;
 
     // 1. GESTIONE MOVIMENTO
     if (boss.isDashing) {
-        boss.x += boss.dashVX * (boss.phase === 2 ? 1.2 : 1);
-        boss.y += boss.dashVY * (boss.phase === 2 ? 1.2 : 1);
+        const dashMult = isP2 ? c.DASH.SPEED_P2_MULT : 1;
+        boss.x += boss.dashVX * dashMult;
+        boss.y += boss.dashVY * dashMult;
 
         if (boss.y > CONFIG.CANVAS_HEIGHT + 150 || boss.x < -150 || boss.x > CONFIG.CANVAS_WIDTH + 150) {
             boss.isDashing = false;
@@ -61,35 +70,38 @@ export function updateBoss(boss) {
             boss.targetX = CONFIG.CANVAS_WIDTH / 2;
         }
     } else {
+        // Ingresso in scena
         if (boss.y < 150) boss.y += 4;
         else boss.y = 150;
 
+        // Movimento orizzontale fluido (Lerp)
         if (Math.abs(boss.x - boss.targetX) < 10) {
             boss.targetX = Math.random() * (CONFIG.CANVAS_WIDTH - 200) + 100;
         }
-        boss.x += (boss.targetX - boss.x) * (0.02 * phaseSpeedMult);
+        const lerpSpeed = isP2 ? c.LERP_SPEED_P2 : c.LERP_SPEED;
+        boss.x += (boss.targetX - boss.x) * lerpSpeed;
 
         // 2. LOGICA ATTACCHI
         
-        // Attacco a Raggera (Sventagliata Pendolo 180°)
-        const radialInterval = 5000 * cooldownMult; 
-        if (now - (boss.lastRadialBurst || 0) > radialInterval && (boss.radialWavesRemaining || 0) <= 0) {
+        // Attacco a Raggera
+        const radialInt = c.RADIAL.INTERVAL * cooldownMult;
+        if (now - (boss.lastRadialBurst || 0) > radialInt && (boss.radialWavesRemaining || 0) <= 0) {
             startRadialBurst(boss);
             boss.lastRadialBurst = now;
         }
         updateRadialBurst(boss, now);
 
         // Attacco Mirato
-        const targetedInterval = 4000 * cooldownMult;
-        if (now - (boss.lastTargetBurst || 0) > targetedInterval) {
-            startTargetedBurst(boss);
+        const targetedInt = c.TARGETED.INTERVAL * cooldownMult;
+        if (now - (boss.lastTargetBurst || 0) > targetedInt) {
+            startTargetedBurst(boss, isP2);
             boss.lastTargetBurst = now;
         }
-        updateTargetedBurst(boss, now);
+        updateTargetedBurst(boss, now, isP2);
 
         // Dash
-        const dashInterval = (CONFIG.BOSS_ATTACKS.DASH_INTERVAL[0] + Math.random() * 6000) * cooldownMult;
-        if (now - boss.lastDash > dashInterval) {
+        const dashInt = (c.DASH.INTERVAL_MIN + Math.random() * c.DASH.INTERVAL_VAR) * cooldownMult;
+        if (now - boss.lastDash > dashInt) {
             startDash(boss);
             boss.lastDash = now;
         }
@@ -101,80 +113,71 @@ export function updateBoss(boss) {
 // --- LOGICA ATTACCHI ---
 
 function startRadialBurst(boss) {
-    boss.radialWavesRemaining = 4; // Avanti, Indietro, Avanti, Indietro
-    boss.radialBulletsRemaining = 15; 
+    boss.radialWavesRemaining = CONFIG.BOSS.RADIAL.WAVES;
+    boss.radialBulletsRemaining = CONFIG.BOSS.RADIAL.BULLETS_PER_WAVE; 
     boss.nextRadialBulletTime = 0;
-    boss.radialDirection = 1; // 1: Destra->Sinistra, -1: Sinistra->Destra
+    boss.radialDirection = 1; 
 }
 
 function updateRadialBurst(boss, now) {
     if (boss.radialWavesRemaining > 0 && now > (boss.nextRadialBulletTime || 0)) {
-        // Aumentato a 25 per rendere la sventagliata più corposa data la velocità
-        const bulletsPerWave = 25; 
-        const currentBulletIdx = bulletsPerWave - boss.radialBulletsRemaining;
+        const cfg = CONFIG.BOSS.RADIAL;
+        const currentIdx = cfg.BULLETS_PER_WAVE - boss.radialBulletsRemaining;
         
-        // Conversione in radianti per l'angolo ristretto (20° a 160°)
-        const startAngle = (20 * Math.PI) / 180;
-        const endAngle = (160 * Math.PI) / 180;
-        const totalArc = endAngle - startAngle;
+        const startRad = (cfg.ANGLE_START * Math.PI) / 180;
+        const endRad = (cfg.ANGLE_END * Math.PI) / 180;
+        const arc = endRad - startRad;
 
-        let angle;
-        if (boss.radialDirection === 1) {
-            // Da 20° a 160° (Destra -> Sinistra)
-            angle = startAngle + (totalArc / (bulletsPerWave - 1)) * currentBulletIdx;
-        } else {
-            // Da 160° a 20° (Sinistra -> Destra)
-            angle = endAngle - (totalArc / (bulletsPerWave - 1)) * currentBulletIdx;
-        }
+        const angle = boss.radialDirection === 1 
+            ? startRad + (arc / (cfg.BULLETS_PER_WAVE - 1)) * currentIdx
+            : endRad - (arc / (cfg.BULLETS_PER_WAVE - 1)) * currentIdx;
         
-        const speed = (CONFIG.BOSS_ATTACKS.RADIAL_BULLET_SPEED || 4) + (boss.phase === 2 ? 2 : 0);
+        const speed = boss.phase === 2 ? cfg.SPEED_P2 : cfg.SPEED_P1;
 
         gameState.bossBullets.push({
-            x: boss.x, 
-            y: boss.y,
+            x: boss.x, y: boss.y,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
-            size: 20, 
-            color: '#ff00ff'
+            size: cfg.SIZE, color: cfg.COLOR
         });
 
         boss.radialBulletsRemaining--;
-        // Delay impostato a 0.02 secondi
-        boss.nextRadialBulletTime = now + 20; 
+        boss.nextRadialBulletTime = now + cfg.DELAY_BETWEEN_BULLETS; 
 
         if (boss.radialBulletsRemaining <= 0) {
             boss.radialWavesRemaining--;
             if (boss.radialWavesRemaining > 0) {
-                boss.radialBulletsRemaining = bulletsPerWave;
+                boss.radialBulletsRemaining = cfg.BULLETS_PER_WAVE;
                 boss.radialDirection *= -1;
-                // Pausa tra le sventagliate (leggermente ridotta per mantenere il ritmo)
-                boss.nextRadialBulletTime = now + 300; 
+                boss.nextRadialBulletTime = now + cfg.DELAY_BETWEEN_WAVES; 
             }
         }
     }
 }
 
-function startTargetedBurst(boss) {
-    boss.targetedCount = boss.phase === 2 ? 8 : 5;
+function startTargetedBurst(boss, isP2) {
+    const cfg = CONFIG.BOSS.TARGETED;
+    boss.targetedCount = isP2 ? cfg.COUNT_P2 : cfg.COUNT_P1;
     boss.nextTargetedTime = 0;
 }
 
-function updateTargetedBurst(boss, now) {
+function updateTargetedBurst(boss, now, isP2) {
     if (boss.targetedCount > 0 && now > (boss.nextTargetedTime || 0)) {
+        const cfg = CONFIG.BOSS.TARGETED;
         const dx = gameState.playerX - boss.x;
         const dy = gameState.playerY - boss.y;
         const angle = Math.atan2(dy, dx);
-        const speed = boss.phase === 2 ? 9 : 7;
+        const speed = isP2 ? cfg.SPEED_P2 : cfg.SPEED_P1;
         
         gameState.bossBullets.push({
             x: boss.x, y: boss.y + 20,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
-            size: 18, color: '#00ffff'
+            size: cfg.SIZE, color: cfg.COLOR
         });
 
         boss.targetedCount--;
-        boss.nextTargetedTime = now + (boss.phase === 2 ? 100 : 180);
+        boss.nextTargetedTime = now + (isP2 ? cfg.DELAY_P2 : cfg.DELAY_P1);
     }
 }
 
@@ -183,10 +186,9 @@ function startDash(boss) {
     const dx = gameState.playerX - boss.x;
     const dy = gameState.playerY - boss.y;
     const angle = Math.atan2(dy, dx);
-    const speed = CONFIG.BOSS_ATTACKS.DASH_SPEED || 14;
+    const speed = CONFIG.BOSS.DASH.SPEED;
     boss.dashVX = Math.cos(angle) * speed;
     boss.dashVY = Math.sin(angle) * speed;
-    boss.lastDash = Date.now();
 }
 
 function updateBossBullets() {
@@ -209,12 +211,13 @@ export function drawBossShadow(ctx, boss, img) {
 
     drawBossBullets(ctx);
 
+    const c = CONFIG.BOSS;
     const totalFrames = 9;
     const frameDuration = 100; 
     const originalSize = 400;  
     
     const frameIndex = Math.floor((Date.now() / frameDuration) % totalFrames);
-    const floatOffset = boss.isDashing ? 0 : Math.sin(Date.now() * 0.003) * 15;
+    const floatOffset = boss.isDashing ? 0 : Math.sin(Date.now() * c.FLOAT_SPEED) * c.FLOAT_AMP;
 
     ctx.save();
     ctx.translate(boss.x, boss.y + floatOffset);
