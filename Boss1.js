@@ -8,7 +8,7 @@ function getPixelBullet(color, size) {
     if (bulletCache[key]) return bulletCache[key];
 
     const canvas = document.createElement('canvas');
-    const padding = 10; // Spazio per il bagliore
+    const padding = 10; 
     canvas.width = size + padding * 2;
     canvas.height = size + padding * 2;
     const ctx = canvas.getContext('2d');
@@ -17,7 +17,6 @@ function getPixelBullet(color, size) {
     const pSize = 4; 
     const r = size / 2;
 
-    // Disegno del Glow (solo una volta in cache)
     ctx.shadowBlur = 8;
     ctx.shadowColor = color;
     ctx.fillStyle = color;
@@ -32,7 +31,6 @@ function getPixelBullet(color, size) {
         }
     }
     
-    // Centro Bianco
     ctx.shadowBlur = 0;
     ctx.fillStyle = 'white';
     ctx.fillRect(Math.floor(center - pSize / 2), Math.floor(center - pSize / 2), pSize, pSize);
@@ -55,6 +53,7 @@ export function updateBoss(boss) {
     const now = Date.now();
     const c = CONFIG.BOSS;
 
+    // Gestione Cambiamento Fase
     if (boss.phase === 1 && boss.hp <= boss.maxHp * c.PHASE_2_THRESHOLD) {
         boss.phase = 2;
         gameState.screenShake = 15;
@@ -64,34 +63,49 @@ export function updateBoss(boss) {
     const cooldownMult = isP2 ? c.RADIAL.COOLDOWN_P2 : 1.0;
 
     if (boss.isDashing) {
+        // --- LOGICA DASH ---
         const dashMult = isP2 ? c.DASH.SPEED_P2_MULT : 1;
         boss.x += boss.dashVX * dashMult;
         boss.y += boss.dashVY * dashMult;
 
-        if (boss.y > CONFIG.CANVAS_HEIGHT + 150 || boss.x < -150 || boss.x > CONFIG.CANVAS_WIDTH + 150) {
+        // Reset quando esce dai bordi (area estesa)
+        if (boss.y > CONFIG.CANVAS_HEIGHT + 150 || boss.y < -200 || boss.x < -200 || boss.x > CONFIG.CANVAS_WIDTH + 200) {
             boss.isDashing = false;
             boss.y = -150; 
             boss.targetX = CONFIG.CANVAS_WIDTH / 2;
+            boss.targetY = 150; // Punto di rientro
         }
     } else {
-        if (boss.y < 150) boss.y += 4;
-        else boss.y = 150;
+        // --- MOVIMENTO DINAMICO (NON DASH) ---
 
-        // --- MOVIMENTO ORIZZONTALE ---
-        // Se l'attacco radiale è pianificato o in corso
+        // Parametri area di movimento
+        const marginX = 80;
+        const minY = 100;
+        const maxY = CONFIG.CANVAS_HEIGHT * 0.5; // Scende fino a metà schermo
+
         if (boss.radialWavesRemaining > 0) {
+            // Durante l'attacco radiale: torna al centro-alto per bilanciamento
             const centerX = CONFIG.CANVAS_WIDTH / 2;
-            boss.x += (centerX - boss.x) * 0.1; // Si sposta al centro
-            
-            // Verifichiamo se è abbastanza vicino al centro per essere considerato "arrivato"
-            boss.isAtCenter = Math.abs(boss.x - centerX) < 5;
+            const centerY = 150;
+            boss.x += (centerX - boss.x) * 0.08;
+            boss.y += (centerY - boss.y) * 0.08;
+            boss.isAtCenter = Math.abs(boss.x - centerX) < 10 && Math.abs(boss.y - centerY) < 10;
         } else {
+            // Movimento libero in un'area più ampia
             boss.isAtCenter = false;
-            if (Math.abs(boss.x - boss.targetX) < 10) {
-                boss.targetX = Math.random() * (CONFIG.CANVAS_WIDTH - 200) + 100;
+
+            // Cambio target X casuale
+            if (!boss.targetX || Math.abs(boss.x - boss.targetX) < 10) {
+                boss.targetX = Math.random() * (CONFIG.CANVAS_WIDTH - marginX * 2) + marginX;
             }
+            // Cambio target Y casuale
+            if (!boss.targetY || Math.abs(boss.y - boss.targetY) < 10) {
+                boss.targetY = Math.random() * (maxY - minY) + minY;
+            }
+
             const lerpSpeed = isP2 ? c.LERP_SPEED_P2 : c.LERP_SPEED;
             boss.x += (boss.targetX - boss.x) * lerpSpeed;
+            boss.y += (boss.targetY - boss.y) * (lerpSpeed * 0.8); // Y leggermente più lenta per fluidità
         }
 
         // --- GESTIONE ATTACCHI ---
@@ -100,7 +114,6 @@ export function updateBoss(boss) {
             startRadialBurst(boss);
             boss.lastRadialBurst = now;
         }
-        // Passiamo 'now' per gestire il timing dei colpi
         updateRadialBurst(boss, now);
 
         const targetedInt = c.TARGETED.INTERVAL * cooldownMult;
@@ -131,7 +144,6 @@ function startRadialBurst(boss) {
 }
 
 function updateRadialBurst(boss, now) {
-    // Esci se non ci sono ondate rimaste o se il boss NON è ancora in posizione centrale
     if (boss.radialWavesRemaining <= 0 || !boss.isAtCenter) return;
 
     if (now > (boss.nextRadialBulletTime || 0)) {
@@ -254,7 +266,6 @@ function drawBossBullets(ctx) {
     for (let i = 0; i < gameState.bossBullets.length; i++) {
         const b = gameState.bossBullets[i];
         const bulletImg = getPixelBullet(b.color, b.size);
-        // Disegno centrato considerando il padding della cache
         ctx.drawImage(
             bulletImg, 
             Math.floor(b.x - bulletImg.width / 2), 
@@ -271,7 +282,6 @@ function drawBossUI(ctx, boss) {
     const y = 30; 
 
     ctx.save();
-    
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(x, y, barWidth, barHeight);
     
@@ -281,6 +291,5 @@ function drawBossUI(ctx, boss) {
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.strokeRect(x - 1, y - 1, barWidth + 2, barHeight + 2);
-
     ctx.restore();
 }
