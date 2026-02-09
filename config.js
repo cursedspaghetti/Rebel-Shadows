@@ -18,14 +18,14 @@ export const CONFIG = {
         
         // Attacco RADIALE (Sventagliata)
         RADIAL: {
-            INTERVAL: 5000,
+            INTERVAL: 15000,
             COOLDOWN_P2: 0.6,
             WAVES: 4,
             BULLETS_PER_WAVE: 20,
             SPEED_P1: 4,  // Rinominato da BULLET_SPEED
             SPEED_P2: 5,  // Rinominato da BULLET_SPEED_P2
             DELAY_BETWEEN_BULLETS: 20, // Rinominato da BULLET_DELAY
-            DELAY_BETWEEN_WAVES: 300,  // Rinominato da WAVE_PAUSE
+            DELAY_BETWEEN_WAVES: 100,  // Rinominato da WAVE_PAUSE
             ANGLE_START: 40, // Rinominato da ARC_START
             ANGLE_END: 140,   // Rinominato da ARC_END
             COLOR: '#ff00ff',
@@ -34,7 +34,7 @@ export const CONFIG = {
 
         // Attacco MIRATO
         TARGETED: {
-            INTERVAL: 4000,
+            INTERVAL: 6000,
             COUNT_P1: 5,
             COUNT_P2: 8,
             SPEED_P1: 7,
@@ -47,8 +47,8 @@ export const CONFIG = {
 
         // DASH
         DASH: {
-            INTERVAL_MIN: 9000, // Rinominato da INTERVAL_BASE
-            INTERVAL_VAR: 6000,
+            INTERVAL_MIN: 12000, // Rinominato da INTERVAL_BASE
+            INTERVAL_VAR: 8000,
             SPEED: 15,
             SPEED_P2_MULT: 1.2
         }
