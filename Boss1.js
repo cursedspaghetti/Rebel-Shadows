@@ -271,17 +271,16 @@ function drawBossUI(ctx, boss) {
     const y = 30; 
 
     ctx.save();
+    
     ctx.fillStyle = '#1a1a1a';
     ctx.fillRect(x, y, barWidth, barHeight);
+    
     ctx.fillStyle = boss.phase === 2 ? '#ff0000' : '#ff00ff';
     ctx.fillRect(x, y, Math.floor(barWidth * healthPercent), barHeight);
+    
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.strokeRect(x - 1, y - 1, barWidth + 2, barHeight + 2);
 
-    ctx.fillStyle = 'white';
-    ctx.font = '10px "Courier New", monospace';
-    ctx.textAlign = 'left';
-    ctx.fillText(boss.phase === 2 ? "SHADOW #647 [OVERDRIVE]" : "SHADOW #647", x, y - 8);
     ctx.restore();
 }
