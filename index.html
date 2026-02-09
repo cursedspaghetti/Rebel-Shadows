@@ -1,36 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Deep in Shadows</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
     <div id="game-container">
-                
-        <div id="startScreen">
-    <div id="title">
-        <h1>REBEL SHADOWS</h1>
+        <canvas id="gameCanvas"></canvas>
         
-    </div>
+        <div id="startScreen">
+            <div id="title">
+                <h1>REBEL SHADOWS</h1>
+            </div>
 
-    <div id="wizardSelector" style="margin-bottom: 20px;">
-    <input type="number" 
-           id="wizardIdInput" 
-           inputmode="numeric" 
-           pattern="[0-9]*" 
-           placeholder="Enter Wizard ID" 
-           style="padding: 10px; border-radius: 5px; border: none; width: 150px;">
-</div>
-    
-    <button id="startButton">START GAME</button>
-</div>
+            <div id="wizardSelector">
+                <input type="number" 
+                       id="wizardIdInput" 
+                       inputmode="numeric" 
+                       pattern="[0-9]*" 
+                       placeholder="Enter Wizard ID">
+            </div>
+            
+            <button id="startButton">START GAME</button>
+        </div>
 
-        <div id="powerUpScreen" style="display: none;">
+        <div id="powerUpScreen">
             <h1>BOSS DEFEATED!</h1>
             <h2>CHOOSE POWER-UP</h2>
             <div class="power-up-options">
@@ -38,10 +35,8 @@
                 <button id="pu-special" class="power-up-btn">IMPROVE SPECIAL ATTACK</button>
             </div>
         </div>
-        
     </div>
 
     <script type="module" src="main.js"></script>
-
 </body>
 </html>
