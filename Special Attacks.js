@@ -167,20 +167,46 @@ export function drawSpecialRay2(ctx) {
 export function drawChargeEffect(ctx, chargeImg) {
     if (chargeImg.complete && chargeImg.naturalWidth !== 0) {
         
-        // --- SCALE FINALI FISSE ---
         const scaleX = 0.09; 
-        const scaleY = 0.13; 
+        const scaleY = 0.11; 
         
         const width = chargeImg.width * scaleX;
         const height = chargeImg.height * scaleY;
 
         ctx.save();
 
-        // Disegno semplice senza bagliori o trasparenze particolari
+        // 1. Spostiamo l'origine sul giocatore per facilitare rotazioni o effetti
+        ctx.translate(gameState.playerX, gameState.playerY);
+
+        // 2. SETTAGGI PER IL GLOW INTENSO
+        // Usiamo 'lighter' per far sì che i colori si sommino (effetto energia pura)
+        ctx.globalCompositeOperation = 'lighter';
+        
+        // Configurazione ombra per il bagliore esterno (modifica il colore in base alla carica)
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = 'rgba(0, 150, 255, 1)'; // Un blu elettrico, ad esempio
+        
+        // 3. PULSAZIONE (Opzionale ma consigliata)
+        // Crea un leggero effetto "respiro" usando il tempo
+        const pulse = 1 + Math.sin(Date.now() / 100) * 0.1;
+        
+        // 4. DISEGNO DELLO SPRITE
+        // Disegniamo lo sprite leggermente più grande e trasparente per il glow
+        ctx.globalAlpha = 0.8;
         ctx.drawImage(
             chargeImg, 
-            gameState.playerX - width / 2, 
-            gameState.playerY - height / 2, 
+            - (width * pulse) / 2, 
+            - (height * pulse) / 2, 
+            width * pulse, 
+            height * pulse
+        );
+
+        // Disegniamo un secondo strato più piccolo e opaco per il nucleo
+        ctx.globalAlpha = 1.0;
+        ctx.drawImage(
+            chargeImg, 
+            -width / 2, 
+            -height / 2, 
             width, 
             height
         );
