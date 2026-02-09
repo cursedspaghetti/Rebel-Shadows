@@ -20,13 +20,13 @@ export const CONFIG = {
             INTERVAL: 5000,
             COOLDOWN_P2: 0.6, // Moltiplicatore tempo d'attesa in P2
             WAVES: 4,
-            BULLETS_PER_WAVE: 25,
-            BULLET_SPEED: 8,
-            BULLET_SPEED_P2: 10,
+            BULLETS_PER_WAVE: 20,
+            BULLET_SPEED: 4,
+            BULLET_SPEED_P2: 5,
             BULLET_DELAY: 20, // ms tra un proiettile e l'altro della sventagliata
             WAVE_PAUSE: 300,  // ms tra una wave e l'altra
-            ARC_START: 20,    // gradi
-            ARC_END: 160      // gradi
+            ARC_START: 40,    // gradi
+            ARC_END: 140      // gradi
         },
 
         // Attacco MIRATO
