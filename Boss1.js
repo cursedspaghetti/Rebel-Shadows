@@ -64,29 +64,41 @@ export function updateBoss(boss) {
     const isP2 = boss.phase === 2;
     const cooldownMult = isP2 ? c.RADIAL.COOLDOWN_P2 : 1.0;
 
-    // 1. MOVIMENTO
+    // 1. MOVIMENTO E LOGICA STATI
     if (boss.isDashing) {
+        // Logica Dash: si muove verso la direzione calcolata fino a uscire dai bordi
         const dashMult = isP2 ? c.DASH.SPEED_P2_MULT : 1;
         boss.x += boss.dashVX * dashMult;
         boss.y += boss.dashVY * dashMult;
 
         if (boss.y > CONFIG.CANVAS_HEIGHT + 150 || boss.x < -150 || boss.x > CONFIG.CANVAS_WIDTH + 150) {
             boss.isDashing = false;
-            boss.y = -150; 
+            boss.y = -150; // Resetta per rientrare dall'alto
             boss.targetX = CONFIG.CANVAS_WIDTH / 2;
         }
     } else {
+        // Rientro dall'alto o mantenimento altezza Y
         if (boss.y < 150) boss.y += 4;
         else boss.y = 150;
 
-        if (Math.abs(boss.x - boss.targetX) < 10) {
-            boss.targetX = Math.random() * (CONFIG.CANVAS_WIDTH - 200) + 100;
+        // --- MOVIMENTO ORIZZONTALE CONDIZIONALE ---
+        if (boss.radialWavesRemaining > 0) {
+            // ATTACCO A RAGGERA ATTIVO: Forza la posizione centrale
+            const centerX = CONFIG.CANVAS_WIDTH / 2;
+            const centerLerp = 0.08; // Velocità di riposizionamento al centro
+            boss.x += (centerX - boss.x) * centerLerp;
+        } else {
+            // MOVIMENTO NORMALE: Segue il target casuale
+            if (Math.abs(boss.x - boss.targetX) < 10) {
+                boss.targetX = Math.random() * (CONFIG.CANVAS_WIDTH - 200) + 100;
+            }
+            const lerpSpeed = isP2 ? c.LERP_SPEED_P2 : c.LERP_SPEED;
+            boss.x += (boss.targetX - boss.x) * lerpSpeed;
         }
-        const lerpSpeed = isP2 ? c.LERP_SPEED_P2 : c.LERP_SPEED;
-        boss.x += (boss.targetX - boss.x) * lerpSpeed;
 
-        // 2. ATTACCHI
-        // Radiale
+        // 2. GESTIONE ATTACCHI
+        
+        // Attacco Radiale (A raggera)
         const radialInt = c.RADIAL.INTERVAL * cooldownMult;
         if (now - (boss.lastRadialBurst || 0) > radialInt && (boss.radialWavesRemaining || 0) <= 0) {
             startRadialBurst(boss);
@@ -94,7 +106,7 @@ export function updateBoss(boss) {
         }
         updateRadialBurst(boss, now);
 
-        // Mirato
+        // Attacco Mirato (Targeted)
         const targetedInt = c.TARGETED.INTERVAL * cooldownMult;
         if (now - (boss.lastTargetBurst || 0) > targetedInt) {
             startTargetedBurst(boss, isP2);
@@ -102,7 +114,7 @@ export function updateBoss(boss) {
         }
         updateTargetedBurst(boss, now, isP2);
 
-        // Dash
+        // Dash (Scatto)
         const dashInt = (c.DASH.INTERVAL_MIN + Math.random() * c.DASH.INTERVAL_VAR) * cooldownMult;
         if (now - (boss.lastDash || 0) > dashInt) {
             startDash(boss);
