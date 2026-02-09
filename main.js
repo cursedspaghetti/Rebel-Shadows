@@ -123,6 +123,7 @@ async function handleLoadWizard() {
 
 // --- INITIALIZATION ---
 async function init() {
+    Boss1.preloadBossAssets();
     // 1. Setup iniziale: l'immagine parte vuota e il pulsante è nascosto
     introImage.src = "";
     introImage.dataset.loaded = "false";
