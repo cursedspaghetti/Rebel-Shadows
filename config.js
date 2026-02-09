@@ -8,15 +8,45 @@ export const CONFIG = {
     SCROLL_SPEED: 2.5,
     PARALLAX_SPEED: 1,      
     
-    BOSS_MAX_HP: 5000, 
-    BOSS_PHASE_2_THRESHOLD: 0.5,
-    
-    BOSS_ATTACKS: {
-        RADIAL_INTERVAL: [5000, 8000],
-        DASH_INTERVAL: [9000, 15000], 
-        DASH_SPEED: 15,                
-        RADIAL_BULLET_COUNT: 18,       
-        RADIAL_BULLET_SPEED: 8         
+    BOSS: {
+        MAX_HP: 5000,
+        PHASE_2_THRESHOLD: 0.5,
+        FLOAT_SPEED: 0.003,
+        FLOAT_AMPLITUDE: 15,
+        LERP_SPEED: 0.02,
+        
+        // Attacco RADIALE (Sventagliata)
+        RADIAL: {
+            INTERVAL: 5000,
+            COOLDOWN_P2: 0.6, // Moltiplicatore tempo d'attesa in P2
+            WAVES: 4,
+            BULLETS_PER_WAVE: 25,
+            BULLET_SPEED: 8,
+            BULLET_SPEED_P2: 10,
+            BULLET_DELAY: 20, // ms tra un proiettile e l'altro della sventagliata
+            WAVE_PAUSE: 300,  // ms tra una wave e l'altra
+            ARC_START: 20,    // gradi
+            ARC_END: 160      // gradi
+        },
+
+        // Attacco MIRATO
+        TARGETED: {
+            INTERVAL: 4000,
+            COUNT_P1: 5,
+            COUNT_P2: 8,
+            SPEED_P1: 7,
+            SPEED_P2: 9,
+            DELAY_P1: 180,
+            DELAY_P2: 100
+        },
+
+        // DASH
+        DASH: {
+            INTERVAL_BASE: 9000,
+            INTERVAL_VAR: 6000, // Variabilità random
+            SPEED: 15,
+            SPEED_P2_MULT: 1.2
+        }
     },
     
     PLAYER_MAX_HP: 100,
