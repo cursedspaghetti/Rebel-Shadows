@@ -180,7 +180,7 @@ export function drawPlayer(ctx, img) {
     const frameHeight = 349; 
     
     const scaleX = 0.09;      
-    const scaleY = 0.13;        
+    const scaleY = 0.11;        
     
     const totalFrames = 13; 
     const animationSpeed = 150;
