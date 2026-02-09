@@ -177,7 +177,7 @@ function applyDamage(amount, shakeIntensity) {
 
 function createExplosion(x, y, color = '#FFC300') {
     // Solo 3 o 4 frammenti per un look pulito
-    const particleCount = 3 + Math.floor(Math.random() * 2); 
+    const particleCount = 1 + Math.floor(Math.random() * 2); 
     
     for (let i = 0; i < particleCount; i++) {
         gameState.explosions.push({
