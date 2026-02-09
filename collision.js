@@ -112,7 +112,7 @@ export function handleAllCollisions() {
             for (let e = gameState.enemies.length - 1; e >= 0; e--) {
                 const enemy = gameState.enemies[e];
                 if (Math.abs(enemy.x - ray.x) < (ray.width / 2 + enemy.size / 2) && enemy.y < gameState.playerY) {
-                    enemy.hp -= 5; 
+                    enemy.hp -= 15; 
                     if (enemy.hp <= 0) {
                         createExplosion(enemy.x, enemy.y, '#ffffff');
                         gameState.enemies.splice(e, 1);
@@ -126,7 +126,7 @@ export function handleAllCollisions() {
             if (gameState.bossActive && gameState.boss) {
                 const hitBoxWidth = BOSS_HITBOX_RAD + ray.width / 2;
                 if (Math.abs(gameState.boss.x - ray.x) < hitBoxWidth && gameState.boss.y < gameState.playerY) {
-                    gameState.boss.hp -= 5; 
+                    gameState.boss.hp -= 15; 
                     if (Math.random() > 0.8) {
                         createExplosion(
                             gameState.boss.x + (Math.random() - 0.5) * 40, 
