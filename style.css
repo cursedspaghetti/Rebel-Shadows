@@ -40,8 +40,8 @@ body {
     position: relative;
     /* Usiamo aspect-ratio per evitare che le immagini si schiaccino */
     width: 100dvw;
-    max-width: 500px; 
-    aspect-ratio: 500 / 852;
+    max-width: 393px; 
+    aspect-ratio: 393 / 852;
     max-height: 100dvh;
     background-color: #000;
     overflow: hidden;
@@ -75,8 +75,8 @@ body {
     z-index: 10;
     /* Safe area per mobile senza scurire troppo */
     padding-top: calc(env(safe-area-inset-top, 0px) + 100px);
-    padding-left: 20px;
-    padding-right: 20px;
+    padding-left: 1px;
+    padding-right: 1px;
 }
 
 #wizardIdInput {
