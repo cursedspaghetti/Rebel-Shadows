@@ -335,15 +335,13 @@ export function updateEnemies() {
 
         const now = Date.now();
         if (now - enemy.lastShot > enemy.shootDelay) {
-            gameState.enemyBullets.push({
-                x: enemy.x,
-                y: enemy.y, // Il proiettile parte dal centro del pipistrello
-                size: 8,
-                speed: 5,
-                color: '#ff00ff'
-            });
+            // --- MODIFICA QUI: Chiamiamo la funzione a raggera ---
+            spawnEnemySpread(enemy); 
+            // ----------------------------------------------------
             enemy.lastShot = now;
         }
+        
+        // Mantieni il nemico se è entro i limiti del canvas
         return enemy.y < CONFIG.CANVAS_HEIGHT + 150;
     });
 }
@@ -424,7 +422,7 @@ function getPixelEnemyBullet(color, size) {
 /**
  * Fa sparare il nemico con una raggera di 3 proiettili
  */
-export function spawnEnemySpread(enemy) {
+ function spawnEnemySpread(enemy) {
     if (!gameState.enemyBullets) gameState.enemyBullets = [];
 
     const bulletCount = 3;
