@@ -6,7 +6,7 @@ const batSprite = new Image();
 batSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bat_sprite.png';
 
 // Definiamo le costanti per il ritaglio dello sprite
-const SPRITE_W = 40; // Larghezza di un singolo frame
+const SPRITE_W = 160; // Larghezza di un singolo frame
 const SPRITE_H = 160; // Altezza (lo sprite è verticale o orizzontale? Dalle dimensioni 40x160 sembra verticale, ma se sono 4 immagini orizzontali dovrebbe essere 160x40. Assumiamo 40x40 per frame)
 const FRAME_COUNT = 4;
 
@@ -354,7 +354,7 @@ export function drawEnemies(ctx) {
         
         // Calcoliamo quale frame mostrare
         const currentFrame = Math.floor(enemy.frame) % FRAME_COUNT;
-        const sourceX = currentFrame * 40; // 40 è la larghezza di un frame
+        const sourceX = currentFrame * 160; // 40 è la larghezza di un frame
 
         // Opzionale: Aggiungiamo un leggero bagliore viola dietro il pipistrello
         ctx.shadowBlur = 10;
@@ -364,7 +364,7 @@ export function drawEnemies(ctx) {
         // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
         ctx.drawImage(
             batSprite, 
-            sourceX, 0, 40, 160,          // Taglio dalla sorgente (assumendo frame orizzontali)
+            sourceX, 0, 160, 320,          // Taglio dalla sorgente (assumendo frame orizzontali)
             enemy.x - enemy.size/2,       // Posizione X centrata
             enemy.y - enemy.size/2,       // Posizione Y centrata
             enemy.size, enemy.size * 4    // Scala l'altezza in base alle proporzioni originali
