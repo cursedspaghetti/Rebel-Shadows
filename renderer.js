@@ -347,7 +347,6 @@ export function updateEnemies() {
     });
 }
 
-// --- PROIETTILI NEMICI ---
 export function drawEnemies(ctx) {
     gameState.enemies.forEach(enemy => {
         ctx.save();
@@ -373,6 +372,37 @@ export function drawEnemies(ctx) {
         ctx.restore();
     });
 }
+
+
+// --- PROIETTILI NEMICI ---
+
+export function drawEnemyBullets(ctx) {
+    if (!gameState.enemyBullets) return;
+
+    gameState.enemyBullets.forEach(eb => {
+        ctx.save();
+        
+        // Effetto bagliore (Glow)
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = eb.color || '#ff00ff';
+        
+        // Disegno del proiettile (Nucleo)
+        ctx.fillStyle = '#ffffff'; // Centro bianco per farlo sembrare energetico
+        ctx.beginPath();
+        ctx.arc(eb.x, eb.y, eb.size / 2.5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Anello esterno colorato
+        ctx.strokeStyle = eb.color || '#ff00ff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(eb.x, eb.y, eb.size / 2, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.restore();
+    });
+}
+
 
 
 export function updateEnemyBullets() {
