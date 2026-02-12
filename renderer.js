@@ -2,6 +2,14 @@ import { CONFIG, gameState } from './config.js';
 
 let hoverCounter = 0;
 
+const batSprite = new Image();
+batSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bat_sprite.png';
+
+// Definiamo le costanti per il ritaglio dello sprite
+const SPRITE_W = 40; // Larghezza di un singolo frame
+const SPRITE_H = 160; // Altezza (lo sprite è verticale o orizzontale? Dalle dimensioni 40x160 sembra verticale, ma se sono 4 immagini orizzontali dovrebbe essere 160x40. Assumiamo 40x40 per frame)
+const FRAME_COUNT = 4;
+
 export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
     // 1. SFONDO
     if (bgParallax.complete && bgParallax.naturalWidth !== 0) {
@@ -327,19 +335,26 @@ export function drawEnemies(ctx) {
     });
 }
 
-export function spawnEnemies(count) {
-    for (let i = 0; i < count; i++) {
-        const size = 60 + Math.random() * 40; 
-        gameState.enemies.push({
-            x: Math.random() * (CONFIG.CANVAS_WIDTH - 60) + 30, 
-            y: -100 - (Math.random() * 300), 
-            size: size,
-            speed: 2 + Math.random() * 2,
-            hp: 100,
-            lastShot: Date.now(),
-            shootDelay: 1500 + Math.random() * 2000
-        });
-    }
+export function updateEnemies() {
+    gameState.enemies = gameState.enemies.filter(enemy => {
+        enemy.y += enemy.speed;
+        
+        // Aggiorna l'animazione
+        enemy.frame += enemy.frameSpeed;
+
+        const now = Date.now();
+        if (now - enemy.lastShot > enemy.shootDelay) {
+            gameState.enemyBullets.push({
+                x: enemy.x,
+                y: enemy.y, // Il proiettile parte dal centro del pipistrello
+                size: 8,
+                speed: 5,
+                color: '#ff00ff'
+            });
+            enemy.lastShot = now;
+        }
+        return enemy.y < CONFIG.CANVAS_HEIGHT + 150;
+    });
 }
 
 export function updateEnemies() {
@@ -362,32 +377,33 @@ export function updateEnemies() {
     });
 }
 // --- PROIETTILI NEMICI ---
-export function drawEnemyBullets(ctx) {
-    if (!gameState.enemyBullets) return;
-
-    gameState.enemyBullets.forEach(eb => {
+export function drawEnemies(ctx) {
+    gameState.enemies.forEach(enemy => {
         ctx.save();
         
-        // Effetto bagliore (Glow)
+        // Calcoliamo quale frame mostrare
+        const currentFrame = Math.floor(enemy.frame) % FRAME_COUNT;
+        const sourceX = currentFrame * 40; // 40 è la larghezza di un frame
+
+        // Opzionale: Aggiungiamo un leggero bagliore viola dietro il pipistrello
         ctx.shadowBlur = 10;
-        ctx.shadowColor = eb.color || '#ff00ff';
-        
-        // Disegno del proiettile (Nucleo)
-        ctx.fillStyle = '#ffffff'; // Centro bianco per farlo sembrare energetico
-        ctx.beginPath();
-        ctx.arc(eb.x, eb.y, eb.size / 2.5, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Anello esterno colorato
-        ctx.strokeStyle = eb.color || '#ff00ff';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(eb.x, eb.y, eb.size / 2, 0, Math.PI * 2);
-        ctx.stroke();
-        
+        ctx.shadowColor = 'rgba(138, 43, 226, 0.5)';
+
+        // Disegniamo lo sprite
+        // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+        ctx.drawImage(
+            batSprite, 
+            sourceX, 0, 40, 160,          // Taglio dalla sorgente (assumendo frame orizzontali)
+            enemy.x - enemy.size/2,       // Posizione X centrata
+            enemy.y - enemy.size/2,       // Posizione Y centrata
+            enemy.size, enemy.size * 4    // Scala l'altezza in base alle proporzioni originali
+        );
+
         ctx.restore();
     });
 }
+
+
 export function updateEnemyBullets() {
     if (!gameState.enemyBullets) return;
     // Rimuove proiettili nemici che escono dal fondo
