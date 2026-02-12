@@ -2,15 +2,6 @@ import { CONFIG, gameState } from './config.js';
 
 let hoverCounter = 0;
 
-const batSprite = new Image();
-batSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bat_sprite.png';
-
-// Definiamo le costanti per il ritaglio dello sprite
-const SPRITE_W = 160; // Larghezza di un singolo frame
-const SPRITE_H = 160; // Altezza (lo sprite è verticale o orizzontale? Dalle dimensioni 40x160 sembra verticale, ma se sono 4 immagini orizzontali dovrebbe essere 160x40. Assumiamo 40x40 per frame)
-const FRAME_COUNT = 4;
-
-
 export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
     // 1. SFONDO
     if (bgParallax.complete && bgParallax.naturalWidth !== 0) {
@@ -307,6 +298,16 @@ export function updateBullets() {
 }
 
 // --- NEMICI ---
+
+const batSprite = new Image();
+batSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bat_sprite.png';
+
+// Definiamo le costanti per il ritaglio dello sprite
+const SPRITE_W = 160; // Larghezza di un singolo frame
+const SPRITE_H = 160; // Altezza (lo sprite è verticale o orizzontale? Dalle dimensioni 40x160 sembra verticale, ma se sono 4 immagini orizzontali dovrebbe essere 160x40. Assumiamo 40x40 per frame)
+const FRAME_COUNT = 4;
+
+
 export function spawnEnemies(count) {
     for (let i = 0; i < count; i++) {
         const size = 60 + Math.random() * 20; 
@@ -350,22 +351,21 @@ export function drawEnemies(ctx) {
     gameState.enemies.forEach(enemy => {
         ctx.save();
         
-        // Calcoliamo quale frame mostrare
+        // Calcolo del frame (Assumendo che siano disposti orizzontalmente)
         const currentFrame = Math.floor(enemy.frame) % FRAME_COUNT;
-        const sourceX = currentFrame * 160; // 40 è la larghezza di un frame
+        const sourceX = currentFrame * 160; 
 
-        // Opzionale: Aggiungiamo un leggero bagliore viola dietro il pipistrello
+        // Opzionale: Bagliore viola
         ctx.shadowBlur = 10;
         ctx.shadowColor = 'rgba(138, 43, 226, 0.5)';
 
-        // Disegniamo lo sprite
-        // drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
         ctx.drawImage(
             batSprite, 
-            sourceX, 0, 160, 320,          // Taglio dalla sorgente (assumendo frame orizzontali)
-            enemy.x - enemy.size/2,       // Posizione X centrata
-            enemy.y - enemy.size/2,       // Posizione Y centrata
-            enemy.size, enemy.size * 4    // Scala l'altezza in base alle proporzioni originali
+            sourceX, 0, 160, 160,          // Taglio sorgente quadrato (160x160)
+            enemy.x - enemy.size / 2,      // Posizione X centrata
+            enemy.y - enemy.size / 2,      // Posizione Y centrata
+            enemy.size,                    // Larghezza a schermo
+            enemy.size                     // Altezza a schermo (uguale alla larghezza)
         );
 
         ctx.restore();
@@ -422,20 +422,19 @@ function getPixelEnemyBullet(color, size) {
 /**
  * Fa sparare il nemico con una raggera di 3 proiettili
  */
- function spawnEnemySpread(enemy) {
+ export function spawnEnemySpread(enemy) {
     if (!gameState.enemyBullets) gameState.enemyBullets = [];
 
     const bulletCount = 3;
-    const speed = 4;
-    // Angoli in radianti: -0.4 (sinistra), 0 (centro), 0.4 (destra)
+    const speed = 5; // Un po' più veloce per i nemici
     const angles = [-0.4, 0, 0.4]; 
 
     angles.forEach(angle => {
         gameState.enemyBullets.push({
-            x: enemy.x + (enemy.width || 0) / 2,
-            y: enemy.y + (enemy.height || 0),
-            size: 16,
-            color: enemy.bulletColor || '#ff00ff',
+            x: enemy.x, // Già centrato
+            y: enemy.y + (enemy.size / 4), // Parte leggermente sotto il centro del corpo
+            size: 14, // Dimensione pixel art
+            color: '#ff00ff',
             vx: Math.sin(angle) * speed,
             vy: Math.cos(angle) * speed
         });
