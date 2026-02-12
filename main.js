@@ -3,6 +3,8 @@ import * as Renderer from './renderer.js';
 import * as Boss1 from './Boss1.js';
 import * as SpecialAttacks from './Special Attacks.js';
 import * as collision from './collision.js';
+import * as Enemies from './enemies.js';
+
 
 // --- CONFIGURAZIONE TOUCH ---
 const TOUCH_SETTINGS = {
@@ -229,8 +231,8 @@ function gameLoop() {
     // 5. AGGIORNAMENTO LOGICA ENTITÀ
     Renderer.autoFire();
     Renderer.updateBullets();
-    Renderer.updateEnemies();
-    Renderer.updateEnemyBullets();
+    Enemies.updateEnemies();
+    Enemies.updateEnemyBullets();
     collision.updateExplosions(); 
     SpecialAttacks.updateSpecialRay();
     SpecialAttacks.updateSpecialRay2();
@@ -238,7 +240,7 @@ function gameLoop() {
     // Spawn nemici comuni (solo se il boss non c'è)
     if (!gameState.bossActive) {
         if (now - (gameState.lastEnemySpawn || 0) > 2000) {
-            Renderer.spawnEnemies(3);
+            Enemies.spawnEnemies(3);
             gameState.lastEnemySpawn = now;
         }
         if (gameState.gameTimer <= 40) {
@@ -267,12 +269,12 @@ function gameLoop() {
     const isBlinking = gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0;
     if (!isBlinking) Renderer.drawPlayer(ctx, playerSprite);
 
-    Renderer.drawEnemies(ctx);
-    Renderer.drawEnemyBullets(ctx);
+    Enemies.drawEnemies(ctx);
+    Enemies.drawEnemyBullets(ctx);
     SpecialAttacks.drawSpecialRay(ctx);
     SpecialAttacks.drawSpecialRay2(ctx);
     if (gameState.isCharging || gameState.isCharging2) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
-    Renderer.drawBullets(ctx);
+    Enemies.drawBullets(ctx);
     collision.drawExplosions(ctx);
 
     ctx.restore(); 
