@@ -40,8 +40,8 @@ body {
     position: relative;
     /* Usiamo aspect-ratio per evitare che le immagini si schiaccino */
     width: 100dvw;
-    max-width: 393px; 
-    aspect-ratio: 393 / 852;
+    max-width: 440px; /* Alza il limite per includere i modelli Pro Max/Plus */
+    aspect-ratio: 9 / 19.5; /* Rapporto standard degli smartphone moderni */
     max-height: 100dvh;
     background-color: #000;
     overflow: hidden;
