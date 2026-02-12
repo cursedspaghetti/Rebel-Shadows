@@ -35,28 +35,25 @@ body {
     }
 }
 
-/* 1. CONTENITORE GIOCO */
 #game-container {
     position: relative;
-    /* Usiamo aspect-ratio per evitare che le immagini si schiaccino */
     width: 100dvw;
-    max-width: 440px; /* Alza il limite per includere i modelli Pro Max/Plus */
-    aspect-ratio: 9 / 19.5; /* Rapporto standard degli smartphone moderni */
-    max-height: 100dvh;
+    height: 100dvh; /* Usa l'altezza dinamica totale */
+    max-width: none; /* Rimuovi il limite se vuoi il vero full screen */
     background-color: #000;
     overflow: hidden;
     image-rendering: pixelated;
 }
 
-/* 2. IL CANVAS */
 #gameCanvas {
     display: block;
     width: 100%;
     height: 100%;
-    /* Impedisce lo schiacciamento dell'immagine se le proporzioni cambiano */
-    object-fit: contain; 
+    /* Rimuovi object-fit o usa cover se vuoi riempire ogni angolo */
+    object-fit: fill; 
     background: transparent;
 }
+
 
 /* --- 3. SCHERMATA INIZIALE --- */
 #startScreen {
