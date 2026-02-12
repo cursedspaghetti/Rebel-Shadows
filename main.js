@@ -48,6 +48,18 @@ chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-W
 export const shadowImg = new Image();
 shadowImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png";
 
+function resizeCanvas() {
+    // 1. Aggiorna le dimensioni reali del canvas
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // 2. Aggiorna il CONFIG in memoria così i calcoli di spawn e bordi sono corretti
+    CONFIG.CANVAS_WIDTH = canvas.width;
+    CONFIG.CANVAS_HEIGHT = canvas.height;
+
+    console.log(`Canvas resized to: ${canvas.width}x${canvas.height}`);
+}
+
 // rimozione sfondo
 function makeTransparent(img) {
     const canvas = document.createElement('canvas');
@@ -124,6 +136,8 @@ async function handleLoadWizard() {
 
 // --- INITIALIZATION ---
 async function init() {
+    resizeCanvas(); // Chiama il resize subito
+    window.addEventListener('resize', resizeCanvas);
     Boss1.preloadBossAssets();
     // 1. Setup iniziale: l'immagine parte vuota e il pulsante è nascosto
     introImage.src = "";
@@ -382,8 +396,9 @@ canvas.addEventListener('touchend', (e) => {
 });
 
 function updateCoords(touch, rect) {
-    gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
-    gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
+    // Se il canvas è full screen, il rapporto è 1:1
+    gameState.touchX = touch.clientX - rect.left;
+    gameState.touchY = touch.clientY - rect.top;
 }
 
 window.addEventListener('keydown', (e) => {
