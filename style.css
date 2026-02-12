@@ -85,9 +85,8 @@ body {
 }
 
 #startButton {
-    visibility: hidden;
+    display: none;
     opacity: 0;
-    pointer-events: none; /* Evita click quando è invisibile */
 }
 
 #startButton.visible {
