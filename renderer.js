@@ -306,33 +306,23 @@ export function updateBullets() {
 }
 
 // --- NEMICI ---
-export function drawEnemies(ctx) {
-    gameState.enemies.forEach(enemy => {
-        ctx.save();
-        const ghostGlow = ctx.createRadialGradient(enemy.x, enemy.y, 0, enemy.x, enemy.y, enemy.size);
-        ghostGlow.addColorStop(0, 'rgba(138, 43, 226, 0.6)');
-        ghostGlow.addColorStop(0.5, 'rgba(75, 0, 130, 0.3)');
-        ghostGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
-        ctx.fillStyle = ghostGlow;
-        ctx.beginPath();
-        ctx.arc(enemy.x, enemy.y, enemy.size, 0, Math.PI * 2);
-        ctx.fill();
-
-        const voidCore = ctx.createRadialGradient(enemy.x, enemy.y, enemy.size * 0.1, enemy.x, enemy.y, enemy.size * 0.4);
-        voidCore.addColorStop(0, '#000000');
-        voidCore.addColorStop(0.7, '#1a0033');
-        voidCore.addColorStop(1, '#00ffff');
-
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = '#8a2be2';
-        ctx.fillStyle = voidCore;
-        ctx.beginPath();
-        ctx.arc(enemy.x, enemy.y, enemy.size * 0.4, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
-    });
+export function spawnEnemies(count) {
+    for (let i = 0; i < count; i++) {
+        const size = 60 + Math.random() * 20; 
+        gameState.enemies.push({
+            x: Math.random() * (CONFIG.CANVAS_WIDTH - 60) + 30, 
+            y: -100 - (Math.random() * 300), 
+            size: size,
+            speed: 2 + Math.random() * 2,
+            hp: 100,
+            lastShot: Date.now(),
+            shootDelay: 1500 + Math.random() * 2000,
+            // Proprietà per l'animazione
+            frame: 0,
+            frameTimer: 0,
+            frameSpeed: 0.15 // Velocità del battito d'ali
+        });
+    }
 }
 
 export function updateEnemies() {
@@ -357,25 +347,6 @@ export function updateEnemies() {
     });
 }
 
-export function updateEnemies() {
-    // Rimuove nemici che escono dal fondo dello schermo
-    gameState.enemies = gameState.enemies.filter(enemy => {
-        enemy.y += enemy.speed;
-
-        const now = Date.now();
-        if (now - enemy.lastShot > enemy.shootDelay) {
-            gameState.enemyBullets.push({
-                x: enemy.x,
-                y: enemy.y + enemy.size / 2,
-                size: 8,
-                speed: 5,
-                color: '#ff00ff'
-            });
-            enemy.lastShot = now;
-        }
-        return enemy.y < CONFIG.CANVAS_HEIGHT + 100;
-    });
-}
 // --- PROIETTILI NEMICI ---
 export function drawEnemies(ctx) {
     gameState.enemies.forEach(enemy => {
