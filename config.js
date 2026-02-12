@@ -2,8 +2,8 @@
  * CONFIGURATION CONSTANTS
  */
 export const CONFIG = {
-    CANVAS_WIDTH: 393,
-    CANVAS_HEIGHT: 852,
+    CANVAS_WIDTH: window.innerWidth,
+    CANVAS_HEIGHT: window.innerHeight,
     GAME_TIME: 60,             
     SCROLL_SPEED: 2.5,
     PARALLAX_SPEED: 1,      
