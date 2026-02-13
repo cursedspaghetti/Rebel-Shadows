@@ -76,7 +76,21 @@ export const CONFIG = {
 /**
  * GLOBAL GAME STATE
  */
+/**
+ * GLOBAL GAME STATE
+ */
 export let gameState = {
+    // --- Nuove variabili per Skill Tree e Progresso ---
+    bossDefeatedCount: 0, // Tiene traccia di quanti boss hai ucciso
+    playerSkills: {
+        offense: 0,
+        defense: 0,
+        speed: 0,
+        magic: 0,
+        points: 0 // Punti da spendere
+    },
+
+    // --- Stati Schermata e UI ---
     bubbleAlpha1: 0,
     bubbleAlpha2: 0,
     bookAlpha: 0,
@@ -84,22 +98,25 @@ export let gameState = {
     fadeSpeed: 0.016, 
     
     currentScreen: 'start', 
-    screenShake: 0,          
+    screenShake: 0,           
     
+    // --- Statistiche Giocatore ---
     hp: CONFIG.PLAYER_MAX_HP,
     isInvulnerable: false,
     lastDamageTime: 0,
     playerX: CONFIG.CANVAS_WIDTH / 2,
     playerY: CONFIG.CANVAS_HEIGHT - 300,
-    playerSpeed: 3,
+    playerSpeed: 3, // Questo verrà modificato dallo skill tree 'speed'
     playerTrail: [],
     
+    // --- Input ---
     keys: {},
     touchIdentifier: null,
     touchX: null,
     touchY: null,
     isTouchActive: false,
 
+    // --- Sistema di Fuoco ---
     fireRateLevel: 1,
     bulletLevel: 3,
     fireRate: 200,
@@ -107,6 +124,7 @@ export let gameState = {
     bullets: [], 
     enemyBullets: [], 
 
+    // --- Abilità Speciali 1 ---
     shieldActive: false,
     shieldDuration: 5,
     shieldStartTime: 0,
@@ -128,6 +146,7 @@ export let gameState = {
     isCharging: false,
     rayParticles: [],
 
+    // --- Abilità Speciali 2 ---
     specialCooldown2: 10,
     specialLastUsed2: 0,
     specialOnCooldown2: false,
@@ -142,27 +161,16 @@ export let gameState = {
     isCharging2: false,
     rayParticles2: [],
     
+    // --- Entità e Mondo ---
     enemies: [],      
     bossBullets: [],  
     explosions: [],
     gameTimer: CONFIG.GAME_TIME,
     timerInterval: null,
     
+    // --- Gestione Boss ---
     bossActive: false,
-    boss: {
-        x: CONFIG.CANVAS_WIDTH / 2,
-        y: -200,
-        hp: CONFIG.BOSS.MAX_HP, // Corretto riferimento
-        maxHp: CONFIG.BOSS.MAX_HP, // Corretto riferimento
-        targetX: CONFIG.CANVAS_WIDTH / 2,
-        lastShot: 0,
-        lastRadialShot: 0,    
-        lastDash: 0,          
-        isDashing: false,     
-        dashVX: 0,            
-        dashVY: 0,            
-        phase: 1
-    },
+    boss: null, // Inizializzato a null perché lo creiamo con spawnBoss()
     lastEnemySpawn: 0,
     
     backgroundPositionY: 0,
