@@ -205,7 +205,7 @@ init();
 // --- GAME LOOP ---
 function gameLoop() {
     // 1. USCITA IMMEDIATA
-    // Se non siamo in gioco, il loop si ferma e non si pianifica il prossimo frame
+    // Fondamentale: se siamo in 'powerup', il loop si interrompe e non si auto-riproduce
     if (gameState.currentScreen !== 'playing') return;
 
     const now = Date.now();
@@ -240,18 +240,23 @@ function gameLoop() {
 
     // 6. LOGICA SPAWN (NEMICI / BOSS)
     if (!gameState.bossActive) {
-        // Spawn nemici comuni
-        if (now - (gameState.lastEnemySpawn || 0) > 2000) {
-            Enemies.spawnEnemies(3);
-            gameState.lastEnemySpawn = now;
-        }
-        // Attivazione Boss (solo se non è già attivo)
-        if (gameState.gameTimer <= 55) {
+        // Spawn nemici comuni (solo se il timer è sopra la soglia del boss)
+        if (gameState.gameTimer > 55) {
+            if (now - (gameState.lastEnemySpawn || 0) > 2000) {
+                Enemies.spawnEnemies(3);
+                gameState.lastEnemySpawn = now;
+            }
+        } else {
+            // Attivazione Boss
             gameState.bossActive = true;
-            gameState.enemies = []; 
-            // Inizializza il boss qui se non lo fai altrove
+            gameState.enemies = []; // Pulisce i nemici piccoli
+            
+            // Inizializza il boss scalando il livello
+            // Assicurati che gameState.bossDefeatedCount sia inizializzato a 0 in config.js
             if (!gameState.boss) {
-                gameState.boss = Boss1.spawnBoss(); // Assicurati di avere una funzione spawn
+                const bossLevel = (gameState.bossDefeatedCount || 0) + 1;
+                gameState.boss = Boss1.spawnBoss(bossLevel);
+                console.log(`Spawning Boss Level: ${bossLevel}`);
             }
         }
     }
@@ -262,11 +267,14 @@ function gameLoop() {
         Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
         
         if (gameState.boss.hp <= 0) {
+            // Vittoria!
             gameState.bossActive = false;
-            gameState.boss = null; 
-            showPowerUpScreen(); 
-            ctx.restore(); // Fondamentale fare restore prima di uscire!
-            return; // Interrompe il loop per la schermata skill tree
+            gameState.boss = null;
+            gameState.bossBullets = []; // Pulizia immediata proiettili
+            
+            ctx.restore(); 
+            showPowerUpScreen(); // Questa funzione mette lo stato su 'powerup'
+            return; 
         }
     }
 
@@ -294,7 +302,6 @@ function gameLoop() {
     // 11. PIANIFICAZIONE PROSSIMO FRAME
     requestAnimationFrame(gameLoop);
 }
-
 // --- HELPER FUNCTIONS ---
 
 function updateAndDrawBackgrounds() {
