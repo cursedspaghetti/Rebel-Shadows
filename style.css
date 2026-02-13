@@ -1,9 +1,10 @@
-/* 0. RESET GLOBALI */
+/* --- 0. RESET E FONT --- */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 * {
     box-sizing: border-box;
     -webkit-touch-callout: none;
+    -webkit-user-select: none;
     -webkit-user-select: none;
     user-select: none;
     touch-action: manipulation;
@@ -25,7 +26,7 @@ body {
     position: fixed; /* Impedisce movimenti indesiderati su iOS */
 }
 
-/* --- ANIMAZIONE FADE IN --- */
+/* --- 1. ANIMAZIONI --- */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -37,11 +38,11 @@ body {
     }
 }
 
+/* --- 2. CONTENITORI PRINCIPALI --- */
 #game-container {
     position: relative;
     width: 100dvw;
-    height: 100dvh; /* Usa l'altezza dinamica totale */
-    max-width: none; /* Rimuovi il limite se vuoi il vero full screen */
+    height: 100dvh;
     background-color: #000;
     overflow: hidden;
     image-rendering: pixelated;
@@ -51,11 +52,9 @@ body {
     display: block;
     width: 100%;
     height: 100%;
-    /* Rimuovi object-fit o usa cover se vuoi riempire ogni angolo */
     object-fit: contain; 
     background: transparent;
 }
-
 
 /* --- 3. SCHERMATA INIZIALE --- */
 #startScreen {
@@ -64,7 +63,6 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    /* Ritorno al layout originale dall'alto */
     display: flex;
     flex-direction: column;
     justify-content: flex-start; 
@@ -72,10 +70,7 @@ body {
     color: white;
     text-align: center;
     z-index: 10;
-    /* Safe area per mobile senza scurire troppo */
     padding-top: calc(env(safe-area-inset-top, 0px) + 100px);
-    padding-left: 1px;
-    padding-right: 1px;
 }
 
 #wizardIdInput {
@@ -95,69 +90,114 @@ body {
     animation-delay: 1s; 
 }
 
-.skill-tree-container {
-    display: flex;
-    justify-content: space-around;
-    gap: 20px;
-    margin-top: 20px;
-    padding: 10px;
+/* --- 4. SCHERMATA SKILL TREE (POWER UP) --- */
+#powerUpScreen {
+    position: absolute;    /* Sovrappone al canvas */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9); /* Sfondo scuro trasparente */
+    z-index: 100;          /* Sopra a tutto */
+    display: none;         /* Diventa 'flex' via JS */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    padding: 20px;
+    text-align: center;
 }
 
+#powerUpScreen h1 {
+    font-size: 16px;
+    color: #ffd700;
+    margin-bottom: 5px;
+}
+
+#powerUpScreen h2 {
+    font-size: 10px;
+    margin-bottom: 20px;
+}
+
+/* Contenitore delle 4 colonne */
+.skill-tree-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 15px;
+    width: 100%;
+    max-width: 1000px;
+    overflow-x: auto; /* Permette lo scroll orizzontale su schermi piccoli */
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+/* Singola colonna (Path) */
 .skill-path {
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Spazio tra i livelli */
+    gap: 12px;
     align-items: center;
+    min-width: 90px;
 }
 
+.skill-path h3 {
+    font-size: 8px;
+    margin-bottom: 10px;
+    color: #aaa;
+}
+
+/* Singolo Bottone Abilità (Nodo) */
 .skill-node {
-    width: 100px;
-    height: 50px;
+    width: 90px;
+    height: 45px;
     border: 2px solid #555;
     background: #222;
     color: white;
     cursor: pointer;
-    transition: all 0.3s;
-    font-size: 0.8rem;
-    border-radius: 5px;
+    transition: all 0.2s;
+    font-size: 7px;
+    padding: 5px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    line-height: 1.2;
 }
 
-/* Stile per abilità sbloccabili */
-.skill-node.available {
-    border-color: #ffd700;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
-}
-
-/* Stile per abilità già prese */
+/* Stati delle Abilità */
 .skill-node.unlocked {
     background: #ffd700;
     color: black;
+    border-color: #fff;
     font-weight: bold;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
-/* Stile per abilità bloccate */
 .skill-node.locked {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
+    filter: grayscale(1);
 }
 
-.skill-node:hover:not(.locked) {
-    transform: scale(1.1);
+.skill-node:hover:not(.locked):not(.unlocked) {
+    border-color: #fff;
     background: #444;
+    transform: scale(1.05);
 }
 
-/* 5. BOTTONI PIXEL ART */
+/* --- 5. BOTTONI GENERALI (STILE PIXEL) --- */
 button {
     font-family: 'Press Start 2P', cursive;
     background-color: #1b0190;
     color: white;
     border: 4px solid #fff;
-    padding: 15px;
+    padding: 12px;
     cursor: pointer;
     box-shadow: 4px 4px 0px #000;
     font-size: 10px;
     transition: transform 0.1s;
-    /* Evita che il bottone sia troppo piccolo per il pollice */
     min-height: 44px;
 }
 
@@ -166,14 +206,24 @@ button:active:not(:disabled) {
     box-shadow: 0px 0px 0px #000;
 }
 
-/* 6. CORREZIONE PER SCHERMI CORTI */
+/* --- 6. RESPONSIVE E CORREZIONI --- */
+@media (max-width: 600px) {
+    .skill-tree-container {
+        justify-content: flex-start; /* Permette lo scroll orizzontale */
+        padding-left: 20px;
+    }
+    
+    .skill-node {
+        width: 75px;
+        height: 40px;
+        font-size: 6px;
+    }
+
+    #powerUpScreen h1 { font-size: 14px; }
+}
+
 @media (max-height: 700px) {
     #startScreen {
         padding-top: 40px;
-    }
-    #game-container {
-        /* Se lo schermo è troppo corto, ridimensiona proporzionalmente */
-        width: auto;
-        height: 100dvh;
     }
 }
