@@ -3,47 +3,57 @@ import { CONFIG, gameState } from './config.js';
 // --- SISTEMA DI CACHING OTTIMIZZATO ---
 const bulletCache = {};
 
-function getPixelBullet(color, size) {
+/**
+ * Genera proiettili tondi in stile pixel art coerenti con enemyBulletCache
+ */
+export function getPixelBullet(color, size) {
     const key = `${color}-${size}`;
     if (bulletCache[key]) return bulletCache[key];
 
     const canvas = document.createElement('canvas');
-    const padding = 10; 
-    canvas.width = size + padding * 2;
-    canvas.height = size + padding * 2;
+    // Manteniamo la logica del pixelSize dinamico (1/4 della dimensione)
+    const pixelSize = size / 4; 
+    canvas.width = size;
+    canvas.height = size;
     const ctx = canvas.getContext('2d');
-    
-    const center = canvas.width / 2;
-    const pSize = 4; 
-    const r = size / 2;
 
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = color;
-    ctx.fillStyle = color;
+    const center = size / 2;
+    const radiusSq = (size / 2) * (size / 2);
 
-    for (let py = 0; py < size; py += pSize) {
-        for (let px = 0; px < size; px += pSize) {
-            const dx = px - r;
-            const dy = py - r;
-            if (dx * dx + dy * dy <= r * r) {
-                ctx.fillRect(px + padding, py + padding, pSize, pSize);
+    for (let y = 0; y < size; y += pixelSize) {
+        for (let x = 0; x < size; x += pixelSize) {
+            // Calcolo distanza dal centro del pixel corrente rispetto al centro del canvas
+            const dx = x + pixelSize / 2 - center;
+            const dy = y + pixelSize / 2 - center;
+            const distSq = dx * dx + dy * dy;
+
+            if (distSq <= radiusSq) {
+                // Core bianco (20% dell'area interna) e bordo colorato
+                // Questo crea l'effetto "bullet" luminoso tipico degli shoot 'em up
+                ctx.fillStyle = distSq <= radiusSq * 0.2 ? '#ffffff' : color;
+                
+                ctx.fillRect(
+                    Math.floor(x), 
+                    Math.floor(y), 
+                    Math.ceil(pixelSize), 
+                    Math.ceil(pixelSize)
+                );
             }
         }
     }
-    
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = 'white';
-    ctx.fillRect(Math.floor(center - pSize / 2), Math.floor(center - pSize / 2), pSize, pSize);
 
     bulletCache[key] = canvas;
     return canvas;
 }
 
+/**
+ * Precarica gli asset del boss utilizzando la nuova logica pixel art
+ */
 export function preloadBossAssets() {
+    // Assicurati che CONFIG sia accessibile o importato
     getPixelBullet(CONFIG.BOSS.RADIAL.COLOR, CONFIG.BOSS.RADIAL.SIZE);
     getPixelBullet(CONFIG.BOSS.TARGETED.COLOR, CONFIG.BOSS.TARGETED.SIZE);
 }
-
 /**
  * LOGICA DI AGGIORNAMENTO
  */
