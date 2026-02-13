@@ -141,6 +141,7 @@ async function init() {
     resizeCanvas(); // Chiama il resize subito
     window.addEventListener('resize', resizeCanvas);
     Boss1.preloadBossAssets();
+    initSkillTree();
     // 1. Setup iniziale: l'immagine parte vuota e il pulsante è nascosto
     introImage.src = "";
     introImage.dataset.loaded = "false";
@@ -243,7 +244,7 @@ function gameLoop() {
             Enemies.spawnEnemies(3);
             gameState.lastEnemySpawn = now;
         }
-        if (gameState.gameTimer <= 40) {
+        if (gameState.gameTimer <= 55) {
             gameState.bossActive = true;
             gameState.enemies = []; 
         }
@@ -257,6 +258,7 @@ function gameLoop() {
         if (gameState.boss.hp <= 0) {
             Renderer.createExplosion(gameState.boss.x, gameState.boss.y, '#ff0000');
             gameState.bossActive = false;
+            gameState.boss = null; // Rimuoviamo l'oggetto boss
             showPowerUpScreen(); 
             return; 
         }
@@ -385,4 +387,94 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
 
 startButton.addEventListener('click', startGame);
-//init();
+
+
+
+// --- LOGICA SKILL TREE ---
+
+// Stato iniziale (puoi metterlo anche in config.js se preferisci)
+const playerSkills = {
+    offense: 0,
+    defense: 0,
+    speed: 0,
+    magic: 0,
+    points: 1 // Guadagni un punto ogni boss
+};
+
+function initSkillTree() {
+    const skillButtons = document.querySelectorAll('.skill-node');
+    const skillPointsDisplay = document.getElementById('skill-points');
+
+    skillButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const path = button.parentElement.dataset.path;
+            const level = parseInt(button.dataset.level);
+
+            // Verifica: Hai punti? È il livello successivo?
+            if (playerSkills.points > 0 && level === playerSkills[path] + 1) {
+                
+                // Applica il potenziamento
+                playerSkills[path] = level;
+                playerSkills.points--;
+                
+                // Aggiorna UI
+                button.classList.remove('locked');
+                button.classList.add('unlocked');
+                skillPointsDisplay.innerText = playerSkills.points;
+
+                // Applica benefici reali alle statistiche
+                applySkillBonus(path, level);
+                
+                console.log(`Sbloccato ${path} Lv. ${level}`);
+            } else if (playerSkills.points <= 0) {
+                alert("Non hai abbastanza punti abilità!");
+            } else {
+                alert("Devi sbloccare il livello precedente!");
+            }
+        });
+    });
+
+    // Bottone per tornare al gioco
+    document.getElementById('closeSkills').addEventListener('click', () => {
+        resumeGame();
+    });
+}
+
+function applySkillBonus(path, level) {
+    switch(path) {
+        case 'offense':
+            // Esempio: CONFIG.PLAYER_DAMAGE += 2;
+            break;
+        case 'defense':
+            gameState.hp = Math.min(gameState.hp + 20, CONFIG.PLAYER_MAX_HP);
+            break;
+        case 'speed':
+            gameState.playerSpeed += 0.5;
+            break;
+    }
+}
+
+function showPowerUpScreen() {
+    gameState.currentScreen = 'powerup';
+    powerUpScreen.style.display = 'flex'; // Usiamo flex per il layout a colonne
+    
+    // Reset timer e interrompi spawn
+    if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+    
+    // Aggiungiamo un punto abilità per la vittoria
+    playerSkills.points++;
+    document.getElementById('skill-points').innerText = playerSkills.points;
+}
+
+function resumeGame() {
+    powerUpScreen.style.display = 'none';
+    gameState.currentScreen = 'playing';
+    
+    // Ripristina il timer o aumenta la difficoltà
+    gameState.gameTimer = 60; // Esempio: reset timer per il prossimo boss
+    gameState.timerInterval = setInterval(() => {
+        if (gameState.gameTimer > 0) gameState.gameTimer--;
+    }, 1000);
+    
+    requestAnimationFrame(gameLoop); // Riavvia il loop
+}
