@@ -325,12 +325,6 @@ function startGame() {
     gameLoop();
 }
 
-function showPowerUpScreen() {
-    gameState.currentScreen = 'powerup';
-    powerUpScreen.style.display = 'flex';
-    if (gameState.timerInterval) clearInterval(gameState.timerInterval);
-}
-
 
 // --- INPUT LISTENERS ---
 canvas.addEventListener('touchstart', (e) => {
