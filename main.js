@@ -342,28 +342,44 @@ function startGame() {
 
 
 // --- INPUT LISTENERS ---
+// --- LOGICA INPUT TOUCH AGGIORNATA ---
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
+    const now = Date.now();
+
+    // Gestione del primo dito (Movimento e Tap)
     if (e.touches.length === 1) {
         const touch = e.touches[0];
         gameState.touchIdentifier = touch.identifier;
         gameState.isTouchActive = true;
         updateCoords(touch, rect);
-    }
-    if (e.touches.length >= 2 && gameState.currentScreen === 'playing') {
-        if (secondFingerTimer) {
-            clearTimeout(secondFingerTimer);
-            secondFingerTimer = null;
-            SpecialAttacks.fireSpecialAttackSequence2();
+
+        // --- LOGICA SINGLE vs DOUBLE TAP ---
+        const lastTap = canvas.dataset.lastTap || 0;
+        const timesince = now - lastTap;
+
+        if (timesince < TOUCH_SETTINGS.TAP_DELAY && timesince > 0) {
+            // DOPPIO TAP RILEVATO -> Special Attack 1
+            console.log("Double Tap: Special Attack 1");
+            SpecialAttacks.fireSpecialAttackSequence(); 
+            canvas.dataset.lastTap = 0; // Reset per evitare tripli tap
         } else {
-            secondFingerTimer = setTimeout(() => {
-                SpecialAttacks.fireSpecialAttackSequence();
-                secondFingerTimer = null;
-            }, TOUCH_SETTINGS.TAP_DELAY);
+            // SINGOLO TAP (o primo del doppio) -> Shield
+            // Usiamo un piccolo timeout per non attivare lo scudo se è l'inizio di un doppio tap? 
+            // In un action game è meglio attivarlo subito per reattività:
+            SpecialAttacks.activateShield(); 
+            canvas.dataset.lastTap = now;
         }
     }
+
+    // Gestione secondo dito (Multi-touch) - Lasciato invariato o per Special 2
+    if (e.touches.length >= 2 && gameState.currentScreen === 'playing') {
+        // Puoi decidere di mappare lo Special 2 qui in futuro
+        // SpecialAttacks.fireSpecialAttackSequence2();
+    }
 }, { passive: false });
+
 
 canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
