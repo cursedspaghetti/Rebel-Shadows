@@ -301,7 +301,7 @@ function drawBossBullets(ctx) {
 }
 
 function drawBossUI(ctx, boss) {
-    const healthPercent = Math.max(0, (boss.hp || 0) / (boss.maxHp || 1);
+    const healthPercent = Math.max(0, (boss.hp || 0) / (boss.maxHp || 1));
     const barWidth = 200; 
     const barHeight = 10;
     const x = Math.floor((ctx.canvas.width - barWidth) / 2);
