@@ -256,7 +256,7 @@ function gameLoop() {
         Boss1.drawBossShadow(ctx, gameState.boss, shadowImg); // Disegna Boss, UI e Proiettili
         
         if (gameState.boss.hp <= 0) {
-            Renderer.createExplosion(gameState.boss.x, gameState.boss.y, '#ff0000');
+            collision.createExplosion(gameState.boss.x, gameState.boss.y, '#ff0000');
             gameState.bossActive = false;
             gameState.boss = null; // Rimuoviamo l'oggetto boss
             showPowerUpScreen(); 
