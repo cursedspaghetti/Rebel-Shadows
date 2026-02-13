@@ -329,34 +329,6 @@ function showPowerUpScreen() {
     if (gameState.timerInterval) clearInterval(gameState.timerInterval);
 }
 
-// --- SPECIAL ATTACK SEQUENCES ---
-function fireSpecialAttackSequence() {
-    if (gameState.specialOnCooldown || gameState.isCharging) return;
-    gameState.isCharging = true;
-    setTimeout(() => {
-        gameState.specialRay.active = true;
-        gameState.specialRay.startTime = Date.now() / 1000;
-        gameState.specialRay.x = gameState.playerX;
-        gameState.specialOnCooldown = true;
-        gameState.specialLastUsed = Date.now() / 1000;
-        setTimeout(() => gameState.specialOnCooldown = false, gameState.specialCooldown * 1000);
-        setTimeout(() => gameState.isCharging = false, gameState.specialRay.duration * 1000);
-    }, 1000);
-}
-
-function fireSpecialAttackSequence2() {
-    if (gameState.specialOnCooldown2 || gameState.isCharging2) return;
-    gameState.isCharging2 = true;
-    setTimeout(() => {
-        gameState.specialRay2.active2 = true;
-        gameState.specialRay2.startTime2 = Date.now() / 1000;
-        gameState.specialRay2.x2 = gameState.playerX;
-        gameState.specialOnCooldown2 = true;
-        gameState.specialLastUsed2 = Date.now() / 1000;
-        setTimeout(() => gameState.specialOnCooldown2 = false, gameState.specialCooldown2 * 1000);
-        setTimeout(() => gameState.isCharging2 = false, gameState.specialRay2.duration2 * 1000);
-    }, 1000);
-}
 
 // --- INPUT LISTENERS ---
 canvas.addEventListener('touchstart', (e) => {
