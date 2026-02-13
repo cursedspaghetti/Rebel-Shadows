@@ -18,7 +18,7 @@ export const CONFIG = {
         
         // Attacco RADIALE (Sventagliata)
         RADIAL: {
-            INTERVAL: 8000,
+            INTERVAL: 4000,
             COOLDOWN_P2: 0.6,
             WAVES: 4,
             BULLETS_PER_WAVE: 14,
