@@ -91,7 +91,7 @@ export function updateBoss(boss) {
         // Parametri area di movimento
         const marginX = 80;
         const minY = 100;
-        const maxY = CONFIG.CANVAS_HEIGHT * 0.6; // Scende fino a metà schermo
+        const maxY = CONFIG.CANVAS_HEIGHT * 0.4; // Scende fino a metà schermo
 
         if (boss.radialWavesRemaining > 0) {
             // Durante l'attacco radiale: torna al centro-alto per bilanciamento
