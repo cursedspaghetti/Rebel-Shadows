@@ -292,7 +292,10 @@ function gameLoop() {
     if (gameState.isCharging || gameState.isCharging2) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
     Renderer.drawBullets(ctx);
     collision.drawExplosions(ctx);
-
+    SpecialAttacks.updateShield(); // Gestisce la durata e il cooldown
+    if (gameState.shieldActive) {
+    SpecialAttacks.drawShield(ctx); // Disegna lo scudo sopra il player
+}
     ctx.restore(); 
 
     // 10. UI FISSA
