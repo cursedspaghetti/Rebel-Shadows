@@ -274,7 +274,7 @@ function gameLoop() {
     SpecialAttacks.drawSpecialRay(ctx);
     SpecialAttacks.drawSpecialRay2(ctx);
     if (gameState.isCharging || gameState.isCharging2) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
-    Enemies.drawBullets(ctx);
+    Renderer.drawBullets(ctx);
     collision.drawExplosions(ctx);
 
     ctx.restore(); 
