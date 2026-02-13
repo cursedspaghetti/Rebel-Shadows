@@ -150,3 +150,62 @@ export function handleAllCollisions() {
         }
     }
 }
+
+function applyDamage(amount, shakeIntensity) {
+    gameState.hp -= amount;
+    gameState.isInvulnerable = true;
+    gameState.lastDamageTime = Date.now();
+    gameState.screenShake = shakeIntensity;
+    if (gameState.hp <= 0) {
+        alert("GAME OVER");
+        location.reload(); 
+    }
+}
+
+// --- ESPLOSIONI ---
+// --- ESPLOSIONI PIXEL ART MINIMALI ---
+
+function createExplosion(x, y, color = '#FFC300') {
+    // Solo 3 o 4 frammenti per un look pulito
+    const particleCount = 1 + Math.floor(Math.random() * 2); 
+    
+    for (let i = 0; i < particleCount; i++) {
+        gameState.explosions.push({
+            x: x,
+            y: y,
+            size: 2, // Dimensione fissa per coerenza pixel
+            vx: (Math.random() - 0.5) * 6, // Spinta iniziale forte
+            vy: (Math.random() - 0.5) * 6,
+            life: 1.0,
+            decay: 0.04, // Scompaiono più velocemente
+            color: color
+        });
+    }
+}
+
+export function updateExplosions() {
+    gameState.explosions = gameState.explosions.filter(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        
+        // Rallentamento immediato (effetto "pop")
+        p.vx *= 0.9;
+        p.vy *= 0.9;
+        
+        p.life -= p.decay;
+        return p.life > 0;
+    });
+}
+
+export function drawExplosions(ctx) {
+    gameState.explosions.forEach(p => {
+        ctx.fillStyle = p.color;
+        // Disegno essenziale senza variazioni di dimensione
+        ctx.fillRect(
+            Math.floor(p.x), 
+            Math.floor(p.y), 
+            p.size, 
+            p.size
+        );
+    });
+}
