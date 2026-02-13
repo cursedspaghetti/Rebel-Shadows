@@ -29,13 +29,49 @@
 </div>
 
         <div id="powerUpScreen" style="display: none;">
-            <h1>BOSS DEFEATED!</h1>
-            <h2>CHOOSE POWER-UP</h2>
-            <div class="power-up-options">
-                <button id="pu-fireRate" class="power-up-btn">IMPROVE FIRE RATE</button>
-                <button id="pu-special" class="power-up-btn">IMPROVE SPECIAL ATTACK</button>
-            </div>
+    <h1>LEVEL UP!</h1>
+    <p>Points available: <span id="skill-points">1</span></p>
+    
+    <div class="skill-tree-container">
+        <div class="skill-path" data-path="offense">
+            <h3>OFFENSE</h3>
+            <button class="skill-node locked" data-level="1">Offense I</button>
+            <button class="skill-node locked" data-level="2">Offense II</button>
+            <button class="skill-node locked" data-level="3">Offense III</button>
+            <button class="skill-node locked" data-level="4">Offense IV</button>
+            <button class="skill-node locked" data-level="5">ULTIMATE ATK</button>
         </div>
+
+        <div class="skill-path" data-path="defense">
+            <h3>DEFENSE</h3>
+            <button class="skill-node locked" data-level="1">Defense I</button>
+            <button class="skill-node locked" data-level="2">Defense II</button>
+            <button class="skill-node locked" data-level="3">Defense III</button>
+            <button class="skill-node locked" data-level="4">Defense IV</button>
+            <button class="skill-node locked" data-level="5">IMMORTAL</button>
+        </div>
+
+        <div class="skill-path" data-path="speed">
+            <h3>SPEED</h3>
+            <button class="skill-node locked" data-level="1">Speed I</button>
+            <button class="skill-node locked" data-level="2">Speed II</button>
+            <button class="skill-node locked" data-level="3">Speed III</button>
+            <button class="skill-node locked" data-level="4">Speed IV</button>
+            <button class="skill-node locked" data-level="5">TELEPORT</button>
+        </div>
+
+        <div class="skill-path" data-path="magic">
+            <h3>MAGIC</h3>
+            <button class="skill-node locked" data-level="1">Magic I</button>
+            <button class="skill-node locked" data-level="2">Magic II</button>
+            <button class="skill-node locked" data-level="3">Magic III</button>
+            <button class="skill-node locked" data-level="4">Magic IV</button>
+            <button class="skill-node locked" data-level="5">ARCHMAGE</button>
+        </div>
+    </div>
+    
+    <button id="closeSkills" style="margin-top: 20px;">BACK TO GAME</button>
+</div>
         
     </div>
 
