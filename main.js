@@ -204,11 +204,13 @@ init();
 
 // --- GAME LOOP ---
 function gameLoop() {
+    // 1. USCITA IMMEDIATA
+    // Se non siamo in gioco, il loop si ferma e non si pianifica il prossimo frame
     if (gameState.currentScreen !== 'playing') return;
 
     const now = Date.now();
 
-    // 1. LOGICA PRE-RENDERING (Invulnerabilità e Shake)
+    // 2. LOGICA STATO (Invulnerabilità e Shake)
     if (gameState.isInvulnerable && (now - gameState.lastDamageTime > CONFIG.INVULNERABILITY_TIME)) {
         gameState.isInvulnerable = false;
     }
@@ -216,17 +218,15 @@ function gameLoop() {
     if (gameState.screenShake > 0.1) gameState.screenShake *= CONFIG.SHAKE_DECAY;
     else gameState.screenShake = 0;
 
-    // 2. PULIZIA E CAMERA SHAKE
+    // 3. PULIZIA E CAMERA SHAKE
     ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     ctx.save(); 
     if (gameState.screenShake > 0) {
         ctx.translate((Math.random() - 0.5) * gameState.screenShake, (Math.random() - 0.5) * gameState.screenShake);
     }
 
-    // 3. DISEGNO SFONDI
+    // 4. AGGIORNAMENTO MOVIMENTO E SFONDI
     updateAndDrawBackgrounds();
-    
-    // 4. MOVIMENTO GIOCATORE
     updatePlayerMovement();
 
     // 5. AGGIORNAMENTO LOGICA ENTITÀ
@@ -238,36 +238,42 @@ function gameLoop() {
     SpecialAttacks.updateSpecialRay();
     SpecialAttacks.updateSpecialRay2();
 
-    // Spawn nemici comuni (solo se il boss non c'è)
+    // 6. LOGICA SPAWN (NEMICI / BOSS)
     if (!gameState.bossActive) {
+        // Spawn nemici comuni
         if (now - (gameState.lastEnemySpawn || 0) > 2000) {
             Enemies.spawnEnemies(3);
             gameState.lastEnemySpawn = now;
         }
+        // Attivazione Boss (solo se non è già attivo)
         if (gameState.gameTimer <= 55) {
             gameState.bossActive = true;
             gameState.enemies = []; 
+            // Inizializza il boss qui se non lo fai altrove
+            if (!gameState.boss) {
+                gameState.boss = Boss1.spawnBoss(); // Assicurati di avere una funzione spawn
+            }
         }
     }
 
-    // 6. LOGICA E RENDERING BOSS
+    // 7. LOGICA E RENDERING BOSS
     if (gameState.bossActive && gameState.boss) {
-        Boss1.updateBoss(gameState.boss); // Aggiorna Boss E i suoi proiettili
-        Boss1.drawBossShadow(ctx, gameState.boss, shadowImg); // Disegna Boss, UI e Proiettili
+        Boss1.updateBoss(gameState.boss);
+        Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
         
         if (gameState.boss.hp <= 0) {
-          //  collision.createExplosion(gameState.boss.x, gameState.boss.y, '#ff0000');
             gameState.bossActive = false;
-            gameState.boss = null; // Rimuoviamo l'oggetto boss
+            gameState.boss = null; 
             showPowerUpScreen(); 
-            return; 
+            ctx.restore(); // Fondamentale fare restore prima di uscire!
+            return; // Interrompe il loop per la schermata skill tree
         }
     }
 
-    // 7. COLLISIONI
+    // 8. COLLISIONI
     collision.handleAllCollisions();
 
-    // 8. RENDERING GIOCATORE ED EFFETTI
+    // 9. RENDERING GIOCATORE ED EFFETTI
     const isBlinking = gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0;
     if (!isBlinking) Renderer.drawPlayer(ctx, playerSprite);
 
@@ -281,9 +287,11 @@ function gameLoop() {
 
     ctx.restore(); 
 
-    // 9. UI FISSA
+    // 10. UI FISSA
     Renderer.drawUI(ctx);
     Renderer.drawHealthBar(ctx, gameState.hp, CONFIG.PLAYER_MAX_HP, CONFIG.CANVAS_WIDTH);
+
+    // 11. PIANIFICAZIONE PROSSIMO FRAME
     requestAnimationFrame(gameLoop);
 }
 
