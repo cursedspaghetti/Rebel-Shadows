@@ -95,22 +95,55 @@ body {
     animation-delay: 1s; 
 }
 
-/* 4. SCHERMATA POWER-UP */
-#powerUpScreen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    /* Manteniamo l'overlay leggero come da tua richiesta */
-    background-color: rgba(0, 0, 0, 0.8); 
-    display: none;
+.skill-tree-container {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+    margin-top: 20px;
+    padding: 10px;
+}
+
+.skill-path {
+    display: flex;
     flex-direction: column;
-    justify-content: flex-start;
+    gap: 15px; /* Spazio tra i livelli */
     align-items: center;
-    z-index: 20;
-    color: gold;
-    padding-top: 120px;
+}
+
+.skill-node {
+    width: 100px;
+    height: 50px;
+    border: 2px solid #555;
+    background: #222;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 0.8rem;
+    border-radius: 5px;
+}
+
+/* Stile per abilità sbloccabili */
+.skill-node.available {
+    border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+/* Stile per abilità già prese */
+.skill-node.unlocked {
+    background: #ffd700;
+    color: black;
+    font-weight: bold;
+}
+
+/* Stile per abilità bloccate */
+.skill-node.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.skill-node:hover:not(.locked) {
+    transform: scale(1.1);
+    background: #444;
 }
 
 /* 5. BOTTONI PIXEL ART */
