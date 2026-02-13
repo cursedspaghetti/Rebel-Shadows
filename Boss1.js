@@ -91,7 +91,7 @@ export function updateBoss(boss) {
         // Parametri area di movimento
         const marginX = 80;
         const minY = 100;
-        const maxY = CONFIG.CANVAS_HEIGHT * 0.5; // Scende fino a metà schermo
+        const maxY = CONFIG.CANVAS_HEIGHT * 0.6; // Scende fino a metà schermo
 
         if (boss.radialWavesRemaining > 0) {
             // Durante l'attacco radiale: torna al centro-alto per bilanciamento
@@ -263,7 +263,7 @@ export function drawBossShadow(ctx, boss, img) {
         ctx.rotate(angle + Math.PI / 2);
     }
 
-    ctx.scale(0.6, 0.6); 
+    ctx.scale(0.55, 0.55); 
     const sx = Math.floor(frameIndex * originalSize);
     ctx.drawImage(img, sx, 0, originalSize, originalSize, -originalSize / 2, -originalSize / 2, originalSize, originalSize);
     ctx.restore();
