@@ -9,7 +9,7 @@ export const CONFIG = {
     PARALLAX_SPEED: 1,      
     
     BOSS: {
-        MAX_HP: 5000,
+        MAX_HP: 100,
         PHASE_2_THRESHOLD: 0.5,
         FLOAT_SPEED: 0.003,
         FLOAT_AMP: 15, // Rinominato da AMPLITUDE per coerenza con la logica
