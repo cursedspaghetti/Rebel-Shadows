@@ -54,8 +54,9 @@ export function preloadBossAssets() {
  */
 export function spawnBoss(level = 1) {
     const c = CONFIG.BOSS;
-    // Difficoltà scalata: +40% HP per ogni livello
-    const scaledMaxHp = c.HP * Math.pow(1.4, level - 1);
+    
+    // CORREZIONE: Usiamo c.MAX_HP (come definito nel tuo config.js)
+    const scaledMaxHp = c.MAX_HP * Math.pow(1.4, level - 1);
 
     return {
         x: CONFIG.CANVAS_WIDTH / 2,
@@ -67,6 +68,7 @@ export function spawnBoss(level = 1) {
         phase: 1,
         isDashing: false,
         isAtCenter: false,
+        // Inizializziamo i timer a 0 o Date.now() per evitare attacchi immediati al primo frame
         lastRadialBurst: Date.now(),
         lastTargetBurst: Date.now(),
         lastDash: Date.now(),
