@@ -4,15 +4,14 @@ import { CONFIG, gameState } from './config.js';
 const bulletCache = {};
 
 /**
- * Genera proiettili tondi in stile pixel art coerenti con enemyBulletCache
+ * Genera proiettili tondi in stile pixel art
  */
 export function getPixelBullet(color, size) {
     const key = `${color}-${size}`;
     if (bulletCache[key]) return bulletCache[key];
 
     const canvas = document.createElement('canvas');
-    // Manteniamo la logica del pixelSize dinamico (1/4 della dimensione)
-    const pixelSize = size / 4; 
+    const pixelSize = Math.max(1, size / 4); 
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
@@ -22,16 +21,12 @@ export function getPixelBullet(color, size) {
 
     for (let y = 0; y < size; y += pixelSize) {
         for (let x = 0; x < size; x += pixelSize) {
-            // Calcolo distanza dal centro del pixel corrente rispetto al centro del canvas
             const dx = x + pixelSize / 2 - center;
             const dy = y + pixelSize / 2 - center;
             const distSq = dx * dx + dy * dy;
 
             if (distSq <= radiusSq) {
-                // Core bianco (20% dell'area interna) e bordo colorato
-                // Questo crea l'effetto "bullet" luminoso tipico degli shoot 'em up
                 ctx.fillStyle = distSq <= radiusSq * 0.2 ? '#ffffff' : color;
-                
                 ctx.fillRect(
                     Math.floor(x), 
                     Math.floor(y), 
@@ -41,19 +36,49 @@ export function getPixelBullet(color, size) {
             }
         }
     }
-
     bulletCache[key] = canvas;
     return canvas;
 }
 
 /**
- * Precarica gli asset del boss utilizzando la nuova logica pixel art
+ * Precarica gli asset del boss
  */
 export function preloadBossAssets() {
-    // Assicurati che CONFIG sia accessibile o importato
     getPixelBullet(CONFIG.BOSS.RADIAL.COLOR, CONFIG.BOSS.RADIAL.SIZE);
     getPixelBullet(CONFIG.BOSS.TARGETED.COLOR, CONFIG.BOSS.TARGETED.SIZE);
 }
+
+/**
+ * CREA UNA NUOVA ISTANZA DEL BOSS
+ * @param {number} level - Il numero del boss attuale (1, 2, 3...)
+ */
+export function spawnBoss(level = 1) {
+    const c = CONFIG.BOSS;
+    // Difficoltà scalata: +40% HP per ogni livello
+    const scaledMaxHp = c.HP * Math.pow(1.4, level - 1);
+
+    return {
+        x: CONFIG.CANVAS_WIDTH / 2,
+        y: -150,
+        targetX: CONFIG.CANVAS_WIDTH / 2,
+        targetY: 150,
+        hp: scaledMaxHp,
+        maxHp: scaledMaxHp,
+        phase: 1,
+        isDashing: false,
+        isAtCenter: false,
+        lastRadialBurst: Date.now(),
+        lastTargetBurst: Date.now(),
+        lastDash: Date.now(),
+        radialWavesRemaining: 0,
+        radialBulletsRemaining: 0,
+        targetedCount: 0,
+        level: level,
+        dashVX: 0,
+        dashVY: 0
+    };
+}
+
 /**
  * LOGICA DI AGGIORNAMENTO
  */
@@ -73,52 +98,43 @@ export function updateBoss(boss) {
     const cooldownMult = isP2 ? c.RADIAL.COOLDOWN_P2 : 1.0;
 
     if (boss.isDashing) {
-        // --- LOGICA DASH ---
         const dashMult = isP2 ? c.DASH.SPEED_P2_MULT : 1;
         boss.x += boss.dashVX * dashMult;
         boss.y += boss.dashVY * dashMult;
 
-        // Reset quando esce dai bordi (area estesa)
         if (boss.y > CONFIG.CANVAS_HEIGHT + 150 || boss.y < -200 || boss.x < -200 || boss.x > CONFIG.CANVAS_WIDTH + 200) {
             boss.isDashing = false;
             boss.y = -150; 
             boss.targetX = CONFIG.CANVAS_WIDTH / 2;
-            boss.targetY = 150; // Punto di rientro
+            boss.targetY = 150;
         }
     } else {
-        // --- MOVIMENTO DINAMICO (NON DASH) ---
-
-        // Parametri area di movimento
+        // MOVIMENTO DINAMICO
         const marginX = 80;
         const minY = 100;
-        const maxY = CONFIG.CANVAS_HEIGHT * 0.4; // Scende fino a metà schermo
+        const maxY = CONFIG.CANVAS_HEIGHT * 0.4;
 
         if (boss.radialWavesRemaining > 0) {
-            // Durante l'attacco radiale: torna al centro-alto per bilanciamento
             const centerX = CONFIG.CANVAS_WIDTH / 2;
             const centerY = 150;
             boss.x += (centerX - boss.x) * 0.08;
             boss.y += (centerY - boss.y) * 0.08;
             boss.isAtCenter = Math.abs(boss.x - centerX) < 10 && Math.abs(boss.y - centerY) < 10;
         } else {
-            // Movimento libero in un'area più ampia
             boss.isAtCenter = false;
-
-            // Cambio target X casuale
             if (!boss.targetX || Math.abs(boss.x - boss.targetX) < 10) {
                 boss.targetX = Math.random() * (CONFIG.CANVAS_WIDTH - marginX * 2) + marginX;
             }
-            // Cambio target Y casuale
             if (!boss.targetY || Math.abs(boss.y - boss.targetY) < 10) {
                 boss.targetY = Math.random() * (maxY - minY) + minY;
             }
 
             const lerpSpeed = isP2 ? c.LERP_SPEED_P2 : c.LERP_SPEED;
             boss.x += (boss.targetX - boss.x) * lerpSpeed;
-            boss.y += (boss.targetY - boss.y) * (lerpSpeed * 0.8); // Y leggermente più lenta per fluidità
+            boss.y += (boss.targetY - boss.y) * (lerpSpeed * 0.8);
         }
 
-        // --- GESTIONE ATTACCHI ---
+        // ATTACCHI
         const radialInt = c.RADIAL.INTERVAL * cooldownMult;
         if (now - (boss.lastRadialBurst || 0) > radialInt && (boss.radialWavesRemaining || 0) <= 0) {
             startRadialBurst(boss);
@@ -139,11 +155,9 @@ export function updateBoss(boss) {
             boss.lastDash = now;
         }
     } 
-   
+    
     updateBossBullets();
 }
-
-// --- LOGICA ATTACCHI DETTAGLIATA ---
 
 function startRadialBurst(boss) {
     const cfg = CONFIG.BOSS.RADIAL;
@@ -285,7 +299,7 @@ function drawBossBullets(ctx) {
 }
 
 function drawBossUI(ctx, boss) {
-    const healthPercent = Math.max(0, (boss.hp || 0) / (boss.maxHp || 100));
+    const healthPercent = Math.max(0, (boss.hp || 0) / (boss.maxHp || 1);
     const barWidth = 200; 
     const barHeight = 10;
     const x = Math.floor((ctx.canvas.width - barWidth) / 2);
