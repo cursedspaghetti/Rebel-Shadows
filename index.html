@@ -4,79 +4,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Deep in Shadows</title>
+    <title>Deep in Shadows - Rebel Shadows</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Aggiunte rapide per i nuovi elementi del Wallet */
+        #connectWalletBtn {
+            padding: 12px 24px;
+            cursor: pointer;
+            background-color: #f6851b; /* Arancione MetaMask */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            font-family: inherit;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        #connectWalletBtn:hover {
+            background-color: #e2761b;
+            transform: scale(1.05);
+        }
+
+        #affinityDisplay {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #00ffcc;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
+            min-height: 1.2em;
+        }
+
+        #wizardIdInput {
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            width: 180px;
+            background: #222;
+            color: white;
+            text-align: center;
+            font-family: inherit;
+        }
+
+        #wizardSelector label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.8em;
+            color: #aaa;
+        }
+    </style>
 </head>
 
 <body>
 
     <div id="game-container">
         
-     <canvas id="gameCanvas"></canvas>
-         
-        <div id="startScreen">
-    <div id="title">
-        <h1>REBEL SHADOWS</h1>
+        <canvas id="gameCanvas"></canvas>
         
-    </div>
+        <div id="startScreen">
+            <div id="title">
+                <h1>REBEL SHADOWS</h1>
+            </div>
 
-    <div id="wizardSelector" style="margin-bottom: 20px;">
-        <input type="number" id="wizardIdInput" placeholder="Enter Wizard ID" 
-               style="padding: 10px; border-radius: 5px; border: none; width: 150px;">
-    </div>
-    
-    <button id="startButton">START GAME</button>
-</div>
+            <div id="walletSection" style="margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
+                
+                <button id="connectWalletBtn">CONNECT METAMASK</button>
+
+                <div id="wizardSelector">
+                    <label>OR ENTER WIZARD ID</label>
+                    <input type="number" id="wizardIdInput" placeholder="ID (e.g. 123)">
+                </div>
+
+                <div id="affinityDisplay"></div>
+            </div>
+            
+            <button id="startButton">START GAME</button>
+        </div>
 
         <div id="powerUpScreen" style="display: none;">
-    <h1>LEVEL UP!</h1>
-    <p>Points available: <span id="skill-points">1</span></p>
-    
-    <div class="skill-tree-container">
-        <div class="skill-path" data-path="offense">
-            <h3>OFFENSE</h3>
-            <button class="skill-node locked" data-level="1">Offense I</button>
-            <button class="skill-node locked" data-level="2">Offense II</button>
-            <button class="skill-node locked" data-level="3">Offense III</button>
-            <button class="skill-node locked" data-level="4">Offense IV</button>
-            <button class="skill-node locked" data-level="5">ULTIMATE ATK</button>
-        </div>
+            <h1>LEVEL UP!</h1>
+            <p>Points available: <span id="skill-points">1</span></p>
+            
+            <div class="skill-tree-container">
+                <div class="skill-path" data-path="offense">
+                    <h3>OFFENSE</h3>
+                    <button class="skill-node locked" data-level="1">Offense I</button>
+                    <button class="skill-node locked" data-level="2">Offense II</button>
+                    <button class="skill-node locked" data-level="3">Offense III</button>
+                    <button class="skill-node locked" data-level="4">Offense IV</button>
+                    <button class="skill-node locked" data-level="5">ULTIMATE ATK</button>
+                </div>
 
-        <div class="skill-path" data-path="defense">
-            <h3>DEFENSE</h3>
-            <button class="skill-node locked" data-level="1">Defense I</button>
-            <button class="skill-node locked" data-level="2">Defense II</button>
-            <button class="skill-node locked" data-level="3">Defense III</button>
-            <button class="skill-node locked" data-level="4">Defense IV</button>
-            <button class="skill-node locked" data-level="5">IMMORTAL</button>
-        </div>
+                <div class="skill-path" data-path="defense">
+                    <h3>DEFENSE</h3>
+                    <button class="skill-node locked" data-level="1">Defense I</button>
+                    <button class="skill-node locked" data-level="2">Defense II</button>
+                    <button class="skill-node locked" data-level="3">Defense III</button>
+                    <button class="skill-node locked" data-level="4">Defense IV</button>
+                    <button class="skill-node locked" data-level="5">IMMORTAL</button>
+                </div>
 
-        <div class="skill-path" data-path="speed">
-            <h3>SPEED</h3>
-            <button class="skill-node locked" data-level="1">Speed I</button>
-            <button class="skill-node locked" data-level="2">Speed II</button>
-            <button class="skill-node locked" data-level="3">Speed III</button>
-            <button class="skill-node locked" data-level="4">Speed IV</button>
-            <button class="skill-node locked" data-level="5">TELEPORT</button>
-        </div>
+                <div class="skill-path" data-path="speed">
+                    <h3>SPEED</h3>
+                    <button class="skill-node locked" data-level="1">Speed I</button>
+                    <button class="skill-node locked" data-level="2">Speed II</button>
+                    <button class="skill-node locked" data-level="3">Speed III</button>
+                    <button class="skill-node locked" data-level="4">Speed IV</button>
+                    <button class="skill-node locked" data-level="5">TELEPORT</button>
+                </div>
 
-        <div class="skill-path" data-path="magic">
-            <h3>MAGIC</h3>
-            <button class="skill-node locked" data-level="1">Magic I</button>
-            <button class="skill-node locked" data-level="2">Magic II</button>
-            <button class="skill-node locked" data-level="3">Magic III</button>
-            <button class="skill-node locked" data-level="4">Magic IV</button>
-            <button class="skill-node locked" data-level="5">ARCHMAGE</button>
+                <div class="skill-path" data-path="magic">
+                    <h3>MAGIC</h3>
+                    <button class="skill-node locked" data-level="1">Magic I</button>
+                    <button class="skill-node locked" data-level="2">Magic II</button>
+                    <button class="skill-node locked" data-level="3">Magic III</button>
+                    <button class="skill-node locked" data-level="4">Magic IV</button>
+                    <button class="skill-node locked" data-level="5">ARCHMAGE</button>
+                </div>
+            </div>
+            
+            <button id="closeSkills" style="margin-top: 20px;">BACK TO GAME</button>
         </div>
-    </div>
-    
-    <button id="closeSkills" style="margin-top: 20px;">BACK TO GAME</button>
-</div>
         
     </div>
 
-    <script type="module" src="main.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    
+    <script type="module" src="main.js"></script>
 
 </body>
 </html>
