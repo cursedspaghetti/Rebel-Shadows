@@ -339,16 +339,12 @@ function startGame() {
 const TOUCH_SETTINGS = {
     LERP: 0.5,
     OFFSET_Y: 80,
-    TAP_DELAY: 250,
-    DASH_DISTANCE: 100, // Quanto lungo è il dash
-    DASH_DURATION: 150  // Durata in ms (opzionale, se vuoi un movimento fluido)
+    TAP_DELAY: 250
 };
 
-// Variabili di stato per il movimento e il dash
+// Variabili di stato per il movimento
 let lastTouchX = 0;
 let lastTouchY = 0;
-let touchVelocityX = 0;
-let touchVelocityY = 0;
 
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
@@ -362,7 +358,6 @@ canvas.addEventListener('touchstart', (e) => {
         gameState.isTouchActive = true;
         updateCoords(touch, rect);
         
-        // Inizializziamo le posizioni per il calcolo della velocità del dash
         lastTouchX = gameState.touchX;
         lastTouchY = gameState.touchY;
     }
@@ -396,10 +391,6 @@ canvas.addEventListener('touchmove', (e) => {
         const nextX = primaryTouch.clientX - rect.left;
         const nextY = primaryTouch.clientY - rect.top;
 
-        // Calcoliamo il vettore di direzione (velocità) prima di aggiornare
-        touchVelocityX = nextX - lastTouchX;
-        touchVelocityY = nextY - lastTouchY;
-
         // Aggiorniamo le coordinate per il rendering/movimento fluido
         gameState.touchX = nextX;
         gameState.touchY = nextY;
@@ -413,39 +404,11 @@ canvas.addEventListener('touchend', (e) => {
     const stillDragging = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
     
     if (!stillDragging) {
-        // IL DITO PRIMARIO SI È STACCATO -> Esegui Dash
-        performDash();
-        
+        // Reset stato movimento quando il dito primario si stacca
         gameState.isTouchActive = false;
         gameState.touchIdentifier = null;
-        touchVelocityX = 0;
-        touchVelocityY = 0;
     }
 });
-
-// Funzione per gestire il Dash
-function performDash() {
-    // Calcoliamo la magnitudo del movimento
-    const magnitude = Math.sqrt(touchVelocityX ** 2 + touchVelocityY ** 2);
-    
-    // Se il movimento è stato minimo, non dashare (evita dash involontari da fermo)
-    if (magnitude > 2) {
-        const dirX = touchVelocityX / magnitude;
-        const dirY = touchVelocityY / magnitude;
-
-        // Applichiamo lo spostamento istantaneo (o potresti aggiungere un'animazione)
-        gameState.playerX += dirX * TOUCH_SETTINGS.DASH_DISTANCE;
-        gameState.playerY += dirY * TOUCH_SETTINGS.DASH_DISTANCE;
-        
-        // Rendi il giocatore invulnerabile per un istante durante il dash
-        gameState.isInvulnerable = true;
-        gameState.lastDamageTime = Date.now() - (CONFIG.INVULNERABILITY_TIME - 200); // Invulnerabilità breve
-        
-        console.log("Dash eseguito!");
-    }
-}
-
-// fine gestione touch
 
 
 function updateCoords(touch, rect) {
@@ -453,6 +416,7 @@ function updateCoords(touch, rect) {
     gameState.touchX = touch.clientX - rect.left;
     gameState.touchY = touch.clientY - rect.top;
 }
+// fine gestione touch
 
 window.addEventListener('keydown', (e) => {
     gameState.keys[e.key] = true;
