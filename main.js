@@ -149,6 +149,7 @@ async function init() {
     initSkillTree();
 
     let debounceTimer;
+    let lastLoadedId = ""; // <--- AGGIUNGI QUESTA RIGA QUI
     wizardIdInput.addEventListener('input', () => {
         startButton.classList.remove('visible');
         clearTimeout(debounceTimer);
