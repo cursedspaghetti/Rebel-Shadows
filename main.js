@@ -61,61 +61,28 @@ function makeTransparent(img) {
     return tmpCanvas.toDataURL();
 }
 
-// --- LOGICA STATISTICHE (Usando gameState) ---
+// --- LOGICA CARICAMENTO WIZARD (Solo ID e Immagine) ---
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
     if (!wizardId) return;
 
-    // Utilizziamo un proxy per bypassare il blocco CORS del browser
-    const proxy = "https://corsproxy.io/?";
-    const jsonUrl = `${proxy}https://forgottenrunes.com/api/art/wizards/${wizardId}.json`;
     const imgUrl = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
 
-    try {
-        const response = await fetch(jsonUrl);
-        if (!response.ok) throw new Error("Errore nel recupero dati");
-        
-        const data = await response.json();
+    // Aggiorna subito il titolo con l'ID
+    document.getElementById('wizardDisplayName').innerText = `WIZARD #${wizardId}`;
 
-        // LOGICA PER TROVARE L'AFFINITY
-        // 1. Cerca il tratto "Affinity" (raro nel JSON diretto)
-        // 2. Cerca il "Background" (spesso usato come Affinity nei giochi)
-        // 3. Cerca un tratto che contenga la parola nel nome (es. "Amber")
-        
-        const affinityAttribute = data.attributes.find(a => 
-            a.trait_type === "Affinity" || a.trait_type === "Background"
-        );
+    const rawImg = new Image();
+    rawImg.crossOrigin = "anonymous"; 
+    rawImg.src = imgUrl;
 
-        gameState.affinityName = affinityAttribute ? affinityAttribute.value : "Neutral";
-        
-        // Aggiorna l'interfaccia
-        document.getElementById('wizardDisplayName').innerText = `WIZARD #${wizardId} - ${gameState.affinityName.toUpperCase()}`;
-        applyAffinityBonus(gameState.affinityName);
+    rawImg.onload = () => {
+        introImage.src = makeTransparent(rawImg);
+        startButton.classList.add('visible');
+    };
 
-        // CARICAMENTO IMMAGINE
-        const rawImg = new Image();
-        // Fondamentale: crossOrigin deve essere impostato PRIMA di src
-        rawImg.crossOrigin = "anonymous"; 
-        rawImg.src = imgUrl;
-
-        rawImg.onload = () => {
-            // Qui invochi la tua funzione per la trasparenza
-            introImage.src = makeTransparent(rawImg);
-            startButton.classList.add('visible');
-        };
-
-        rawImg.onerror = () => {
-            console.error("Errore nel caricamento dell'immagine. Il server potrebbe bloccare l'accesso diretto.");
-        };
-
-    } catch (e) {
-        console.warn("Wizard data error:", e);
-    }
-}
-function applyAffinityBonus(affinity) {
-    Object.keys(gameState.affinityBonuses).forEach(k => gameState.affinityBonuses[k] = 0);
-    const bonuses = { "Fire": "Attack Power", "Wind": "Dexterity", "Earth": "Constitution", "Water": "HP" };
-    if (bonuses[affinity]) gameState.affinityBonuses[bonuses[affinity]] = 15;
+    rawImg.onerror = () => {
+        console.error("Errore nel caricamento dell'immagine per l'ID:", wizardId);
+    };
 }
 
 function renderStatTable() {
@@ -127,7 +94,6 @@ function renderStatTable() {
         <tr>
             <td style="padding: 10px; border-bottom: 1px solid #333;">${stat}</td>
             <td style="text-align: center;">${gameState.baseStats[stat]}</td>
-            <td style="text-align: center; color: #00ff00;">+${gameState.affinityBonuses[stat]}</td>
             <td style="text-align: center;">
                 <button onclick="changeStat('${stat}', -1)" class="stat-btn">-</button>
                 <span style="display:inline-block; width: 30px;">${gameState.addedStats[stat]}</span>
@@ -185,10 +151,9 @@ function startGame() {
     setupScreen.style.display = 'none';
     gameState.currentScreen = 'playing';
     
-    // Iniezione statistiche nel gameplay
-    gameState.hp = 100 + (gameState.addedStats["HP"] * 10) + (gameState.affinityBonuses["HP"] * 2);
+    // Calcolo HP e Speed basato solo sulle statistiche base + punti aggiunti
+    gameState.hp = 100 + (gameState.addedStats["HP"] * 10);
     gameState.playerSpeed = 5 + (gameState.addedStats["Dexterity"] * 0.3);
-    // Esempio: CONFIG.PLAYER_DAMAGE = 10 + gameState.addedStats["Attack Power"];
 
     gameState.timerInterval = setInterval(() => {
         if (gameState.gameTimer > 0) gameState.gameTimer--;
@@ -201,7 +166,6 @@ function gameLoop() {
     if (gameState.currentScreen !== 'playing') return;
     const now = Date.now();
     
-    // Logica Invulnerabilità & Shake
     if (gameState.isInvulnerable && (now - gameState.lastDamageTime > CONFIG.INVULNERABILITY_TIME)) {
         gameState.isInvulnerable = false;
     }
@@ -225,7 +189,6 @@ function gameLoop() {
     SpecialAttacks.updateSpecialRay();
     SpecialAttacks.updateSpecialRay2();
 
-    // Spawn Logic
     if (!gameState.bossActive) {
         if (gameState.gameTimer > 5) {
             if (now - (gameState.lastEnemySpawn || 0) > 2000) {
@@ -255,7 +218,6 @@ function gameLoop() {
 
     collision.handleAllCollisions();
 
-    // Blink & Draw Player
     if (!(gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0)) {
         Renderer.drawPlayer(ctx, playerSprite);
     }
