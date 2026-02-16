@@ -195,27 +195,21 @@ async function init() {
     introImage.src = "";
     introImage.dataset.loaded = "false";
 
-    // Listener MetaMask (Click + Touch)
-    const handleConnect = async (e) => {
-        if (e.type === 'touchstart') e.preventDefault();
-        await connectWallet();
-    };
-    
-   if (connectWalletBtn) {
-    connectWalletBtn.addEventListener('click', async (e) => {
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        
-        if (isMobile && !window.ethereum) {
-            e.preventDefault();
-            const currentUrl = window.location.href.replace(/^https?:\/\//, '');
-            // Proviamo lo schema diretto "metamask://dapp/"
-            window.location.href = `metamask://dapp/${currentUrl}`;
-            return;
-        }
-        
-        // Se siamo su PC o già in MetaMask Browser
-        await connectWallet();
-    });
+    if (connectWalletBtn) {
+        connectWalletBtn.addEventListener('click', async (e) => {
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            if (isMobile && !window.ethereum) {
+                e.preventDefault();
+                const currentUrl = window.location.href.replace(/^https?:\/\//, '');
+                // Deep link per aprire MetaMask su mobile
+                window.location.href = `metamask://dapp/${currentUrl}`;
+                return;
+            }
+            
+            await connectWallet();
+        });
+    }
 }
 
 function startScreenLoop() {
