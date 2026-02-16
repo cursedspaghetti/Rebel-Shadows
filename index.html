@@ -6,52 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Deep in Shadows - Rebel Shadows</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* Aggiunte rapide per i nuovi elementi del Wallet */
-        #connectWalletBtn {
-            padding: 12px 24px;
-            cursor: pointer;
-            background-color: #f6851b; /* Arancione MetaMask */
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-weight: bold;
-            font-family: inherit;
-            transition: transform 0.2s, background-color 0.2s;
-        }
-
-        #connectWalletBtn:hover {
-            background-color: #e2761b;
-            transform: scale(1.05);
-        }
-
-        #affinityDisplay {
-            margin-top: 10px;
-            font-size: 0.9em;
-            color: #00ffcc;
-            font-weight: bold;
-            text-shadow: 0 0 5px rgba(0, 255, 204, 0.5);
-            min-height: 1.2em;
-        }
-
-        #wizardIdInput {
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #444;
-            width: 180px;
-            background: #222;
-            color: white;
-            text-align: center;
-            font-family: inherit;
-        }
-
-        #wizardSelector label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 0.8em;
-            color: #aaa;
-        }
-    </style>
 </head>
 
 <body>
@@ -65,16 +19,12 @@
                 <h1>REBEL SHADOWS</h1>
             </div>
 
-            <div id="walletSection" style="margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px;">
-                
-                <button id="connectWalletBtn">CONNECT METAMASK</button>
-
+            <div id="wizardSelectionArea">
                 <div id="wizardSelector">
-                    <label>OR ENTER WIZARD ID</label>
-                    <input type="number" id="wizardIdInput" placeholder="ID (e.g. 123)">
+                    <label>CHOOSE YOUR WIZARD ID</label>
+                    <input type="number" id="wizardIdInput" placeholder="Enter ID (e.g. 73)">
                 </div>
-
-                <div id="affinityDisplay"></div>
+                <div id="affinityDisplay">ENTER ID TO SYNC LORE</div>
             </div>
             
             <button id="startButton">START GAME</button>
@@ -127,8 +77,6 @@
         
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
-    
     <script type="module" src="main.js"></script>
 
 </body>
