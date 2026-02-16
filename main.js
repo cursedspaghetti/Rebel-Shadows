@@ -39,114 +39,88 @@ shadowImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-W
 let debounceTimer;
 let lastLoadedId = "";
 
-// --- WEB3 & NFT LOGIC (RESERVOIR API - NO CORS ERRORS) ---
-
-// --- CONSTANTS ---
-// Assicurati che l'indirizzo sia esattamente questo (quello che mi hai fornito)
-const FR_CONTRACT = "0x521f9c7505005cfa19a8e5786a9c3c9c9f5e6f42";
 
 // --- WEB3 & NFT LOGIC ---
 
-async function connectWallet() {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    // Se siamo su mobile e MetaMask non è rilevato
-    if (isMobile && !window.ethereum) {
-        const currentUrl = window.location.href.replace(/^https?:\/\//, '');
-        // Proviamo il link universale E lo schema diretto in fallback
-        const deepLink = `https://metamask.app.link/dapp/${currentUrl}`;
-        const directScheme = `metamask://dapp/${currentUrl}`;
-        
-        // Prova ad aprire MetaMask
-        window.location.href = deepLink;
-        
-        // Se dopo 500ms siamo ancora qui, prova lo schema diretto
-        setTimeout(() => {
-            window.location.href = directScheme;
-        }, 500);
-        return;
-    }
+// --- CONSTANTS ---
+const FR_CONTRACT = "0x521f9c7505005cfa19a8e5786a9c3c9c9f5e6f42";
+const OPENSEA_CHAIN = "ethereum";
 
-    if (typeof window.ethereum !== 'undefined') {
-        try {
-            if (connectWalletBtn) connectWalletBtn.innerText = "CONNECTING...";
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            const address = accounts[0];
-            
-            if (connectWalletBtn) {
-                connectWalletBtn.innerText = "CONNECTED";
-                connectWalletBtn.style.backgroundColor = "#28a745";
-            }
-            await fetchUserWizards(address);
-        } catch (error) {
-            console.error("Connection error:", error);
-            if (connectWalletBtn) connectWalletBtn.innerText = "CONNECT METAMASK";
-        }
-    } else {
-        alert("MetaMask not detected! Use MetaMask Browser on mobile.");
-    }
-}
+// --- WEB3 & NFT LOGIC (OPENSEA METHOD) ---
 
 async function fetchUserWizards(address) {
+    const affinityDisplay = document.getElementById('affinityDisplay');
     try {
-        if (affinityDisplay) affinityDisplay.innerText = "SEARCHING WIZARDS...";
-        
-        // URL AGGIORNATO: Usiamo l'endpoint v2 di Reservoir che è più stabile
-        const url = `https://api.reservoir.tools/users/${address}/tokens/v2?collection=${FR_CONTRACT}&limit=1`;
-        
+        if (affinityDisplay) affinityDisplay.innerText = "LOOKING ON OPENSEA...";
+
+        // URL per ottenere gli NFT di un account filtrati per collezione su OpenSea
+        const url = `https://api.opensea.io/api/v2/chain/${OPENSEA_CHAIN}/account/${address}/nfts?collection=forgottenruneswizardscult&limit=1`;
+
         const response = await fetch(url, {
+            method: 'GET',
             headers: {
-                'Accept': '*/*',
-                'x-api-key': 'demo-api-key' // Usiamo la chiave demo pubblica di Reservoir
+                'accept': 'application/json'
+                // Nota: OpenSea potrebbe richiedere una API Key per volumi alti. 
+                // Se hai una key, aggiungi qui: 'x-api-key': 'TUA_KEY'
             }
         });
 
-        if (!response.ok) throw new Error("API Reservoir non raggiungibile");
-        
+        if (!response.ok) throw new Error("OpenSea blocked or limited");
+
         const data = await response.json();
 
-        if (data.tokens && data.tokens.length > 0) {
-            const firstId = data.tokens[0].token.tokenId;
-            wizardIdInput.value = firstId;
+        if (data.nfts && data.nfts.length > 0) {
+            const nft = data.nfts[0];
+            wizardIdInput.value = nft.identifier; // identifier su OpenSea è il tokenId
+            console.log(`Wizard trovato su OS: ${nft.identifier}`);
+            
+            // OpenSea v2 non sempre manda tutti i tratti nella lista account.
+            // Chiamiamo getWizardAffinity per essere sicuri dei metadati.
             handleLoadWizard(); 
         } else {
-            if (affinityDisplay) affinityDisplay.innerText = "NO WIZARDS FOUND";
+            if (affinityDisplay) affinityDisplay.innerText = "NO WIZARDS ON OPENSEA";
         }
     } catch (e) {
-        console.error("Fetch Error:", e);
-        if (affinityDisplay) affinityDisplay.innerText = "CONNECTION ERROR";
+        console.error("OpenSea Fetch Error:", e);
+        if (affinityDisplay) affinityDisplay.innerText = "OPENSEA BUSY - TRY MANUAL ID";
     }
 }
 
 async function getWizardAffinity(wizardId) {
+    const affinityDisplay = document.getElementById('affinityDisplay');
     try {
-        if (affinityDisplay) affinityDisplay.innerText = "READING TRAITS...";
-        // URL AGGIORNATO: Endpoint v2 per i singoli token
-        const url = `https://api.reservoir.tools/tokens/v2?tokens=${FR_CONTRACT}:${wizardId}`;
-        
+        if (affinityDisplay) affinityDisplay.innerText = "READING METADATA...";
+
+        const url = `https://api.opensea.io/api/v2/chain/${OPENSEA_CHAIN}/contract/${FR_CONTRACT}/nfts/${wizardId}`;
+
         const response = await fetch(url, {
-            headers: {
-                'Accept': '*/*',
-                'x-api-key': 'demo-api-key'
-            }
+            method: 'GET',
+            headers: { 'accept': 'application/json' }
         });
+        
         const data = await response.json();
-        
-        if (!data.tokens || data.tokens.length === 0) return "Neutral";
-        
-        const token = data.tokens[0].token;
-        // Reservoir v2 usa 'attributes' con 'key' e 'value'
-        const affinityAttr = token.attributes.find(attr => attr.key === 'Affinity' || attr.key === 'affinity');
-        const affinityValue = affinityAttr ? affinityAttr.value : "Neutral";
+        const nft = data.nft;
+
+        // Estrazione tratti da OpenSea
+        let affinityValue = "Neutral";
+        if (nft.traits) {
+            const trait = nft.traits.find(t => t.trait_type === 'Affinity');
+            if (trait) affinityValue = trait.value;
+        }
 
         if (affinityDisplay) {
             affinityDisplay.innerText = `AFFINITY: ${affinityValue.toUpperCase()}`;
-            applyAffinityColor(affinityValue);
+            // Applichiamo i colori
+            const colors = {
+                'Fire': '#ff4500', 'Water': '#00bfff', 'Earth': '#8b4513',
+                'Air': '#f0ffff', 'Shadow': '#9400d3', 'Life': '#32cd32'
+            };
+            affinityDisplay.style.color = colors[affinityValue] || '#00ffcc';
         }
 
         return affinityValue;
     } catch (e) {
-        console.error("Affinity Error:", e);
+        console.error("OpenSea Metadata Error:", e);
         return "Neutral";
     }
 }
@@ -226,19 +200,22 @@ async function init() {
         if (e.type === 'touchstart') e.preventDefault();
         await connectWallet();
     };
-    if (connectWalletBtn) {
-        connectWalletBtn.addEventListener('click', handleConnect);
-        connectWalletBtn.addEventListener('touchstart', handleConnect, { passive: false });
-    }
-
-    wizardIdInput.addEventListener('input', () => {
-        startButton.classList.remove('visible');
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(handleLoadWizard, 500);
+    
+   if (connectWalletBtn) {
+    connectWalletBtn.addEventListener('click', async (e) => {
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        
+        if (isMobile && !window.ethereum) {
+            e.preventDefault();
+            const currentUrl = window.location.href.replace(/^https?:\/\//, '');
+            // Proviamo lo schema diretto "metamask://dapp/"
+            window.location.href = `metamask://dapp/${currentUrl}`;
+            return;
+        }
+        
+        // Se siamo su PC o già in MetaMask Browser
+        await connectWallet();
     });
-
-    startButton.addEventListener('click', startGame);
-    requestAnimationFrame(startScreenLoop);
 }
 
 function startScreenLoop() {
