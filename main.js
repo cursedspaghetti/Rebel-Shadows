@@ -90,7 +90,8 @@ async function handleLoadWizard() {
     };
 
     try {
-        const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
+       // const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
+        const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}`);
         if (!response.ok) throw new Error("Metadata non trovati");
         const metadata = await response.json();
         const affinity = metadata.attributes.find(a => a.trait_type === 'Affinity')?.value;
