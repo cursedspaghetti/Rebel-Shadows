@@ -344,60 +344,118 @@ function startGame() {
 }
 
 
-// --- INPUT LISTENERS ---
-// --- LOGICA INPUT TOUCH AGGIORNATA ---
+// --- CONFIGURAZIONE TOUCH AGGIORNATA ---
+const TOUCH_SETTINGS = {
+    LERP: 0.5,
+    OFFSET_Y: 80,
+    TAP_DELAY: 250,
+    DASH_DISTANCE: 100, // Quanto lungo è il dash
+    DASH_DURATION: 150  // Durata in ms (opzionale, se vuoi un movimento fluido)
+};
+
+// Variabili di stato per il movimento e il dash
+let lastTouchX = 0;
+let lastTouchY = 0;
+let touchVelocityX = 0;
+let touchVelocityY = 0;
+
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     const now = Date.now();
 
-    // Gestione del primo dito (Movimento e Tap)
+    // DITO PRIMARIO (Indice 0) -> Movimento
     if (e.touches.length === 1) {
         const touch = e.touches[0];
         gameState.touchIdentifier = touch.identifier;
         gameState.isTouchActive = true;
         updateCoords(touch, rect);
+        
+        // Inizializziamo le posizioni per il calcolo della velocità del dash
+        lastTouchX = gameState.touchX;
+        lastTouchY = gameState.touchY;
+    }
 
-        // --- LOGICA SINGLE vs DOUBLE TAP ---
-        const lastTap = canvas.dataset.lastTap || 0;
+    // SECONDO DITO (Indice 1) -> Shield e Special
+    if (e.touches.length === 2) {
+        const lastTap = canvas.dataset.lastTapSecondFinger || 0;
         const timesince = now - lastTap;
 
         if (timesince < TOUCH_SETTINGS.TAP_DELAY && timesince > 0) {
-            // DOPPIO TAP RILEVATO -> Special Attack 1
-            console.log("Double Tap: Special Attack 1");
-            SpecialAttacks.fireSpecialAttackSequence(); 
-            canvas.dataset.lastTap = 0; // Reset per evitare tripli tap
+            // DOUBLE TAP -> Special Attack
+            SpecialAttacks.fireSpecialAttackSequence();
+            SpecialAttacks.fireSpecialAttackSequence2();
+            canvas.dataset.lastTapSecondFinger = 0;
         } else {
-            // SINGOLO TAP (o primo del doppio) -> Shield
-            // Usiamo un piccolo timeout per non attivare lo scudo se è l'inizio di un doppio tap? 
-            // In un action game è meglio attivarlo subito per reattività:
-            SpecialAttacks.activateShield(); 
-            canvas.dataset.lastTap = now;
+            // SINGLE TAP -> Shield
+            SpecialAttacks.activateShield();
+            canvas.dataset.lastTapSecondFinger = now;
         }
     }
-
-    // Gestione secondo dito (Multi-touch) - Lasciato invariato o per Special 2
-    if (e.touches.length >= 2 && gameState.currentScreen === 'playing') {
-        // Puoi decidere di mappare lo Special 2 qui in futuro
-        // SpecialAttacks.fireSpecialAttackSequence2();
-    }
 }, { passive: false });
-
 
 canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
-    const touch = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
-    if (touch) updateCoords(touch, rect);
+    
+    // Troviamo il dito primario tra i tocchi attivi
+    const primaryTouch = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
+    
+    if (primaryTouch) {
+        const nextX = primaryTouch.clientX - rect.left;
+        const nextY = primaryTouch.clientY - rect.top;
+
+        // Calcoliamo il vettore di direzione (velocità) prima di aggiornare
+        touchVelocityX = nextX - lastTouchX;
+        touchVelocityY = nextY - lastTouchY;
+
+        // Aggiorniamo le coordinate per il rendering/movimento fluido
+        gameState.touchX = nextX;
+        gameState.touchY = nextY;
+        
+        lastTouchX = nextX;
+        lastTouchY = nextY;
+    }
 }, { passive: false });
 
 canvas.addEventListener('touchend', (e) => {
     const stillDragging = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
+    
     if (!stillDragging) {
+        // IL DITO PRIMARIO SI È STACCATO -> Esegui Dash
+        performDash();
+        
         gameState.isTouchActive = false;
         gameState.touchIdentifier = null;
+        touchVelocityX = 0;
+        touchVelocityY = 0;
     }
 });
+
+// Funzione per gestire il Dash
+function performDash() {
+    // Calcoliamo la magnitudo del movimento
+    const magnitude = Math.sqrt(touchVelocityX ** 2 + touchVelocityY ** 2);
+    
+    // Se il movimento è stato minimo, non dashare (evita dash involontari da fermo)
+    if (magnitude > 2) {
+        const dirX = touchVelocityX / magnitude;
+        const dirY = touchVelocityY / magnitude;
+
+        // Applichiamo lo spostamento istantaneo (o potresti aggiungere un'animazione)
+        gameState.playerX += dirX * TOUCH_SETTINGS.DASH_DISTANCE;
+        gameState.playerY += dirY * TOUCH_SETTINGS.DASH_DISTANCE;
+        
+        // Rendi il giocatore invulnerabile per un istante durante il dash
+        gameState.isInvulnerable = true;
+        gameState.lastDamageTime = Date.now() - (CONFIG.INVULNERABILITY_TIME - 200); // Invulnerabilità breve
+        
+        console.log("Dash eseguito!");
+    }
+}
+
+// fine gestione touch
+
 
 function updateCoords(touch, rect) {
     // Se il canvas è full screen, il rapporto è 1:1
@@ -413,6 +471,10 @@ window.addEventListener('keydown', (e) => {
     }
 });
 window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
+
+
+
+
 
 startButton.addEventListener('click', startGame);
 
