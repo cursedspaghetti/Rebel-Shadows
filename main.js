@@ -36,73 +36,19 @@ export const shadowImg = new Image();
 shadowImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png";
 
 // --- CONSTANTS ---
-let debounceTimer;
 let lastLoadedId = "";
-
-
-// --- WEB3 & NFT LOGIC ---
-async function connectWallet() {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    // Se siamo su mobile e MetaMask non è rilevato
-    if (isMobile && !window.ethereum) {
-        const currentUrl = window.location.href.replace(/^https?:\/\//, '');
-        // Proviamo il link universale E lo schema diretto in fallback
-        const deepLink = `https://metamask.app.link/dapp/${currentUrl}`;
-        const directScheme = `metamask://dapp/${currentUrl}`;
-        
-        // Prova ad aprire MetaMask
-        window.location.href = deepLink;
-        
-        // Se dopo 500ms siamo ancora qui, prova lo schema diretto
-        setTimeout(() => {
-            window.location.href = directScheme;
-        }, 500);
-        return;
-    }
-
-    if (typeof window.ethereum !== 'undefined') {
-        try {
-            if (connectWalletBtn) connectWalletBtn.innerText = "CONNECTING...";
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            const address = accounts[0];
-            
-            if (connectWalletBtn) {
-                connectWalletBtn.innerText = "CONNECTED";
-                connectWalletBtn.style.backgroundColor = "#28a745";
-            }
-            await fetchUserWizards(address);
-        } catch (error) {
-            console.error("Connection error:", error);
-            if (connectWalletBtn) connectWalletBtn.innerText = "CONNECT METAMASK";
-        }
-    } else {
-        alert("MetaMask not detected! Use MetaMask Browser on mobile.");
-    }
-}
-// --- CONSTANTS ---
 const FR_CONTRACT = "0x521f9c7505005cfa19a8e5786a9c3c9c9f5e6f42";
 const OPENSEA_CHAIN = "ethereum";
 
-// --- WEB3 & NFT LOGIC (OPENSEA METHOD) ---
+// --- WEB3 & NFT LOGIC ---
 
 async function connectWallet() {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    // Se siamo su mobile e MetaMask non è rilevato
     if (isMobile && !window.ethereum) {
         const currentUrl = window.location.href.replace(/^https?:\/\//, '');
-        // Proviamo il link universale E lo schema diretto in fallback
         const deepLink = `https://metamask.app.link/dapp/${currentUrl}`;
-        const directScheme = `metamask://dapp/${currentUrl}`;
-        
-        // Prova ad aprire MetaMask
         window.location.href = deepLink;
-        
-        // Se dopo 500ms siamo ancora qui, prova lo schema diretto
-        setTimeout(() => {
-            window.location.href = directScheme;
-        }, 500);
         return;
     }
 
@@ -122,53 +68,41 @@ async function connectWallet() {
             if (connectWalletBtn) connectWalletBtn.innerText = "CONNECT METAMASK";
         }
     } else {
-        alert("MetaMask not detected! Use MetaMask Browser on mobile.");
+        alert("MetaMask not detected!");
     }
 }
 
 async function fetchUserWizards(address) {
-    const affinityDisplay = document.getElementById('affinityDisplay');
     try {
         if (affinityDisplay) affinityDisplay.innerText = "LOOKING ON OPENSEA...";
-
-        // URL per ottenere gli NFT di un account filtrati per collezione su OpenSea
         const url = `https://api.opensea.io/api/v2/chain/${OPENSEA_CHAIN}/account/${address}/nfts?collection=forgottenruneswizardscult&limit=1`;
 
         const response = await fetch(url, {
             method: 'GET',
-            headers: {
-                'accept': 'application/json'
-                // Nota: OpenSea potrebbe richiedere una API Key per volumi alti. 
-                // Se hai una key, aggiungi qui: 'x-api-key': 'TUA_KEY'
-            }
+            headers: { 'accept': 'application/json' }
         });
 
-        if (!response.ok) throw new Error("OpenSea blocked or limited");
-
+        if (!response.ok) throw new Error("OpenSea API error");
         const data = await response.json();
 
         if (data.nfts && data.nfts.length > 0) {
             const nft = data.nfts[0];
-            wizardIdInput.value = nft.identifier; // identifier su OpenSea è il tokenId
-            console.log(`Wizard trovato su OS: ${nft.identifier}`);
-            
-            // OpenSea v2 non sempre manda tutti i tratti nella lista account.
-            // Chiamiamo getWizardAffinity per essere sicuri dei metadati.
-            handleLoadWizard(); 
+            if (wizardIdInput) {
+                wizardIdInput.value = nft.identifier;
+                handleLoadWizard(); 
+            }
         } else {
-            if (affinityDisplay) affinityDisplay.innerText = "NO WIZARDS ON OPENSEA";
+            if (affinityDisplay) affinityDisplay.innerText = "NO WIZARDS FOUND";
         }
     } catch (e) {
         console.error("OpenSea Fetch Error:", e);
-        if (affinityDisplay) affinityDisplay.innerText = "OPENSEA BUSY - TRY MANUAL ID";
+        if (affinityDisplay) affinityDisplay.innerText = "ERROR - TRY MANUAL ID";
     }
 }
 
 async function getWizardAffinity(wizardId) {
-    const affinityDisplay = document.getElementById('affinityDisplay');
     try {
         if (affinityDisplay) affinityDisplay.innerText = "READING METADATA...";
-
         const url = `https://api.opensea.io/api/v2/chain/${OPENSEA_CHAIN}/contract/${FR_CONTRACT}/nfts/${wizardId}`;
 
         const response = await fetch(url, {
@@ -179,29 +113,26 @@ async function getWizardAffinity(wizardId) {
         const data = await response.json();
         const nft = data.nft;
 
-        // Estrazione tratti da OpenSea
         let affinityValue = "Neutral";
-        if (nft.traits) {
+        if (nft && nft.traits) {
             const trait = nft.traits.find(t => t.trait_type === 'Affinity');
             if (trait) affinityValue = trait.value;
         }
 
         if (affinityDisplay) {
             affinityDisplay.innerText = `AFFINITY: ${affinityValue.toUpperCase()}`;
-            // Applichiamo i colori
             const colors = {
                 'Fire': '#ff4500', 'Water': '#00bfff', 'Earth': '#8b4513',
                 'Air': '#f0ffff', 'Shadow': '#9400d3', 'Life': '#32cd32'
             };
             affinityDisplay.style.color = colors[affinityValue] || '#00ffcc';
         }
-
         return affinityValue;
     } catch (e) {
-        console.error("OpenSea Metadata Error:", e);
         return "Neutral";
     }
 }
+
 // --- CORE FUNCTIONS ---
 
 async function handleLoadWizard() {
@@ -209,40 +140,32 @@ async function handleLoadWizard() {
     if (wizardId === lastLoadedId || !wizardId) return;
 
     lastLoadedId = wizardId;
-    
-    // 1. Get Affinity & Stats
     const affinity = await getWizardAffinity(wizardId);
     gameState.playerAffinity = affinity;
     applyAffinityBonuses(affinity);
 
-    // 2. Load Image with CORS safe handling
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
 
     rawImg.onload = () => {
-        if (wizardIdInput.value.trim() === wizardId) {
-            introImage.src = makeTransparent(rawImg);
-            introImage.dataset.loaded = "true";
-            startButton.classList.add('visible');
-        }
+        // Applichiamo la trasparenza e assegniamo il risultato
+        const transparentDataUrl = makeTransparent(rawImg);
+        introImage.src = transparentDataUrl;
+        introImage.dataset.loaded = "true";
+        if (startButton) startButton.classList.add('visible');
     };
 }
 
 function applyAffinityBonuses(affinity) {
-    // Implementazione bonus logica di gioco
     switch(affinity) {
         case 'Fire': CONFIG.BULLET_DAMAGE_MULTIPLIER = 1.4; break;
-        case 'Water': gameState.hp = CONFIG.PLAYER_MAX_HP += 20; break;
+        case 'Water': 
+            CONFIG.PLAYER_MAX_HP += 20; 
+            gameState.hp = CONFIG.PLAYER_MAX_HP; 
+            break;
         case 'Shadow': CONFIG.INVULNERABILITY_TIME += 500; break;
     }
-}
-
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    CONFIG.CANVAS_WIDTH = canvas.width;
-    CONFIG.CANVAS_HEIGHT = canvas.height;
 }
 
 function makeTransparent(img) {
@@ -270,32 +193,49 @@ async function init() {
     Boss1.preloadBossAssets();
     initSkillTree();
 
-    introImage.src = "";
-    introImage.dataset.loaded = "false";
-
-    if (connectWalletBtn) {
-        connectWalletBtn.addEventListener('click', async (e) => {
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            
-            if (isMobile && !window.ethereum) {
-                e.preventDefault();
-                const currentUrl = window.location.href.replace(/^https?:\/\//, '');
-                // Deep link per aprire MetaMask su mobile
-                window.location.href = `metamask://dapp/${currentUrl}`;
-                return;
-            }
-            
-            await connectWallet();
+    if (wizardIdInput) {
+        wizardIdInput.addEventListener('input', () => {
+            clearTimeout(window.loadTimeout);
+            window.loadTimeout = setTimeout(handleLoadWizard, 500);
         });
     }
+
+    if (connectWalletBtn) {
+        connectWalletBtn.addEventListener('click', connectWallet);
+    }
+    
+    if (startButton) {
+        startButton.addEventListener('click', startGame);
+    }
+
+    startScreenLoop();
 }
 
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    CONFIG.CANVAS_WIDTH = canvas.width;
+    CONFIG.CANVAS_HEIGHT = canvas.height;
+}
+
+// Inizio loop per la schermata iniziale
 function startScreenLoop() {
     if (gameState.currentScreen === 'start') {
         Renderer.drawStartScreen(ctx, bgParallax, introImage, Wiz1, bookImg);
         requestAnimationFrame(startScreenLoop);
     }
 }
+
+function startGame() {
+    if (startScreen) startScreen.style.display = 'none';
+    gameState.currentScreen = 'playing';
+    gameState.timerInterval = setInterval(() => {
+        if (gameState.gameTimer > 0) gameState.gameTimer--;
+    }, 1000);
+    gameLoop();
+}
+
+// ... Resto del Game Loop e Input Handlers rimangono simili ma puliti ...
 
 function startGame() {
     startScreen.style.display = 'none';
