@@ -38,68 +38,79 @@ shadowImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-W
 
 // --- WEB3 & NFT LOGIC ---
 
+// --- FUNZIONE CONNESSIONE WALLET ---
 async function connectWallet() {
     if (typeof window.ethereum !== 'undefined') {
         try {
-            // Richiesta account a MetaMask
+            // Cambia il testo del bottone per dare feedback
+            connectWalletBtn.innerText = "CONNECTING...";
+            
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             const address = accounts[0];
             console.log("Wallet Connesso:", address);
             
-            // Recupera i Wizard posseduti dall'indirizzo
+            connectWalletBtn.innerText = "CONNECTED";
+            connectWalletBtn.style.backgroundColor = "#28a745"; // Verde successo
+
             await fetchUserWizards(address);
         } catch (error) {
             console.error("Errore connessione wallet:", error);
+            connectWalletBtn.innerText = "CONNECT METAMASK";
+            alert("Connection refused or error occurred.");
         }
     } else {
-        alert("MetaMask non rilevato. Installa l'estensione!");
+        alert("MetaMask not found. Please install the extension.");
     }
 }
 
+// --- FUNZIONE RECUPERO NFT ---
 async function fetchUserWizards(address) {
     try {
-        // API di Forgotten Runes per ottenere i Wizard di un proprietario
         const response = await fetch(`https://forgottenrunes.com/api/art/wizards/owner/${address}`);
+        if (!response.ok) throw new Error("Network response was not ok");
+        
         const wizardIds = await response.json();
 
         if (wizardIds && wizardIds.length > 0) {
-            // Inserisce automaticamente il primo Wizard trovato nell'input
+            // Prendi il primo wizard e inseriscilo nell'input
             wizardIdInput.value = wizardIds[0];
+            // Forza il trigger del caricamento
             handleLoadWizard(); 
-            console.log(`Trovati ${wizardIds.length} Wizard. Caricato ID: ${wizardIds[0]}`);
         } else {
-            alert("Nessun Wizard trovato in questo wallet.");
+            const affinityDisplay = document.getElementById('affinityDisplay');
+            if (affinityDisplay) affinityDisplay.innerText = "No Wizards found in this wallet";
         }
     } catch (e) {
         console.error("Errore nel recupero NFT:", e);
     }
 }
 
+// --- FUNZIONE AFFINITY (CORRETTA) ---
 async function getWizardAffinity(wizardId) {
     const affinityDisplay = document.getElementById('affinityDisplay');
-    
     try {
-        // Opzionale: mostra un caricamento
-        if (affinityDisplay) affinityDisplay.innerText = "Checking Affinity...";
+        if (affinityDisplay) affinityDisplay.innerText = "FETCHING METADATA...";
 
         const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
+        if (!response.ok) throw new Error("Metadata not found");
+        
         const metadata = await response.json();
         
-        // 1. Cerca il tratto "Affinity"
+        // Cerca l'attributo Affinity
         const affinityAttr = metadata.attributes.find(attr => attr.trait_type === 'Affinity');
-        const affinity = affinityAttr ? affinityAttr.value : "Neutral";
+        const affinityValue = affinityAttr ? affinityAttr.value : "Neutral";
 
-        // 2. ORA aggiorna l'interfaccia, dopo che hai il valore
         if (affinityDisplay) {
-            affinityDisplay.innerText = `Affinity: ${affinity}`;
-            // Opzionale: cambia colore in base all'elemento
-            applyAffinityColor(affinityDisplay, affinity);
+            affinityDisplay.innerText = `AFFINITY: ${affinityValue}`;
+            // Cambia colore in base all'elemento (opzionale)
+            if(affinityValue === "Fire") affinityDisplay.style.color = "#ff4500";
+            if(affinityValue === "Water") affinityDisplay.style.color = "#00bfff";
         }
 
-        return affinity;
+        return affinityValue;
     } catch (e) {
-        console.error("Errore recupero metadati:", e);
-        if (affinityDisplay) affinityDisplay.innerText = "Affinity: Unknown";
+        console.error("Errore Affinity:", e);
+        if (affinityDisplay) affinityDisplay.innerText = "AFFINITY: UNKNOWN";
         return "Neutral";
     }
 }
