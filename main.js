@@ -76,17 +76,44 @@ async function fetchUserWizards(address) {
 }
 
 async function getWizardAffinity(wizardId) {
+    const affinityDisplay = document.getElementById('affinityDisplay');
+    
     try {
+        // Opzionale: mostra un caricamento
+        if (affinityDisplay) affinityDisplay.innerText = "Checking Affinity...";
+
         const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
         const metadata = await response.json();
         
-        // Cerca il tratto "Affinity" tra gli attributi
+        // 1. Cerca il tratto "Affinity"
         const affinityAttr = metadata.attributes.find(attr => attr.trait_type === 'Affinity');
-        return affinityAttr ? affinityAttr.value : "Neutral";
+        const affinity = affinityAttr ? affinityAttr.value : "Neutral";
+
+        // 2. ORA aggiorna l'interfaccia, dopo che hai il valore
+        if (affinityDisplay) {
+            affinityDisplay.innerText = `Affinity: ${affinity}`;
+            // Opzionale: cambia colore in base all'elemento
+            applyAffinityColor(affinityDisplay, affinity);
+        }
+
+        return affinity;
     } catch (e) {
         console.error("Errore recupero metadati:", e);
+        if (affinityDisplay) affinityDisplay.innerText = "Affinity: Unknown";
         return "Neutral";
     }
+}
+
+// Funzione extra per rendere la UI più bella
+function applyAffinityColor(element, affinity) {
+    const colors = {
+        'Fire': '#ff4500',
+        'Water': '#00bfff',
+        'Earth': '#8b4513',
+        'Air': '#f0ffff',
+        'Shadow': '#9400d3'
+    };
+    element.style.color = colors[affinity] || '#00ffcc';
 }
 
 // --- CORE FUNCTIONS ---
