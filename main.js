@@ -5,8 +5,10 @@ import * as SpecialAttacks from './Special Attacks.js';
 import * as collision from './collision.js';
 import * as Enemies from './enemies.js';
 
-// --- CONFIGURAZIONE TOUCH ---
+// --- CONFIGURAZIONE E STATO GLOBALE ---
 const TOUCH_SETTINGS = { LERP: 0.5, OFFSET_Y: 80, TAP_DELAY: 250 };
+let lastLoadedId = ""; // Dichiarata globalmente per handleLoadWizard
+let debounceTimer;    // Dichiarata globalmente per il listener input
 
 // --- DOM ELEMENTS ---
 const canvas = document.getElementById('gameCanvas');
@@ -61,26 +63,23 @@ function makeTransparent(img) {
     return tmpCanvas.toDataURL();
 }
 
-// --- LOGICA CARICAMENTO WIZARD (Solo ID e Immagine) ---
+// --- LOGICA CARICAMENTO WIZARD ---
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
     
-    // 1. Validazione iniziale
     if (!wizardId || wizardId === lastLoadedId) return;
     lastLoadedId = wizardId;
 
-    // Aggiorna subito la UI testuale
     const displayName = document.getElementById('wizardDisplayName');
     if (displayName) displayName.innerText = `WIZARD #${wizardId}`;
 
-    // 2. Avvio caricamento Immagine
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
 
     rawImg.onload = () => {
-        // Applica trasparenza e mostra il pulsante start
-        introImage.src = makeTransparent(rawImg);
+        const transparentDataUrl = makeTransparent(rawImg);
+        introImage.src = transparentDataUrl;
         introImage.dataset.loaded = "true";
         startButton.classList.add('visible');
     };
@@ -90,20 +89,14 @@ async function handleLoadWizard() {
         startButton.classList.remove('visible');
     };
 
-    // 3. Fetch Metadati (Affinità) in parallelo
     try {
         const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
         if (!response.ok) throw new Error("Metadata non trovati");
-        
         const metadata = await response.json();
-        
-        // Cerca l'affinità tra gli attributi
         const affinity = metadata.attributes.find(a => a.trait_type === 'Affinity')?.value;
-        
         if (affinity) {
             console.log(`Wizard #${wizardId} Affinity: ${affinity}`);
             gameState.playerAffinity = affinity;
-            // Qui potresti anche cambiare colore alla UI in base all'affinità
         }
     } catch (e) {
         console.warn("Could not load wizard metadata, using default stats.");
@@ -111,8 +104,11 @@ async function handleLoadWizard() {
     }
 }
 
+// --- STATS TABLE ---
 function renderStatTable() {
     const tbody = document.getElementById('statsBody');
+    if (!tbody) return;
+
     document.getElementById('availableEssence').innerText = gameState.essences;
     confirmStatsBtn.disabled = gameState.essences > 0;
 
@@ -148,8 +144,6 @@ async function init() {
     Boss1.preloadBossAssets();
     initSkillTree();
 
-    let debounceTimer;
-    let lastLoadedId = ""; // <--- AGGIUNGI QUESTA RIGA QUI
     wizardIdInput.addEventListener('input', () => {
         startButton.classList.remove('visible');
         clearTimeout(debounceTimer);
@@ -159,6 +153,7 @@ async function init() {
     startButton.addEventListener('click', () => {
         startScreen.style.display = 'none';
         setupScreen.style.display = 'flex';
+        // Passiamo l'immagine trasparente alla schermata di setup
         setupWizImage.src = introImage.src;
         renderStatTable();
     });
@@ -178,7 +173,7 @@ function startGame() {
     setupScreen.style.display = 'none';
     gameState.currentScreen = 'playing';
     
-    // Calcolo HP e Speed basato solo sulle statistiche base + punti aggiunti
+    // Calcolo HP e Speed basato sulle statistiche
     gameState.hp = 100 + (gameState.addedStats["HP"] * 10);
     gameState.playerSpeed = 5 + (gameState.addedStats["Dexterity"] * 0.3);
 
@@ -187,6 +182,7 @@ function startGame() {
     }, 1000);
     gameLoop();
 }
+
 
 // --- GAME LOOP ---
 function gameLoop() {
