@@ -69,7 +69,7 @@ async function handleLoadWizard() {
     if (!wizardId || wizardId === lastLoadedId) return;
     lastLoadedId = wizardId;
 
-    // 1. Caricamento Immagine (Invariato)
+    // --- 1. Caricamento Immagine (Invariato) ---
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
@@ -79,30 +79,30 @@ async function handleLoadWizard() {
         startButton.classList.add('visible');
     };
 
-    // 2. Fetch dell'Affinity tramite IPFS (Soluzione stabile e senza CORS)
-    // Usiamo il CID ufficiale dei metadati dei Wizards
-    const CID = "QmS99fXpAt6N8S9p98k8V1T1K5z1R4X2U5E5F6G7H8I9J0"; // Verifica questo CID o usa un gateway API
-    
-    // Proviamo l'endpoint che serve i JSON tramite gateway Cloudflare (molto veloce)
-    const metadataUrl = `https://cloudflare-ipfs.com/ipfs/QmeSjSinHpPnmXvMjEwi9LbbzLCWZznv4A66E7B9fNpS4m/${wizardId}`;
+    // --- 2. Fetch Metadata tramite Proxy CORS ---
+    // Usiamo il proxy per aggirare il blocco del browser
+    const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+    const targetUrl = `https://forgottenrunes.com/api/art/wizards/${wizardId}.json`;
 
     try {
-        const response = await fetch(metadataUrl);
-        if (!response.ok) throw new Error("Metadata non trovati");
+        const response = await fetch(proxyUrl + targetUrl);
         
-        const data = await response.json();
+        if (!response.ok) throw new Error("Errore nella risposta del proxy o ID non trovato");
+
+        const metadata = await response.json();
         
-        // Cerchiamo l'Affinity nell'array attributes
-        const affinity = data.attributes?.find(a => a.trait_type === 'Affinity')?.value;
+        // Estraiamo l'Affinity
+        const affinity = metadata.attributes?.find(a => a.trait_type === 'Affinity')?.value;
         
         if (affinity) {
-            console.log(`Wizard #${wizardId} Affinity: ${affinity}`);
+            console.log(`Wizard #${wizardId} Affinity (via Proxy): ${affinity}`);
             gameState.playerAffinity = affinity;
         } else {
             gameState.playerAffinity = "Neutral";
         }
     } catch (e) {
-        console.warn("Impossibile caricare i metadati, uso 'Neutral':", e);
+        console.warn("CORS Proxy Error o ID inesistente:", e);
+        // Se il proxy è bloccato o fallisce, usiamo un fallback
         gameState.playerAffinity = "Neutral";
     }
 }
