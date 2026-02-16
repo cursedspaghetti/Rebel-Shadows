@@ -69,7 +69,7 @@ async function handleLoadWizard() {
     if (!wizardId || wizardId === lastLoadedId) return;
     lastLoadedId = wizardId;
 
-    // --- 1. Caricamento Immagine (Invariato) ---
+    // --- 1. Immagine (Sempre via API standard) ---
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
@@ -79,34 +79,32 @@ async function handleLoadWizard() {
         startButton.classList.add('visible');
     };
 
-    // --- 2. Fetch Metadata tramite Proxy CORS ---
-    // Usiamo il proxy per aggirare il blocco del browser
-    const proxyUrl = "https://cors-anywhere.herokuapp.com/";
-    const targetUrl = `https://forgottenrunes.com/api/art/wizards/${wizardId}.json`;
+    // --- 2. Fetch Metadata tramite AllOrigins (No CORS, No 403) ---
+    const targetUrl = encodeURIComponent(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
+    const proxyUrl = `https://api.allorigins.win/get?url=${targetUrl}`;
 
     try {
-        const response = await fetch(proxyUrl + targetUrl);
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error("Errore Proxy");
         
-        if (!response.ok) throw new Error("Errore nella risposta del proxy o ID non trovato");
-
-        const metadata = await response.json();
+        const data = await response.json();
         
-        // Estraiamo l'Affinity
+        // AllOrigins mette il JSON originale come stringa dentro data.contents
+        const metadata = JSON.parse(data.contents);
+        
         const affinity = metadata.attributes?.find(a => a.trait_type === 'Affinity')?.value;
         
         if (affinity) {
-            console.log(`Wizard #${wizardId} Affinity (via Proxy): ${affinity}`);
+            console.log(`Wizard #${wizardId} Affinity: ${affinity}`);
             gameState.playerAffinity = affinity;
         } else {
             gameState.playerAffinity = "Neutral";
         }
     } catch (e) {
-        console.warn("CORS Proxy Error o ID inesistente:", e);
-        // Se il proxy è bloccato o fallisce, usiamo un fallback
+        console.warn("Errore nel recupero affinità:", e);
         gameState.playerAffinity = "Neutral";
     }
 }
-
 // --- STATS TABLE ---
 function renderStatTable() {
     const tbody = document.getElementById('statsBody');
