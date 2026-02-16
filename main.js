@@ -38,73 +38,100 @@ shadowImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-W
 
 // --- WEB3 & NFT LOGIC ---
 
-// --- FUNZIONE CONNESSIONE WALLET ---
+// --- WEB3 & NFT LOGIC (CORRETTA PER BYPASSARE IL CORS) ---
+
 async function connectWallet() {
+    // 1. Rileva se siamo su un browser mobile
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    // 2. Se siamo su mobile e NON siamo dentro il browser di MetaMask
+    if (isMobile && !window.ethereum) {
+        // Otteniamo l'URL attuale (es. https://cursedspaghetti73.github.io/tuo-gioco/)
+        const currentUrl = window.location.href.replace(/^https?:\/\//, '');
+        // Generiamo il Deep Link per MetaMask
+        const metamaskAppDeepLink = `https://metamask.app.link/dapp/${currentUrl}`;
+        
+        // Reindirizziamo l'utente all'app di MetaMask
+        window.location.href = metamaskAppDeepLink;
+        return;
+    }
+
+    // 3. Logica standard (per Desktop o per quando siamo già dentro l'app MetaMask)
     if (typeof window.ethereum !== 'undefined') {
         try {
-            // Cambia il testo del bottone per dare feedback
-            connectWalletBtn.innerText = "CONNECTING...";
-            
+            const connectBtn = document.getElementById('connectWalletBtn');
+            if (connectBtn) connectBtn.innerText = "CONNECTING...";
+
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             const address = accounts[0];
-            console.log("Wallet Connesso:", address);
             
-            connectWalletBtn.innerText = "CONNECTED";
-            connectWalletBtn.style.backgroundColor = "#28a745"; // Verde successo
+            if (connectBtn) {
+                connectBtn.innerText = "CONNECTED";
+                connectBtn.style.backgroundColor = "#28a745";
+            }
 
             await fetchUserWizards(address);
         } catch (error) {
-            console.error("Errore connessione wallet:", error);
-            connectWalletBtn.innerText = "CONNECT METAMASK";
-            alert("Connection refused or error occurred.");
+            console.error("Errore connessione:", error);
+            if (connectBtn) connectBtn.innerText = "CONNECT METAMASK";
         }
     } else {
-        alert("MetaMask not found. Please install the extension.");
+        alert("MetaMask not detected. If you are on mobile, please open this page inside the MetaMask Browser.");
     }
 }
 
-// --- FUNZIONE RECUPERO NFT ---
 async function fetchUserWizards(address) {
+    const affinityDisplay = document.getElementById('affinityDisplay');
     try {
-        const response = await fetch(`https://forgottenrunes.com/api/art/wizards/owner/${address}`);
-        if (!response.ok) throw new Error("Network response was not ok");
+        if (affinityDisplay) affinityDisplay.innerText = "FETCHING WIZARDS...";
+
+        // Utilizzo di AllOrigins Proxy per bypassare il blocco CORS
+        const proxyUrl = 'https://api.allorigins.win/get?url=';
+        const targetUrl = encodeURIComponent(`https://forgottenrunes.com/api/art/wizards/owner/${address}`);
+
+        const response = await fetch(`${proxyUrl}${targetUrl}`);
+        if (!response.ok) throw new Error("Proxy error");
         
-        const wizardIds = await response.json();
+        const data = await response.json();
+        const wizardIds = JSON.parse(data.contents); // I dati reali sono nella stringa contents
 
         if (wizardIds && wizardIds.length > 0) {
-            // Prendi il primo wizard e inseriscilo nell'input
             wizardIdInput.value = wizardIds[0];
-            // Forza il trigger del caricamento
+            console.log(`Wizard trovati: ${wizardIds}. Caricato: ${wizardIds[0]}`);
             handleLoadWizard(); 
         } else {
-            const affinityDisplay = document.getElementById('affinityDisplay');
-            if (affinityDisplay) affinityDisplay.innerText = "No Wizards found in this wallet";
+            if (affinityDisplay) affinityDisplay.innerText = "NO WIZARDS FOUND";
         }
     } catch (e) {
-        console.error("Errore nel recupero NFT:", e);
+        console.error("Errore recupero NFT (CORS):", e);
+        if (affinityDisplay) affinityDisplay.innerText = "CORS ERROR - TRY MANUAL ID";
     }
 }
 
-// --- FUNZIONE AFFINITY (CORRETTA) ---
 async function getWizardAffinity(wizardId) {
     const affinityDisplay = document.getElementById('affinityDisplay');
     try {
         if (affinityDisplay) affinityDisplay.innerText = "FETCHING METADATA...";
 
-        const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
-        if (!response.ok) throw new Error("Metadata not found");
+        const proxyUrl = 'https://api.allorigins.win/get?url=';
+        const targetUrl = encodeURIComponent(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
+
+        const response = await fetch(`${proxyUrl}${targetUrl}`);
+        const data = await response.json();
+        const metadata = JSON.parse(data.contents);
         
-        const metadata = await response.json();
-        
-        // Cerca l'attributo Affinity
+        // Trova il tratto Affinity
         const affinityAttr = metadata.attributes.find(attr => attr.trait_type === 'Affinity');
         const affinityValue = affinityAttr ? affinityAttr.value : "Neutral";
 
         if (affinityDisplay) {
             affinityDisplay.innerText = `AFFINITY: ${affinityValue}`;
-            // Cambia colore in base all'elemento (opzionale)
-            if(affinityValue === "Fire") affinityDisplay.style.color = "#ff4500";
-            if(affinityValue === "Water") affinityDisplay.style.color = "#00bfff";
+            // Applica colore basato sull'affinity
+            const colors = {
+                'Fire': '#ff4500', 'Water': '#00bfff', 'Earth': '#8b4513',
+                'Air': '#f0ffff', 'Shadow': '#9400d3', 'Life': '#32cd32'
+            };
+            affinityDisplay.style.color = colors[affinityValue] || '#00ffcc';
         }
 
         return affinityValue;
@@ -115,18 +142,51 @@ async function getWizardAffinity(wizardId) {
     }
 }
 
-// Funzione extra per rendere la UI più bella
-function applyAffinityColor(element, affinity) {
-    const colors = {
-        'Fire': '#ff4500',
-        'Water': '#00bfff',
-        'Earth': '#8b4513',
-        'Air': '#f0ffff',
-        'Shadow': '#9400d3'
+// --- CORE FUNCTIONS (AGGIORNATA PER SUPPORTARE AFFINITY) ---
+
+async function handleLoadWizard() {
+    const wizardId = wizardIdInput.value.trim();
+    if (wizardId === lastLoadedId || !wizardId) return;
+
+    lastLoadedId = wizardId;
+    
+    // 1. Carica Affinity e applica bonus
+    const affinity = await getWizardAffinity(wizardId);
+    gameState.playerAffinity = affinity;
+    applyAffinityBonuses(affinity);
+
+    // 2. Carica Immagine
+    const rawImg = new Image();
+    rawImg.crossOrigin = "anonymous"; 
+    rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
+
+    rawImg.onload = () => {
+        if (wizardIdInput.value.trim() === wizardId) {
+            introImage.src = makeTransparent(rawImg);
+            introImage.dataset.loaded = "true";
+            startButton.classList.add('visible');
+        }
     };
-    element.style.color = colors[affinity] || '#00ffcc';
 }
 
+function applyAffinityBonuses(affinity) {
+    // Resetta bonus (assicurati che CONFIG abbia questi campi o aggiungili)
+    console.log(`Applicazione bonus per: ${affinity}`);
+    
+    switch(affinity) {
+        case 'Fire':
+            gameState.damageMultiplier = 1.3; // Esempio: +30% danno
+            break;
+        case 'Water':
+            gameState.hp = CONFIG.PLAYER_MAX_HP += 20; // +20 HP
+            break;
+        case 'Shadow':
+            CONFIG.INVULNERABILITY_TIME += 500; // +0.5s invulnerabilità
+            break;
+        default:
+            gameState.damageMultiplier = 1.0;
+    }
+}
 // --- CORE FUNCTIONS ---
 
 function resizeCanvas() {
@@ -208,7 +268,22 @@ async function init() {
     introImage.dataset.loaded = "false";
 
     // MetaMask Listener
-    if (connectWalletBtn) connectWalletBtn.addEventListener('click', connectWallet);
+   if (connectWalletBtn) {
+    // Definiamo una funzione di gestione per evitare ripetizioni
+    const handleConnect = async (e) => {
+        // Impedisce al browser di eseguire il click standard se è già scattato il touch
+        if (e.type === 'touchstart') {
+            e.preventDefault();
+        }
+        await connectWallet();
+    };
+
+    // Aggiungiamo il listener per il click (Desktop e fallback Mobile)
+    connectWalletBtn.addEventListener('click', handleConnect);
+
+    // Aggiungiamo il listener per il touch (Mobile - più reattivo)
+    connectWalletBtn.addEventListener('touchstart', handleConnect, { passive: false });
+}
 
     wizardIdInput.addEventListener('input', () => {
         startButton.classList.remove('visible');
