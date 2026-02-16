@@ -66,46 +66,45 @@ function makeTransparent(img) {
 // --- LOGICA CARICAMENTO WIZARD ---
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
-    
     if (!wizardId || wizardId === lastLoadedId) return;
     lastLoadedId = wizardId;
 
-    const displayName = document.getElementById('wizardDisplayName');
-    if (displayName) displayName.innerText = `WIZARD #${wizardId}`;
-
+    // 1. Caricamento Immagine (Metodo standard, non soffre CORS per il display)
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
-
     rawImg.onload = () => {
-        const transparentDataUrl = makeTransparent(rawImg);
-        introImage.src = transparentDataUrl;
+        introImage.src = makeTransparent(rawImg);
         introImage.dataset.loaded = "true";
         startButton.classList.add('visible');
     };
 
-    rawImg.onerror = () => {
-        console.error(`Errore nel caricamento immagine per l'ID: ${wizardId}`);
-        startButton.classList.remove('visible');
-    };
+    // 2. Fetch dell'Affinity tramite GraphQL (Zero errori CORS)
+    const query = `{
+      wizards(where: {id: "${wizardId}"}) {
+        affinity
+      }
+    }`;
 
     try {
-        // Usiamo l'endpoint del Book of Lore che solitamente ha politiche CORS aperte
-        const response = await fetch(`https://lore.forgottenrunes.com/api/characters/wizards/${wizardId}`);
+        const response = await fetch('https://api.thegraph.com/subgraphs/name/dabit3/forgotten-runes-wizards', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query })
+        });
+
+        const result = await response.json();
         
-        if (!response.ok) throw new Error("Metadata non trovati");
-        
-        const data = await response.json();
-        
-        // La struttura del JSON qui è leggermente diversa (data.attributes invece di metadata.attributes)
-        const affinity = data.attributes?.find(a => a.trait_type === 'Affinity')?.value;
-        
-        if (affinity) {
-            console.log(`Wizard #${wizardId} Affinity: ${affinity}`);
+        if (result.data && result.data.wizards.length > 0) {
+            const affinity = result.data.wizards[0].affinity;
+            console.log(`Affinity caricata: ${affinity}`);
             gameState.playerAffinity = affinity;
+        } else {
+            console.warn("Wizard non trovato nel database on-chain.");
+            gameState.playerAffinity = "Neutral";
         }
     } catch (e) {
-        console.warn("Errore fetch metadata (CORS o ID inesistente):", e);
+        console.error("Errore GraphQL:", e);
         gameState.playerAffinity = "Neutral";
     }
 }
