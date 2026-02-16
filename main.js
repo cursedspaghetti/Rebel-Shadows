@@ -36,66 +36,73 @@ export const shadowImg = new Image();
 shadowImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png";
 
 // --- CONSTANTS ---
-const FR_CONTRACT = "0x521f9c7505005cfa19a8e5786a9c3c9c9f5e6f42";
 let debounceTimer;
 let lastLoadedId = "";
 
 // --- WEB3 & NFT LOGIC (RESERVOIR API - NO CORS ERRORS) ---
 
+// --- CONSTANTS ---
+// Assicurati che l'indirizzo sia esattamente questo (quello che mi hai fornito)
+const FR_CONTRACT = "0x521f9c7505005cfa19a8e5786a9c3c9c9f5e6f42";
+
+// --- WEB3 & NFT LOGIC ---
+
 async function connectWallet() {
-    // 1. Indirizzo corretto del contratto (quello che hai fornito tu)
-    const FR_CONTRACT = "0x521f9c7505005cfa19a8e5786a9c3c9c9f5e6f42";
-
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
-    // 2. Se siamo su mobile e NON siamo già dentro il browser di MetaMask
+    
+    // Se siamo su mobile e MetaMask non è rilevato
     if (isMobile && !window.ethereum) {
         const currentUrl = window.location.href.replace(/^https?:\/\//, '');
-        // Usiamo lo schema universale di MetaMask per forzare l'apertura
-        const metamaskAppDeepLink = `https://metamask.app.link/dapp/${currentUrl}`;
+        // Proviamo il link universale E lo schema diretto in fallback
+        const deepLink = `https://metamask.app.link/dapp/${currentUrl}`;
+        const directScheme = `metamask://dapp/${currentUrl}`;
         
-        // Piccola pausa per assicurarsi che l'evento touch/click sia completato
+        // Prova ad aprire MetaMask
+        window.location.href = deepLink;
+        
+        // Se dopo 500ms siamo ancora qui, prova lo schema diretto
         setTimeout(() => {
-            window.location.href = metamaskAppDeepLink;
-        }, 100);
+            window.location.href = directScheme;
+        }, 500);
         return;
     }
 
-    // 3. Logica normale se siamo su PC o già dentro MetaMask App
     if (typeof window.ethereum !== 'undefined') {
         try {
+            if (connectWalletBtn) connectWalletBtn.innerText = "CONNECTING...";
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             const address = accounts[0];
-            console.log("Wallet connesso:", address);
             
-            // UI Update
             if (connectWalletBtn) {
                 connectWalletBtn.innerText = "CONNECTED";
                 connectWalletBtn.style.backgroundColor = "#28a745";
             }
-
             await fetchUserWizards(address);
         } catch (error) {
-            console.error("User denied account access", error);
+            console.error("Connection error:", error);
+            if (connectWalletBtn) connectWalletBtn.innerText = "CONNECT METAMASK";
         }
     } else {
-        alert("Per giocare su mobile, apri questo sito nel browser interno di MetaMask!");
+        alert("MetaMask not detected! Use MetaMask Browser on mobile.");
     }
-}
-
-function connectBtnStyleConnected() {
-    connectWalletBtn.innerText = "CONNECTED";
-    connectWalletBtn.style.backgroundColor = "#28a745";
-    connectWalletBtn.style.boxShadow = "4px 4px 0px #145523";
 }
 
 async function fetchUserWizards(address) {
     try {
         if (affinityDisplay) affinityDisplay.innerText = "SEARCHING WIZARDS...";
-        // Reservoir API: Più veloce e CORS-friendly
-        const url = `https://api.reservoir.tools/users/${address}/tokens/v1?collection=${FR_CONTRACT}&limit=1`;
         
-        const response = await fetch(url);
+        // URL AGGIORNATO: Usiamo l'endpoint v2 di Reservoir che è più stabile
+        const url = `https://api.reservoir.tools/users/${address}/tokens/v2?collection=${FR_CONTRACT}&limit=1`;
+        
+        const response = await fetch(url, {
+            headers: {
+                'Accept': '*/*',
+                'x-api-key': 'demo-api-key' // Usiamo la chiave demo pubblica di Reservoir
+            }
+        });
+
+        if (!response.ok) throw new Error("API Reservoir non raggiungibile");
+        
         const data = await response.json();
 
         if (data.tokens && data.tokens.length > 0) {
@@ -106,22 +113,30 @@ async function fetchUserWizards(address) {
             if (affinityDisplay) affinityDisplay.innerText = "NO WIZARDS FOUND";
         }
     } catch (e) {
-        console.error("Reservoir Fetch Error:", e);
+        console.error("Fetch Error:", e);
+        if (affinityDisplay) affinityDisplay.innerText = "CONNECTION ERROR";
     }
 }
 
 async function getWizardAffinity(wizardId) {
     try {
         if (affinityDisplay) affinityDisplay.innerText = "READING TRAITS...";
-        const url = `https://api.reservoir.tools/tokens/v1?tokens=${FR_CONTRACT}:${wizardId}`;
+        // URL AGGIORNATO: Endpoint v2 per i singoli token
+        const url = `https://api.reservoir.tools/tokens/v2?tokens=${FR_CONTRACT}:${wizardId}`;
         
-        const response = await fetch(url);
+        const response = await fetch(url, {
+            headers: {
+                'Accept': '*/*',
+                'x-api-key': 'demo-api-key'
+            }
+        });
         const data = await response.json();
         
         if (!data.tokens || data.tokens.length === 0) return "Neutral";
         
         const token = data.tokens[0].token;
-        const affinityAttr = token.attributes.find(attr => attr.key === 'Affinity');
+        // Reservoir v2 usa 'attributes' con 'key' e 'value'
+        const affinityAttr = token.attributes.find(attr => attr.key === 'Affinity' || attr.key === 'affinity');
         const affinityValue = affinityAttr ? affinityAttr.value : "Neutral";
 
         if (affinityDisplay) {
@@ -135,15 +150,6 @@ async function getWizardAffinity(wizardId) {
         return "Neutral";
     }
 }
-
-function applyAffinityColor(affinity) {
-    const colors = {
-        'Fire': '#ff4500', 'Water': '#00bfff', 'Earth': '#8b4513',
-        'Air': '#f0ffff', 'Shadow': '#9400d3', 'Life': '#32cd32'
-    };
-    affinityDisplay.style.color = colors[affinity] || '#00ffcc';
-}
-
 // --- CORE FUNCTIONS ---
 
 async function handleLoadWizard() {
