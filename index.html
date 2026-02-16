@@ -28,6 +28,31 @@
     <button id="startButton">START GAME</button>
 </div>
 
+<div id="characterSetup" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: black; color: white; flex-direction: column; align-items: center; justify-content: center; font-family: 'Courier New', monospace;">
+    <h1 id="wizardDisplayName">WIZARD #?</h1>
+    
+    <div style="display: flex; gap: 50px; align-items: center; margin-top: 20px;">
+        <img id="setupWizImage" src="" style="width: 300px; height: 300px; image-rendering: pixelated;">
+        
+        <div id="statsContainer">
+            <p>Essences available: <span id="availableEssence">10</span></p>
+            <table style="border-collapse: collapse;">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; padding: 10px;">Stat</th>
+                        <th style="padding: 10px;">Base</th>
+                        <th style="padding: 10px;">Affinity</th>
+                        <th style="padding: 10px;">Add</th>
+                    </tr>
+                </thead>
+                <tbody id="statsBody">
+                    </tbody>
+            </table>
+            <button id="confirmStats" style="margin-top: 20px; padding: 10px 20px; cursor: pointer;" disabled>START ADVENTURE</button>
+        </div>
+    </div>
+</div>
+        
         <div id="powerUpScreen" style="display: none;">
     <h1>LEVEL UP!</h1>
     <p>Points available: <span id="skill-points">1</span></p>
