@@ -4,35 +4,38 @@
 export const CONFIG = {
     CANVAS_WIDTH: window.innerWidth,
     CANVAS_HEIGHT: window.innerHeight,
-    GAME_TIME: 60,             
+    GAME_TIME: 60,              
     SCROLL_SPEED: 2.5,
     PARALLAX_SPEED: 1,      
     
+    // --- Sistema Statistiche ---
+    BASE_STATS_VALUE: 10,
+    MAX_STATS_VALUE: 100,
+    INITIAL_ESSENCES: 10,
+
     BOSS: {
         MAX_HP: 100,
         PHASE_2_THRESHOLD: 0.5,
         FLOAT_SPEED: 0.003,
-        FLOAT_AMP: 15, // Rinominato da AMPLITUDE per coerenza con la logica
+        FLOAT_AMP: 15,
         LERP_SPEED: 0.02,
         LERP_SPEED_P2: 0.04,
         
-        // Attacco RADIALE (Sventagliata)
         RADIAL: {
             INTERVAL: 4000,
             COOLDOWN_P2: 0.6,
             WAVES: 4,
             BULLETS_PER_WAVE: 14,
-            SPEED_P1: 5,  // Rinominato da BULLET_SPEED
-            SPEED_P2: 6,  // Rinominato da BULLET_SPEED_P2
-            DELAY_BETWEEN_BULLETS: 30, // Rinominato da BULLET_DELAY
-            DELAY_BETWEEN_WAVES: 100,  // Rinominato da WAVE_PAUSE
-            ANGLE_START: 40, // Rinominato da ARC_START
-            ANGLE_END: 140,   // Rinominato da ARC_END
+            SPEED_P1: 5,
+            SPEED_P2: 6,
+            DELAY_BETWEEN_BULLETS: 30,
+            DELAY_BETWEEN_WAVES: 100,
+            ANGLE_START: 40,
+            ANGLE_END: 140,
             COLOR: '#ff00ff',
             SIZE: 20          
         },
 
-        // Attacco MIRATO
         TARGETED: {
             INTERVAL: 5000,
             COUNT_P1: 7,
@@ -45,9 +48,8 @@ export const CONFIG = {
             SIZE: 18          
         },
 
-        // DASH
         DASH: {
-            INTERVAL_MIN: 10000, // Rinominato da INTERVAL_BASE
+            INTERVAL_MIN: 10000,
             INTERVAL_VAR: 7000,
             SPEED: 15,
             SPEED_P2_MULT: 1.2
@@ -76,37 +78,60 @@ export const CONFIG = {
 /**
  * GLOBAL GAME STATE
  */
-/**
- * GLOBAL GAME STATE
- */
 export let gameState = {
-    // --- Nuove variabili per Skill Tree e Progresso ---
-    bossDefeatedCount: 0, // Tiene traccia di quanti boss hai ucciso
+    // --- Caratteristiche del Mago (Character Setup) ---
+    wizardName: "Unknown Wizard",
+    affinityName: "Neutral",
+    essences: CONFIG.INITIAL_ESSENCES, // Punti da allocare all'inizio
+    
+    // Statistiche Base (10/100)
+    baseStats: {
+        "Attack Power": 10,
+        "Attack Rate": 10,
+        "Dexterity": 10,
+        "HP": 10,
+        "Constitution": 10,
+        "Elusion": 10
+    },
+    
+    // Punti aggiunti manualmente dal player
+    addedStats: {
+        "Attack Power": 0, "Attack Rate": 0, "Dexterity": 0, 
+        "HP": 0, "Constitution": 0, "Elusion": 0
+    },
+    
+    // Bonus derivanti dal tratto "Affinity" del Wizard
+    affinityBonuses: {
+        "Attack Power": 0, "Attack Rate": 0, "Dexterity": 0, 
+        "HP": 0, "Constitution": 0, "Elusion": 0
+    },
+
+    // --- Skill Tree e Progresso ---
+    bossDefeatedCount: 0,
     playerSkills: {
         offense: 0,
         defense: 0,
         speed: 0,
         magic: 0,
-        points: 0 // Punti da spendere
+        points: 0 // Punti guadagnati uccidendo i boss
     },
 
     // --- Stati Schermata e UI ---
+    currentScreen: 'start', // 'start', 'setup', 'playing', 'powerup'
     bubbleAlpha1: 0,
     bubbleAlpha2: 0,
     bookAlpha: 0,
     wizIdAlpha: 0,   
     fadeSpeed: 0.016, 
+    screenShake: 0,            
     
-    currentScreen: 'start', 
-    screenShake: 0,           
-    
-    // --- Statistiche Giocatore ---
+    // --- Statistiche Effettive in Gioco ---
     hp: CONFIG.PLAYER_MAX_HP,
     isInvulnerable: false,
     lastDamageTime: 0,
     playerX: CONFIG.CANVAS_WIDTH / 2,
     playerY: CONFIG.CANVAS_HEIGHT - 300,
-    playerSpeed: 3, // Questo verrà modificato dallo skill tree 'speed'
+    playerSpeed: 3, 
     playerTrail: [],
     
     // --- Input ---
@@ -124,7 +149,7 @@ export let gameState = {
     bullets: [], 
     enemyBullets: [], 
 
-    // --- Abilità Speciali 1 ---
+    // --- Abilità Speciali 1 (Shield / Ray) ---
     shieldActive: false,
     shieldDuration: 5,
     shieldStartTime: 0,
@@ -146,7 +171,7 @@ export let gameState = {
     isCharging: false,
     rayParticles: [],
 
-    // --- Abilità Speciali 2 ---
+    // --- Abilità Speciali 2 (Ray 2) ---
     specialCooldown2: 10,
     specialLastUsed2: 0,
     specialOnCooldown2: false,
@@ -170,7 +195,7 @@ export let gameState = {
     
     // --- Gestione Boss ---
     bossActive: false,
-    boss: null, // Inizializzato a null perché lo creiamo con spawnBoss()
+    boss: null, 
     lastEnemySpawn: 0,
     
     backgroundPositionY: 0,
