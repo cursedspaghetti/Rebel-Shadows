@@ -63,6 +63,25 @@ function makeTransparent(img) {
 
 // --- LOGICA CARICAMENTO WIZARD (Solo ID e Immagine) ---
 async function handleLoadWizard() {
+
+const wizardId = wizardIdInput.value.trim();
+    if (wizardId === lastLoadedId || !wizardId) return;
+
+    // 1. Fetch Metadata (Affinities)
+    try {
+        const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
+        const metadata = await response.json();
+        
+        // Find the affinity trait
+        const affinity = metadata.attributes.find(a => a.trait_type === 'Affinity')?.value;
+        console.log(`Wizard Affinity: ${affinity}`);
+        
+        // Store it in gameState to use for special powers later!
+        gameState.playerAffinity = affinity;
+    } catch (e) {
+        console.error("Could not load wizard metadata");
+    }
+    
     const wizardId = wizardIdInput.value.trim();
     if (!wizardId) return;
 
