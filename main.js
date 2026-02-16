@@ -12,9 +12,8 @@ const startScreen = document.getElementById('startScreen');
 const powerUpScreen = document.getElementById('powerUpScreen');
 const startButton = document.getElementById('startButton');
 const wizardIdInput = document.getElementById('wizardIdInput');
-
-// Nuovo elemento per MetaMask (Assicurati di aggiungerlo nell'HTML!)
 const connectWalletBtn = document.getElementById('connectWalletBtn');
+const affinityDisplay = document.getElementById('affinityDisplay');
 
 // --- ASSET LOADING ---
 const introImage = new Image();
@@ -36,113 +35,104 @@ chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-W
 export const shadowImg = new Image();
 shadowImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png";
 
-// --- WEB3 & NFT LOGIC ---
+// --- CONSTANTS ---
+const FR_CONTRACT = "0x521f9d4575913e2128b2345c1b924e125b09d643";
+let debounceTimer;
+let lastLoadedId = "";
 
-// --- WEB3 & NFT LOGIC (CORRETTA PER BYPASSARE IL CORS) ---
+// --- WEB3 & NFT LOGIC (RESERVOIR API - NO CORS ERRORS) ---
 
 async function connectWallet() {
-    // 1. Rileva se siamo su un browser mobile
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
-    // 2. Se siamo su mobile e NON siamo dentro il browser di MetaMask
+    // Deep Link per Mobile se non siamo nel browser di MetaMask
     if (isMobile && !window.ethereum) {
-        // Otteniamo l'URL attuale (es. https://cursedspaghetti73.github.io/tuo-gioco/)
         const currentUrl = window.location.href.replace(/^https?:\/\//, '');
-        // Generiamo il Deep Link per MetaMask
-        const metamaskAppDeepLink = `https://metamask.app.link/dapp/${currentUrl}`;
-        
-        // Reindirizziamo l'utente all'app di MetaMask
-        window.location.href = metamaskAppDeepLink;
+        window.location.href = `https://metamask.app.link/dapp/${currentUrl}`;
         return;
     }
 
-    // 3. Logica standard (per Desktop o per quando siamo già dentro l'app MetaMask)
     if (typeof window.ethereum !== 'undefined') {
         try {
-            const connectBtn = document.getElementById('connectWalletBtn');
-            if (connectBtn) connectBtn.innerText = "CONNECTING...";
-
+            if (connectWalletBtn) connectWalletBtn.innerText = "CONNECTING...";
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             const address = accounts[0];
             
-            if (connectBtn) {
-                connectBtn.innerText = "CONNECTED";
-                connectBtn.style.backgroundColor = "#28a745";
+            if (connectWalletBtn) {
+                connectBtnStyleConnected();
             }
-
             await fetchUserWizards(address);
         } catch (error) {
-            console.error("Errore connessione:", error);
-            if (connectBtn) connectBtn.innerText = "CONNECT METAMASK";
+            console.error("Connection error:", error);
+            if (connectWalletBtn) connectWalletBtn.innerText = "CONNECT METAMASK";
         }
     } else {
-        alert("MetaMask not detected. If you are on mobile, please open this page inside the MetaMask Browser.");
+        alert("MetaMask not detected!");
     }
 }
 
+function connectBtnStyleConnected() {
+    connectWalletBtn.innerText = "CONNECTED";
+    connectWalletBtn.style.backgroundColor = "#28a745";
+    connectWalletBtn.style.boxShadow = "4px 4px 0px #145523";
+}
+
 async function fetchUserWizards(address) {
-    const affinityDisplay = document.getElementById('affinityDisplay');
     try {
-        if (affinityDisplay) affinityDisplay.innerText = "FETCHING WIZARDS...";
-
-        // Utilizzo di AllOrigins Proxy per bypassare il blocco CORS
-        const proxyUrl = 'https://api.allorigins.win/get?url=';
-        const targetUrl = encodeURIComponent(`https://forgottenrunes.com/api/art/wizards/owner/${address}`);
-
-        const response = await fetch(`${proxyUrl}${targetUrl}`);
-        if (!response.ok) throw new Error("Proxy error");
+        if (affinityDisplay) affinityDisplay.innerText = "SEARCHING WIZARDS...";
+        // Reservoir API: Più veloce e CORS-friendly
+        const url = `https://api.reservoir.tools/users/${address}/tokens/v1?collection=${FR_CONTRACT}&limit=1`;
         
+        const response = await fetch(url);
         const data = await response.json();
-        const wizardIds = JSON.parse(data.contents); // I dati reali sono nella stringa contents
 
-        if (wizardIds && wizardIds.length > 0) {
-            wizardIdInput.value = wizardIds[0];
-            console.log(`Wizard trovati: ${wizardIds}. Caricato: ${wizardIds[0]}`);
+        if (data.tokens && data.tokens.length > 0) {
+            const firstId = data.tokens[0].token.tokenId;
+            wizardIdInput.value = firstId;
             handleLoadWizard(); 
         } else {
             if (affinityDisplay) affinityDisplay.innerText = "NO WIZARDS FOUND";
         }
     } catch (e) {
-        console.error("Errore recupero NFT (CORS):", e);
-        if (affinityDisplay) affinityDisplay.innerText = "CORS ERROR - TRY MANUAL ID";
+        console.error("Reservoir Fetch Error:", e);
     }
 }
 
 async function getWizardAffinity(wizardId) {
-    const affinityDisplay = document.getElementById('affinityDisplay');
     try {
-        if (affinityDisplay) affinityDisplay.innerText = "FETCHING METADATA...";
-
-        const proxyUrl = 'https://api.allorigins.win/get?url=';
-        const targetUrl = encodeURIComponent(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
-
-        const response = await fetch(`${proxyUrl}${targetUrl}`);
-        const data = await response.json();
-        const metadata = JSON.parse(data.contents);
+        if (affinityDisplay) affinityDisplay.innerText = "READING TRAITS...";
+        const url = `https://api.reservoir.tools/tokens/v1?tokens=${FR_CONTRACT}:${wizardId}`;
         
-        // Trova il tratto Affinity
-        const affinityAttr = metadata.attributes.find(attr => attr.trait_type === 'Affinity');
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (!data.tokens || data.tokens.length === 0) return "Neutral";
+        
+        const token = data.tokens[0].token;
+        const affinityAttr = token.attributes.find(attr => attr.key === 'Affinity');
         const affinityValue = affinityAttr ? affinityAttr.value : "Neutral";
 
         if (affinityDisplay) {
-            affinityDisplay.innerText = `AFFINITY: ${affinityValue}`;
-            // Applica colore basato sull'affinity
-            const colors = {
-                'Fire': '#ff4500', 'Water': '#00bfff', 'Earth': '#8b4513',
-                'Air': '#f0ffff', 'Shadow': '#9400d3', 'Life': '#32cd32'
-            };
-            affinityDisplay.style.color = colors[affinityValue] || '#00ffcc';
+            affinityDisplay.innerText = `AFFINITY: ${affinityValue.toUpperCase()}`;
+            applyAffinityColor(affinityValue);
         }
 
         return affinityValue;
     } catch (e) {
-        console.error("Errore Affinity:", e);
-        if (affinityDisplay) affinityDisplay.innerText = "AFFINITY: UNKNOWN";
+        console.error("Affinity Error:", e);
         return "Neutral";
     }
 }
 
-// --- CORE FUNCTIONS (AGGIORNATA PER SUPPORTARE AFFINITY) ---
+function applyAffinityColor(affinity) {
+    const colors = {
+        'Fire': '#ff4500', 'Water': '#00bfff', 'Earth': '#8b4513',
+        'Air': '#f0ffff', 'Shadow': '#9400d3', 'Life': '#32cd32'
+    };
+    affinityDisplay.style.color = colors[affinity] || '#00ffcc';
+}
+
+// --- CORE FUNCTIONS ---
 
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
@@ -150,12 +140,12 @@ async function handleLoadWizard() {
 
     lastLoadedId = wizardId;
     
-    // 1. Carica Affinity e applica bonus
+    // 1. Get Affinity & Stats
     const affinity = await getWizardAffinity(wizardId);
     gameState.playerAffinity = affinity;
     applyAffinityBonuses(affinity);
 
-    // 2. Carica Immagine
+    // 2. Load Image with CORS safe handling
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
@@ -170,24 +160,13 @@ async function handleLoadWizard() {
 }
 
 function applyAffinityBonuses(affinity) {
-    // Resetta bonus (assicurati che CONFIG abbia questi campi o aggiungili)
-    console.log(`Applicazione bonus per: ${affinity}`);
-    
+    // Implementazione bonus logica di gioco
     switch(affinity) {
-        case 'Fire':
-            gameState.damageMultiplier = 1.3; // Esempio: +30% danno
-            break;
-        case 'Water':
-            gameState.hp = CONFIG.PLAYER_MAX_HP += 20; // +20 HP
-            break;
-        case 'Shadow':
-            CONFIG.INVULNERABILITY_TIME += 500; // +0.5s invulnerabilità
-            break;
-        default:
-            gameState.damageMultiplier = 1.0;
+        case 'Fire': CONFIG.BULLET_DAMAGE_MULTIPLIER = 1.4; break;
+        case 'Water': gameState.hp = CONFIG.PLAYER_MAX_HP += 20; break;
+        case 'Shadow': CONFIG.INVULNERABILITY_TIME += 500; break;
     }
 }
-// --- CORE FUNCTIONS ---
 
 function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -202,26 +181,19 @@ function makeTransparent(img) {
     tempCanvas.width = img.width;
     tempCanvas.height = img.height;
     tempCtx.drawImage(img, 0, 0);
-    
     const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
     const data = imageData.data;
-    const rTarget = data[0], gTarget = data[1], bTarget = data[2];
-    const threshold = 50; 
-
+    const rT = data[0], gT = data[1], bT = data[2];
     for (let i = 0; i < data.length; i += 4) {
-        const distance = Math.sqrt(
-            Math.pow(data[i] - rTarget, 2) + 
-            Math.pow(data[i+1] - gTarget, 2) + 
-            Math.pow(data[i+2] - bTarget, 2)
-        );
-        if (distance < threshold) data[i + 3] = 0;
+        const d = Math.sqrt(Math.pow(data[i]-rT,2)+Math.pow(data[i+1]-gT,2)+Math.pow(data[i+2]-bT,2));
+        if (d < 50) data[i+3] = 0;
     }
     tempCtx.putImageData(imageData, 0, 0);
     return tempCanvas.toDataURL();
 }
 
-
 // --- INITIALIZATION ---
+
 async function init() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
@@ -231,23 +203,15 @@ async function init() {
     introImage.src = "";
     introImage.dataset.loaded = "false";
 
-    // MetaMask Listener
-   if (connectWalletBtn) {
-    // Definiamo una funzione di gestione per evitare ripetizioni
+    // Listener MetaMask (Click + Touch)
     const handleConnect = async (e) => {
-        // Impedisce al browser di eseguire il click standard se è già scattato il touch
-        if (e.type === 'touchstart') {
-            e.preventDefault();
-        }
+        if (e.type === 'touchstart') e.preventDefault();
         await connectWallet();
     };
-
-    // Aggiungiamo il listener per il click (Desktop e fallback Mobile)
-    connectWalletBtn.addEventListener('click', handleConnect);
-
-    // Aggiungiamo il listener per il touch (Mobile - più reattivo)
-    connectWalletBtn.addEventListener('touchstart', handleConnect, { passive: false });
-}
+    if (connectWalletBtn) {
+        connectWalletBtn.addEventListener('click', handleConnect);
+        connectWalletBtn.addEventListener('touchstart', handleConnect, { passive: false });
+    }
 
     wizardIdInput.addEventListener('input', () => {
         startButton.classList.remove('visible');
@@ -256,7 +220,6 @@ async function init() {
     });
 
     startButton.addEventListener('click', startGame);
-
     requestAnimationFrame(startScreenLoop);
 }
 
@@ -277,18 +240,16 @@ function startGame() {
 }
 
 // --- GAME LOOP ---
+
 function gameLoop() {
     if (gameState.currentScreen !== 'playing') return;
-
     const now = Date.now();
 
-    // Logica invulnerabilità e shake
     if (gameState.isInvulnerable && (now - gameState.lastDamageTime > CONFIG.INVULNERABILITY_TIME)) {
         gameState.isInvulnerable = false;
     }
     gameState.screenShake = gameState.screenShake > 0.1 ? gameState.screenShake * CONFIG.SHAKE_DECAY : 0;
 
-    // Rendering
     ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     ctx.save(); 
     if (gameState.screenShake > 0) {
@@ -306,7 +267,6 @@ function gameLoop() {
     SpecialAttacks.updateSpecialRay();
     SpecialAttacks.updateSpecialRay2();
 
-    // Logic Spawn
     if (!gameState.bossActive) {
         if (gameState.gameTimer > 0) {
             if (now - (gameState.lastEnemySpawn || 0) > 2000) {
@@ -316,12 +276,11 @@ function gameLoop() {
         } else {
             gameState.bossActive = true;
             gameState.enemies = [];
-            const bossLevel = (gameState.bossDefeatedCount || 0) + 1;
-            gameState.boss = Boss1.spawnBoss(bossLevel);
+            const bLvl = (gameState.bossDefeatedCount || 0) + 1;
+            gameState.boss = Boss1.spawnBoss(bLvl);
         }
     }
 
-    // Boss Logic
     if (gameState.bossActive && gameState.boss) {
         Boss1.updateBoss(gameState.boss);
         Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
@@ -337,7 +296,6 @@ function gameLoop() {
 
     collision.handleAllCollisions();
 
-    // Player Draw
     if (!(gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0)) {
         Renderer.drawPlayer(ctx, playerSprite);
     }
@@ -360,7 +318,7 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// --- HELPERS ---
+// --- HELPERS & BACKGROUNDS ---
 
 function updateAndDrawBackgrounds() {
     gameState.parallaxPositionY = (gameState.parallaxPositionY + CONFIG.PARALLAX_SPEED) % CONFIG.CANVAS_HEIGHT;
@@ -373,9 +331,11 @@ function updateAndDrawBackgrounds() {
 }
 
 function updatePlayerMovement() {
+    const LERP = 0.5;
+    const OFFSET_Y = 80;
     if (gameState.isTouchActive) {
-        gameState.playerX += (gameState.touchX - gameState.playerX) * 0.5;
-        gameState.playerY += (gameState.touchY - 80 - gameState.playerY) * 0.5;
+        gameState.playerX += (gameState.touchX - gameState.playerX) * LERP;
+        gameState.playerY += (gameState.touchY - OFFSET_Y - gameState.playerY) * LERP;
     } else {
         if (gameState.keys['ArrowLeft']) gameState.playerX -= gameState.playerSpeed;
         if (gameState.keys['ArrowRight']) gameState.playerX += gameState.playerSpeed;
@@ -386,26 +346,21 @@ function updatePlayerMovement() {
     gameState.playerY = Math.max(20, Math.min(CONFIG.CANVAS_HEIGHT - 20, gameState.playerY));
 }
 
-// --- TOUCH & INPUT ---
-
-let secondFingerTimer = null;
-gameState.isTouchActive = false;
-gameState.touchIdentifier = null;
-
+// --- TOUCH INPUTS ---
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        gameState.touchIdentifier = touch.identifier;
+        const t = e.touches[0];
+        gameState.touchIdentifier = t.identifier;
         gameState.isTouchActive = true;
-        gameState.touchX = touch.clientX - rect.left;
-        gameState.touchY = touch.clientY - rect.top;
+        gameState.touchX = t.clientX - rect.left;
+        gameState.touchY = t.clientY - rect.top;
     }
     if (e.touches.length === 2) {
         const now = Date.now();
-        const lastTap = canvas.dataset.lastTap || 0;
-        if (now - lastTap < 250) {
+        const last = canvas.dataset.lastTap || 0;
+        if (now - last < 250) {
             SpecialAttacks.fireSpecialAttackSequence();
             SpecialAttacks.fireSpecialAttackSequence2();
         } else {
@@ -418,10 +373,10 @@ canvas.addEventListener('touchstart', (e) => {
 canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
-    const touch = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
-    if (touch) {
-        gameState.touchX = touch.clientX - rect.left;
-        gameState.touchY = touch.clientY - rect.top;
+    const t = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
+    if (t) {
+        gameState.touchX = t.clientX - rect.left;
+        gameState.touchY = t.clientY - rect.top;
     }
 }, { passive: false });
 
@@ -449,16 +404,10 @@ function initSkillTree() {
                 playerSkills.points--;
                 button.classList.replace('locked', 'unlocked');
                 document.getElementById('skill-points').innerText = playerSkills.points;
-                applySkillBonus(path, level);
             }
         });
     });
     document.getElementById('closeSkills').addEventListener('click', resumeGame);
-}
-
-function applySkillBonus(path, level) {
-    if (path === 'speed') gameState.playerSpeed += 0.5;
-    if (path === 'defense') gameState.hp = Math.min(gameState.hp + 20, CONFIG.PLAYER_MAX_HP);
 }
 
 function showPowerUpScreen() {
