@@ -310,6 +310,11 @@ function updatePlayerMovement() {
 }
 
 // --- TOUCH & INPUT ---
+
+let secondFingerTimer = null;
+gameState.isTouchActive = false;
+gameState.touchIdentifier = null;
+
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
