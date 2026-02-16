@@ -41,7 +41,45 @@ let lastLoadedId = "";
 
 
 // --- WEB3 & NFT LOGIC ---
+async function connectWallet() {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    
+    // Se siamo su mobile e MetaMask non è rilevato
+    if (isMobile && !window.ethereum) {
+        const currentUrl = window.location.href.replace(/^https?:\/\//, '');
+        // Proviamo il link universale E lo schema diretto in fallback
+        const deepLink = `https://metamask.app.link/dapp/${currentUrl}`;
+        const directScheme = `metamask://dapp/${currentUrl}`;
+        
+        // Prova ad aprire MetaMask
+        window.location.href = deepLink;
+        
+        // Se dopo 500ms siamo ancora qui, prova lo schema diretto
+        setTimeout(() => {
+            window.location.href = directScheme;
+        }, 500);
+        return;
+    }
 
+    if (typeof window.ethereum !== 'undefined') {
+        try {
+            if (connectWalletBtn) connectWalletBtn.innerText = "CONNECTING...";
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const address = accounts[0];
+            
+            if (connectWalletBtn) {
+                connectWalletBtn.innerText = "CONNECTED";
+                connectWalletBtn.style.backgroundColor = "#28a745";
+            }
+            await fetchUserWizards(address);
+        } catch (error) {
+            console.error("Connection error:", error);
+            if (connectWalletBtn) connectWalletBtn.innerText = "CONNECT METAMASK";
+        }
+    } else {
+        alert("MetaMask not detected! Use MetaMask Browser on mobile.");
+    }
+}
 // --- CONSTANTS ---
 const FR_CONTRACT = "0x521f9c7505005cfa19a8e5786a9c3c9c9f5e6f42";
 const OPENSEA_CHAIN = "ethereum";
