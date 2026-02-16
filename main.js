@@ -65,24 +65,53 @@ function makeTransparent(img) {
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
     if (!wizardId) return;
-    try {
-        const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
-        const data = await response.json();
-        gameState.affinityName = data.attributes.find(a => a.trait_type === "Affinity")?.value || "Neutral";
-        
-        applyAffinityBonus(gameState.affinityName);
-        document.getElementById('wizardDisplayName').innerText = `WIZARD #${wizardId} - ${gameState.affinityName.toUpperCase()}`;
 
+    // Utilizziamo un proxy per bypassare il blocco CORS del browser
+    const proxy = "https://corsproxy.io/?";
+    const jsonUrl = `${proxy}https://forgottenrunes.com/api/art/wizards/${wizardId}.json`;
+    const imgUrl = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
+
+    try {
+        const response = await fetch(jsonUrl);
+        if (!response.ok) throw new Error("Errore nel recupero dati");
+        
+        const data = await response.json();
+
+        // LOGICA PER TROVARE L'AFFINITY
+        // 1. Cerca il tratto "Affinity" (raro nel JSON diretto)
+        // 2. Cerca il "Background" (spesso usato come Affinity nei giochi)
+        // 3. Cerca un tratto che contenga la parola nel nome (es. "Amber")
+        
+        const affinityAttribute = data.attributes.find(a => 
+            a.trait_type === "Affinity" || a.trait_type === "Background"
+        );
+
+        gameState.affinityName = affinityAttribute ? affinityAttribute.value : "Neutral";
+        
+        // Aggiorna l'interfaccia
+        document.getElementById('wizardDisplayName').innerText = `WIZARD #${wizardId} - ${gameState.affinityName.toUpperCase()}`;
+        applyAffinityBonus(gameState.affinityName);
+
+        // CARICAMENTO IMMAGINE
         const rawImg = new Image();
-        rawImg.crossOrigin = "anonymous";
-        rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
+        // Fondamentale: crossOrigin deve essere impostato PRIMA di src
+        rawImg.crossOrigin = "anonymous"; 
+        rawImg.src = imgUrl;
+
         rawImg.onload = () => {
+            // Qui invochi la tua funzione per la trasparenza
             introImage.src = makeTransparent(rawImg);
             startButton.classList.add('visible');
         };
-    } catch (e) { console.warn("Wizard data error"); }
-}
 
+        rawImg.onerror = () => {
+            console.error("Errore nel caricamento dell'immagine. Il server potrebbe bloccare l'accesso diretto.");
+        };
+
+    } catch (e) {
+        console.warn("Wizard data error:", e);
+    }
+}
 function applyAffinityBonus(affinity) {
     Object.keys(gameState.affinityBonuses).forEach(k => gameState.affinityBonuses[k] = 0);
     const bonuses = { "Fire": "Attack Power", "Wind": "Dexterity", "Earth": "Constitution", "Water": "HP" };
