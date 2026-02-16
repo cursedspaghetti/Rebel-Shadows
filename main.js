@@ -235,17 +235,6 @@ function startGame() {
     gameLoop();
 }
 
-// ... Resto del Game Loop e Input Handlers rimangono simili ma puliti ...
-
-function startGame() {
-    startScreen.style.display = 'none';
-    gameState.currentScreen = 'playing';
-    gameState.timerInterval = setInterval(() => {
-        if (gameState.gameTimer > 0) gameState.gameTimer--;
-    }, 1000);
-    gameLoop();
-}
-
 // --- GAME LOOP ---
 
 function gameLoop() {
