@@ -43,31 +43,43 @@ let lastLoadedId = "";
 // --- WEB3 & NFT LOGIC (RESERVOIR API - NO CORS ERRORS) ---
 
 async function connectWallet() {
+    // 1. Indirizzo corretto del contratto (quello che hai fornito tu)
+    const FR_CONTRACT = "0x521f9c7505005cfa19a8e5786a9c3c9c9f5e6f42";
+
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    // Deep Link per Mobile se non siamo nel browser di MetaMask
+
+    // 2. Se siamo su mobile e NON siamo già dentro il browser di MetaMask
     if (isMobile && !window.ethereum) {
         const currentUrl = window.location.href.replace(/^https?:\/\//, '');
-        window.location.href = `https://metamask.app.link/dapp/${currentUrl}`;
+        // Usiamo lo schema universale di MetaMask per forzare l'apertura
+        const metamaskAppDeepLink = `https://metamask.app.link/dapp/${currentUrl}`;
+        
+        // Piccola pausa per assicurarsi che l'evento touch/click sia completato
+        setTimeout(() => {
+            window.location.href = metamaskAppDeepLink;
+        }, 100);
         return;
     }
 
+    // 3. Logica normale se siamo su PC o già dentro MetaMask App
     if (typeof window.ethereum !== 'undefined') {
         try {
-            if (connectWalletBtn) connectWalletBtn.innerText = "CONNECTING...";
             const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
             const address = accounts[0];
+            console.log("Wallet connesso:", address);
             
+            // UI Update
             if (connectWalletBtn) {
-                connectBtnStyleConnected();
+                connectWalletBtn.innerText = "CONNECTED";
+                connectWalletBtn.style.backgroundColor = "#28a745";
             }
+
             await fetchUserWizards(address);
         } catch (error) {
-            console.error("Connection error:", error);
-            if (connectWalletBtn) connectWalletBtn.innerText = "CONNECT METAMASK";
+            console.error("User denied account access", error);
         }
     } else {
-        alert("MetaMask not detected!");
+        alert("Per giocare su mobile, apri questo sito nel browser interno di MetaMask!");
     }
 }
 
