@@ -36,7 +36,7 @@ export const shadowImg = new Image();
 shadowImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png";
 
 // --- CONSTANTS ---
-const FR_CONTRACT = "0x521f9d4575913e2128b2345c1b924e125b09d643";
+const FR_CONTRACT = "0x521f9c7505005cfa19a8e5786a9c3c9c9f5e6f42";
 let debounceTimer;
 let lastLoadedId = "";
 
