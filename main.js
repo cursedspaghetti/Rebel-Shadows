@@ -220,42 +220,6 @@ function makeTransparent(img) {
     return tempCanvas.toDataURL();
 }
 
-let debounceTimer;
-let lastLoadedId = "";
-
-async function handleLoadWizard() {
-    const wizardId = wizardIdInput.value.trim();
-    if (wizardId === lastLoadedId || !wizardId) return;
-
-    lastLoadedId = wizardId;
-    
-    // Recupero Affinity e applicazione bonus
-    const affinity = await getWizardAffinity(wizardId);
-    gameState.playerAffinity = affinity;
-    console.log(`Wizard Affinity: ${affinity}`);
-    
-    // Logica Bonus (Esempio: Fire aumenta danno, Water HP)
-    applyAffinityBonuses(affinity);
-
-    const rawImg = new Image();
-    rawImg.crossOrigin = "anonymous"; 
-    rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
-
-    rawImg.onload = () => {
-        if (wizardIdInput.value.trim() === wizardId) {
-            introImage.src = makeTransparent(rawImg);
-            introImage.dataset.loaded = "true";
-            startButton.classList.add('visible');
-        }
-    };
-}
-
-function applyAffinityBonuses(affinity) {
-    // Resetta bonus base prima di applicare i nuovi
-    // Esempio di implementazione:
-    if (affinity === "Fire") CONFIG.BULLET_DAMAGE_MULTIPLIER = 1.5;
-    if (affinity === "Water") gameState.hp = CONFIG.PLAYER_MAX_HP += 20;
-}
 
 // --- INITIALIZATION ---
 async function init() {
