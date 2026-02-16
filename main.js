@@ -63,45 +63,52 @@ function makeTransparent(img) {
 
 // --- LOGICA CARICAMENTO WIZARD (Solo ID e Immagine) ---
 async function handleLoadWizard() {
-
-const wizardId = wizardIdInput.value.trim();
-    if (wizardId === lastLoadedId || !wizardId) return;
-
-    // 1. Fetch Metadata (Affinities)
-    try {
-        const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
-        const metadata = await response.json();
-        
-        // Find the affinity trait
-        const affinity = metadata.attributes.find(a => a.trait_type === 'Affinity')?.value;
-        console.log(`Wizard Affinity: ${affinity}`);
-        
-        // Store it in gameState to use for special powers later!
-        gameState.playerAffinity = affinity;
-    } catch (e) {
-        console.error("Could not load wizard metadata");
-    }
-    
     const wizardId = wizardIdInput.value.trim();
-    if (!wizardId) return;
+    
+    // 1. Validazione iniziale
+    if (!wizardId || wizardId === lastLoadedId) return;
+    lastLoadedId = wizardId;
 
-    const imgUrl = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
+    // Aggiorna subito la UI testuale
+    const displayName = document.getElementById('wizardDisplayName');
+    if (displayName) displayName.innerText = `WIZARD #${wizardId}`;
 
-    // Aggiorna subito il titolo con l'ID
-    document.getElementById('wizardDisplayName').innerText = `WIZARD #${wizardId}`;
-
+    // 2. Avvio caricamento Immagine
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
-    rawImg.src = imgUrl;
+    rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
 
     rawImg.onload = () => {
+        // Applica trasparenza e mostra il pulsante start
         introImage.src = makeTransparent(rawImg);
+        introImage.dataset.loaded = "true";
         startButton.classList.add('visible');
     };
 
     rawImg.onerror = () => {
-        console.error("Errore nel caricamento dell'immagine per l'ID:", wizardId);
+        console.error(`Errore nel caricamento immagine per l'ID: ${wizardId}`);
+        startButton.classList.remove('visible');
     };
+
+    // 3. Fetch Metadati (Affinità) in parallelo
+    try {
+        const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
+        if (!response.ok) throw new Error("Metadata non trovati");
+        
+        const metadata = await response.json();
+        
+        // Cerca l'affinità tra gli attributi
+        const affinity = metadata.attributes.find(a => a.trait_type === 'Affinity')?.value;
+        
+        if (affinity) {
+            console.log(`Wizard #${wizardId} Affinity: ${affinity}`);
+            gameState.playerAffinity = affinity;
+            // Qui potresti anche cambiare colore alla UI in base all'affinità
+        }
+    } catch (e) {
+        console.warn("Could not load wizard metadata, using default stats.");
+        gameState.playerAffinity = "Neutral";
+    }
 }
 
 function renderStatTable() {
