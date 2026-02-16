@@ -90,18 +90,22 @@ async function handleLoadWizard() {
     };
 
     try {
-       // const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
-        const response = await fetch(`https://forgottenrunes.com/api/art/wizards/${wizardId}`);
+        // Usiamo l'endpoint del Book of Lore che solitamente ha politiche CORS aperte
         const response = await fetch(`https://lore.forgottenrunes.com/api/characters/wizards/${wizardId}`);
+        
         if (!response.ok) throw new Error("Metadata non trovati");
-        const metadata = await response.json();
-        const affinity = metadata.attributes.find(a => a.trait_type === 'Affinity')?.value;
+        
+        const data = await response.json();
+        
+        // La struttura del JSON qui è leggermente diversa (data.attributes invece di metadata.attributes)
+        const affinity = data.attributes?.find(a => a.trait_type === 'Affinity')?.value;
+        
         if (affinity) {
             console.log(`Wizard #${wizardId} Affinity: ${affinity}`);
             gameState.playerAffinity = affinity;
         }
     } catch (e) {
-        console.warn("Could not load wizard metadata, using default stats.");
+        console.warn("Errore fetch metadata (CORS o ID inesistente):", e);
         gameState.playerAffinity = "Neutral";
     }
 }
