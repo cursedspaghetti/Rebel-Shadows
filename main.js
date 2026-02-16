@@ -12,7 +12,6 @@ const startScreen = document.getElementById('startScreen');
 const powerUpScreen = document.getElementById('powerUpScreen');
 const startButton = document.getElementById('startButton');
 const wizardIdInput = document.getElementById('wizardIdInput');
-const connectWalletBtn = document.getElementById('connectWalletBtn');
 const affinityDisplay = document.getElementById('affinityDisplay');
 
 // --- ASSET LOADING ---
@@ -37,85 +36,23 @@ shadowImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-W
 
 // --- CONSTANTS ---
 let lastLoadedId = "";
-const FR_CONTRACT = "0x521f9c7505005cfa19a8e5786a9c3c9c9f5e6f42";
-const OPENSEA_CHAIN = "ethereum";
 
-// --- WEB3 & NFT LOGIC ---
-
-async function connectWallet() {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
-    if (isMobile && !window.ethereum) {
-        const currentUrl = window.location.href.replace(/^https?:\/\//, '');
-        const deepLink = `https://metamask.app.link/dapp/${currentUrl}`;
-        window.location.href = deepLink;
-        return;
-    }
-
-    if (typeof window.ethereum !== 'undefined') {
-        try {
-            if (connectWalletBtn) connectWalletBtn.innerText = "CONNECTING...";
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-            const address = accounts[0];
-            
-            if (connectWalletBtn) {
-                connectWalletBtn.innerText = "CONNECTED";
-                connectWalletBtn.style.backgroundColor = "#28a745";
-            }
-            await fetchUserWizards(address);
-        } catch (error) {
-            console.error("Connection error:", error);
-            if (connectWalletBtn) connectWalletBtn.innerText = "CONNECT METAMASK";
-        }
-    } else {
-        alert("MetaMask not detected!");
-    }
-}
-
-async function fetchUserWizards(address) {
-    try {
-        if (affinityDisplay) affinityDisplay.innerText = "LOOKING ON OPENSEA...";
-        const url = `https://api.opensea.io/api/v2/chain/${OPENSEA_CHAIN}/account/${address}/nfts?collection=forgottenruneswizardscult&limit=1`;
-
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: { 'accept': 'application/json' }
-        });
-
-        if (!response.ok) throw new Error("OpenSea API error");
-        const data = await response.json();
-
-        if (data.nfts && data.nfts.length > 0) {
-            const nft = data.nfts[0];
-            if (wizardIdInput) {
-                wizardIdInput.value = nft.identifier;
-                handleLoadWizard(); 
-            }
-        } else {
-            if (affinityDisplay) affinityDisplay.innerText = "NO WIZARDS FOUND";
-        }
-    } catch (e) {
-        console.error("OpenSea Fetch Error:", e);
-        if (affinityDisplay) affinityDisplay.innerText = "ERROR - TRY MANUAL ID";
-    }
-}
+// --- WIZARD LOGIC (NO WALLET) ---
 
 async function getWizardAffinity(wizardId) {
     try {
-        if (affinityDisplay) affinityDisplay.innerText = "READING METADATA...";
-        const url = `https://api.opensea.io/api/v2/chain/${OPENSEA_CHAIN}/contract/${FR_CONTRACT}/nfts/${wizardId}`;
-
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: { 'accept': 'application/json' }
-        });
+        if (affinityDisplay) affinityDisplay.innerText = "READING LORE...";
         
+        // Carichiamo i metadati direttamente da Forgotten Runes (Nessuna API Key richiesta)
+        const url = `https://forgottenrunes.com/api/art/wizards/${wizardId}.json`;
+        const response = await fetch(url);
+        
+        if (!response.ok) throw new Error("Wizards API error");
         const data = await response.json();
-        const nft = data.nft;
 
         let affinityValue = "Neutral";
-        if (nft && nft.traits) {
-            const trait = nft.traits.find(t => t.trait_type === 'Affinity');
+        if (data.attributes) {
+            const trait = data.attributes.find(t => t.trait_type === 'Affinity');
             if (trait) affinityValue = trait.value;
         }
 
@@ -129,27 +66,29 @@ async function getWizardAffinity(wizardId) {
         }
         return affinityValue;
     } catch (e) {
+        console.error("Metadata error:", e);
+        if (affinityDisplay) affinityDisplay.innerText = "WIZARD NOT FOUND";
         return "Neutral";
     }
 }
-
-// --- CORE FUNCTIONS ---
 
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
     if (wizardId === lastLoadedId || !wizardId) return;
 
     lastLoadedId = wizardId;
+    
+    // 1. Otteniamo l'affinità dai metadati JSON
     const affinity = await getWizardAffinity(wizardId);
     gameState.playerAffinity = affinity;
     applyAffinityBonuses(affinity);
 
+    // 2. Carichiamo l'immagine
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
 
     rawImg.onload = () => {
-        // Applichiamo la trasparenza e assegniamo il risultato
         const transparentDataUrl = makeTransparent(rawImg);
         introImage.src = transparentDataUrl;
         introImage.dataset.loaded = "true";
@@ -158,13 +97,16 @@ async function handleLoadWizard() {
 }
 
 function applyAffinityBonuses(affinity) {
+    // Reset bonus precedenti se necessario
+    CONFIG.BULLET_DAMAGE_MULTIPLIER = 1; 
+    
     switch(affinity) {
         case 'Fire': CONFIG.BULLET_DAMAGE_MULTIPLIER = 1.4; break;
         case 'Water': 
-            CONFIG.PLAYER_MAX_HP += 20; 
+            CONFIG.PLAYER_MAX_HP = 120; // Esempio: +20 HP
             gameState.hp = CONFIG.PLAYER_MAX_HP; 
             break;
-        case 'Shadow': CONFIG.INVULNERABILITY_TIME += 500; break;
+        case 'Shadow': CONFIG.INVULNERABILITY_TIME = 1500; break; // Più tempo di invulnerabilità
     }
 }
 
@@ -200,10 +142,6 @@ async function init() {
         });
     }
 
-    if (connectWalletBtn) {
-        connectWalletBtn.addEventListener('click', connectWallet);
-    }
-    
     if (startButton) {
         startButton.addEventListener('click', startGame);
     }
@@ -218,7 +156,6 @@ function resizeCanvas() {
     CONFIG.CANVAS_HEIGHT = canvas.height;
 }
 
-// Inizio loop per la schermata iniziale
 function startScreenLoop() {
     if (gameState.currentScreen === 'start') {
         Renderer.drawStartScreen(ctx, bgParallax, introImage, Wiz1, bookImg);
