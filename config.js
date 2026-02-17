@@ -8,6 +8,14 @@ export const CONFIG = {
     SCROLL_SPEED: 2.5,
     PARALLAX_SPEED: 1,      
     
+    // --- Sistema Mago & Sprite ---
+    WIZARD_SPRITE: {
+        FRAME_SIZE: 50,      // Dimensione nativa del frame FRWC (50x50)
+        RENDER_SCALE: 1.2,   // Scala di visualizzazione in gioco
+        ANIM_SPEED: 100,     // Velocità animazione camminata (ms)
+        TOTAL_FRAMES: 14     // Frame per ogni riga dello spritesheet
+    },
+
     // --- Sistema Statistiche ---
     BASE_STATS_VALUE: 10,
     MAX_STATS_VALUE: 100,
@@ -79,7 +87,7 @@ export const CONFIG = {
  * GLOBAL GAME STATE
  */
 export let gameState = {
-   // --- Caratteristiche del Mago (Dati estratti dal JSON) ---
+    // --- Caratteristiche del Mago ---
     wizardData: {
         name: "",
         head: "",
@@ -91,9 +99,13 @@ export let gameState = {
         id: null
     },
     
+    // Asset Caricati Dinamicamente
+    wizardSpritesheet: null, // Memorizza l'immagine trasparente dello sprite
+    lastLoadedId: null,      // Evita caricamenti doppi
+    
     essences: CONFIG.INITIAL_ESSENCES, 
     
-    // Statistiche Base (10/100)
+    // Statistiche Base
     baseStats: {
         "Attack Power": 10,
         "Attack Rate": 10,
@@ -103,13 +115,11 @@ export let gameState = {
         "Elusion": 10
     },
     
-    // Punti aggiunti manualmente dal player durante il setup
     addedStats: {
         "Attack Power": 0, "Attack Rate": 0, "Dexterity": 0, 
         "HP": 0, "Constitution": 0, "Elusion": 0
     },
     
-    // Bonus derivanti dai tratti specifici (es. una certa Head o Prop dà bonus)
     traitBonuses: {
         "Attack Power": 0, "Attack Rate": 0, "Dexterity": 0, 
         "HP": 0, "Constitution": 0, "Elusion": 0
@@ -122,11 +132,11 @@ export let gameState = {
         defense: 0,
         speed: 0,
         magic: 0,
-        points: 0 // Punti guadagnati uccidendo i boss
+        points: 0 
     },
 
     // --- Stati Schermata e UI ---
-    currentScreen: 'start', // 'start', 'setup', 'playing', 'powerup'
+    currentScreen: 'start', 
     bubbleAlpha1: 0,
     bubbleAlpha2: 0,
     bookAlpha: 0,
@@ -141,6 +151,8 @@ export let gameState = {
     playerX: CONFIG.CANVAS_WIDTH / 2,
     playerY: CONFIG.CANVAS_HEIGHT - 300,
     playerSpeed: 3, 
+    playerDirection: 0, // 0: Giù, 1: Sinistra, 2: Destra, 3: Su
+    isMoving: false,    // Per fermare l'animazione se il player è fermo
     playerTrail: [],
     
     // --- Input ---
@@ -158,7 +170,7 @@ export let gameState = {
     bullets: [], 
     enemyBullets: [], 
 
-    // --- Abilità Speciali 1 (Shield / Ray) ---
+    // --- Abilità Speciali 1 ---
     shieldActive: false,
     shieldDuration: 5,
     shieldStartTime: 0,
@@ -180,7 +192,7 @@ export let gameState = {
     isCharging: false,
     rayParticles: [],
 
-    // --- Abilità Speciali 2 (Ray 2) ---
+    // --- Abilità Speciali 2 ---
     specialCooldown2: 10,
     specialLastUsed2: 0,
     specialOnCooldown2: false,
