@@ -79,16 +79,19 @@ export const CONFIG = {
  * GLOBAL GAME STATE
  */
 export let gameState = {
-    // --- Caratteristiche del Mago (Character Setup) ---
-    "name",
-    "head",
-    "body",
-    "prop",
-    "familiar",
-    "rune",
-    "background",
+   // --- Caratteristiche del Mago (Dati estratti dal JSON) ---
+    wizardData: {
+        name: "",
+        head: "",
+        body: "",
+        prop: "",
+        familiar: "",
+        rune: "",
+        background: "",
+        id: null
+    },
     
-    essences: CONFIG.INITIAL_ESSENCES, // Punti da allocare all'inizio
+    essences: CONFIG.INITIAL_ESSENCES, 
     
     // Statistiche Base (10/100)
     baseStats: {
@@ -100,18 +103,18 @@ export let gameState = {
         "Elusion": 10
     },
     
-    // Punti aggiunti manualmente dal player
+    // Punti aggiunti manualmente dal player durante il setup
     addedStats: {
         "Attack Power": 0, "Attack Rate": 0, "Dexterity": 0, 
         "HP": 0, "Constitution": 0, "Elusion": 0
     },
     
-    // Bonus derivanti dal tratto "Affinity" del Wizard
-    affinityBonuses: {
+    // Bonus derivanti dai tratti specifici (es. una certa Head o Prop dà bonus)
+    traitBonuses: {
         "Attack Power": 0, "Attack Rate": 0, "Dexterity": 0, 
         "HP": 0, "Constitution": 0, "Elusion": 0
     },
-
+    
     // --- Skill Tree e Progresso ---
     bossDefeatedCount: 0,
     playerSkills: {
