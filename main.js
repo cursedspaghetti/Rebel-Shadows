@@ -64,66 +64,54 @@ function makeTransparent(img) {
 }
 
 // --- LOGICA CARICAMENTO WIZARD ---
-// --- LOGICA CARICAMENTO WIZARD AGGIORNATA ---
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
-    
-    // Evita ricaricamenti inutili se l'ID è vuoto o identico all'ultimo caricato
     if (!wizardId || wizardId === lastLoadedId) return;
     lastLoadedId = wizardId;
 
-    // 1. Caricamento Immagine (Sempre dall'API ufficiale per coerenza visiva)
+    // 1. Caricamento Immagine
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
     
     rawImg.onload = () => {
-        // Applica la trasparenza (togliendo il background originale)
         introImage.src = makeTransparent(rawImg);
         introImage.dataset.loaded = "true";
-        
-        // Mostra il pulsante Start solo quando l'immagine è pronta
         startButton.classList.add('visible');
     };
 
-    // 2. Recupero Dati dal file wizzies.json su GitHub
+    // 2. Recupero Dati (Accesso Diretto all'Oggetto)
     const jsonUrl = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/wizzies.json";
 
     try {
         const response = await fetch(jsonUrl);
-        if (!response.ok) throw new Error("Errore nel recupero del database Wizard");
+        if (!response.ok) throw new Error("Errore nel recupero del database");
         
         const wizzies = await response.json();
         
-        // Il file wizzies.json è un array. Cerchiamo l'oggetto che ha l'ID corrispondente.
-        // Nota: uso == invece di === nel caso in cui wizardId sia una stringa e l'ID nel JSON un numero.
-        const foundWizard = wizzies.find(w => w.id == wizardId);
+        // --- FIX PER OGGETTO ---
+        // Accediamo direttamente alla proprietà usando l'ID come chiave
+        const foundWizard = wizzies[wizardId];
 
         if (foundWizard) {
-            console.log(`Mago trovato: ${foundWizard.name}`);
+            console.log(`Mago caricato: ${foundWizard.name}`);
 
-            // Popoliamo il gameState con i dati del file JSON
             gameState.wizardData = {
                 name: foundWizard.name,
                 head: foundWizard.head,
                 body: foundWizard.body,
                 prop: foundWizard.prop,
-                familiar: foundWizard.familiar,
-                rune: foundWizard.rune,
+                familiar: foundWizard.familiar || "None", // Gestisce le stringhe vuote
+                rune: foundWizard.rune || "None",
                 background: foundWizard.background,
                 id: wizardId
             };
-
-            // Esempio: Mostra il nome nell'interfaccia se hai un elemento dedicato
-            // const nameDisplay = document.getElementById('wizard-name-display');
-            // if (nameDisplay) nameDisplay.innerText = foundWizard.name;
-
         } else {
-            console.warn(`Wizard #${wizardId} non trovato nel database locale.`);
+            console.warn(`L'ID ${wizardId} non esiste nel database.`);
             resetWizardData(wizardId);
         }
     } catch (e) {
-        console.error("Errore critico durante il fetch dei dati:", e);
+        console.error("Errore durante il caricamento:", e);
         resetWizardData(wizardId);
     }
 }
