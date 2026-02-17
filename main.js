@@ -420,7 +420,7 @@ function updatePlayerMovement() {
 }
 
 
-// --- INPUT LISTENERS --- MOVIMENTO MOBILE 
+// --- INPUT LISTENERS --- MOVIMENTO MOBILE e TRIGEER ATTACHI / SHIELD
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
@@ -434,10 +434,10 @@ canvas.addEventListener('touchstart', (e) => {
         if (secondFingerTimer) {
             clearTimeout(secondFingerTimer);
             secondFingerTimer = null;
-            fireSpecialAttackSequence2();
+            SpecialAttacks.fireSpecialAttackSequence2();
         } else {
             secondFingerTimer = setTimeout(() => {
-                fireSpecialAttackSequence();
+                SpecialAttacks.fireSpecialAttackSequence();
                 secondFingerTimer = null;
             }, TOUCH_SETTINGS.TAP_DELAY);
         }
@@ -467,8 +467,8 @@ function updateCoords(touch, rect) {
 window.addEventListener('keydown', (e) => {
     gameState.keys[e.key] = true;
     if (e.key === ' ' && gameState.currentScreen === 'playing') {
-        fireSpecialAttackSequence();
-        fireSpecialAttackSequence2();
+        SpecialAttacks.fireSpecialAttackSequence();
+        SpecialAttacks.fireSpecialAttackSequence2();
     }
 });
 window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
