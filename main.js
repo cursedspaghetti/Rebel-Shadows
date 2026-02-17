@@ -135,6 +135,7 @@ async function handleLoadWizard() {
             traitBody.innerText = foundWizard.body;
             traitProp.innerText = foundWizard.prop;
             traitFamiliar.innerText = foundWizard.familiar || "None";
+            traitRune.innerText = foundWizard.rune || "None";
             traitBg.innerText = foundWizard.background;
 
             // Se hai una funzione che genera la tabella delle statistiche, chiamala qui
@@ -155,7 +156,7 @@ async function handleLoadWizard() {
 
 // Funzione di utility per pulire i tratti se il wizard non viene trovato
 function clearTraits() {
-    ['trait-head', 'trait-body', 'trait-prop', 'trait-familiar', 'trait-bg'].forEach(id => {
+    ['trait-head', 'trait-body', 'trait-prop', 'trait-familiar', 'trait-rune', 'trait-bg'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerText = "-";
     });
