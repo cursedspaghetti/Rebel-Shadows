@@ -6,8 +6,7 @@ import * as collision from './collision.js';
 import * as Enemies from './enemies.js';
 
 // --- CONFIGURAZIONE E STATO GLOBALE ---
-let lastLoadedId = ""; // Dichiarata globalmente per handleLoadWizard
-let debounceTimer;    // Dichiarata globalmente per il listener input
+let debounceTimer; 
 
 // --- DOM ELEMENTS ---
 const canvas = document.getElementById('gameCanvas');
@@ -19,8 +18,6 @@ const startButton = document.getElementById('startButton');
 const wizardIdInput = document.getElementById('wizardIdInput');
 const setupWizImage = document.getElementById('setupWizImage');
 const confirmStatsBtn = document.getElementById('confirmStats');
-
-
 
 // --- ASSET LOADING ---
 const introImage = new Image();
@@ -35,6 +32,7 @@ const bgParallax = new Image();
 bgParallax.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png'; 
 const playerSprite = new Image();
 playerSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/booksprite.png';
+
 export const chargeImg = new Image();
 chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bookfull.png";
 export const shadowImg = new Image();
@@ -48,75 +46,39 @@ function resizeCanvas() {
     CONFIG.CANVAS_HEIGHT = canvas.height;
 }
 
-/**
- * Converte il colore del primo pixel (in alto a sinistra) in trasparenza
- * su tutta l'immagine e restituisce un oggetto Image.
- */
 function makeTransparent(img) {
     const tmpCanvas = document.createElement('canvas');
     const tmpCtx = tmpCanvas.getContext('2d');
-    
     tmpCanvas.width = img.width;
     tmpCanvas.height = img.height;
-    
-    // Disegniamo l'immagine originale sul canvas temporaneo
     tmpCtx.drawImage(img, 0, 0);
     
     const imageData = tmpCtx.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
     const data = imageData.data;
-
-    // Prendiamo il colore del primo pixel (0,0) come colore "chiave" per lo sfondo
-    const rT = data[0];
-    const gT = data[1];
-    const bT = data[2];
-    
-    // Soglia di tolleranza per catturare sfumature simili allo sfondo
+    const rT = data[0], gT = data[1], bT = data[2];
     const tolerance = 50; 
 
     for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-
-        // Calcoliamo la distanza euclidea tra il colore del pixel e il colore target
         const distance = Math.sqrt(
-            Math.pow(r - rT, 2) + 
-            Math.pow(g - gT, 2) + 
-            Math.pow(b - bT, 2)
+            Math.pow(data[i] - rT, 2) + 
+            Math.pow(data[i+1] - gT, 2) + 
+            Math.pow(data[i+2] - bT, 2)
         );
-
-        // Se il colore è vicino a quello di sfondo, rendiamo il pixel trasparente
-        if (distance < tolerance) {
-            data[i + 3] = 0; // Alpha a 0
-        }
+        if (distance < tolerance) data[i + 3] = 0;
     }
-
-    // Applichiamo i dati modificati al canvas
     tmpCtx.putImageData(imageData, 0, 0);
-
-    // Creiamo un nuovo oggetto Image invece di una semplice stringa URL
-    // Questo permette di usare .complete e .onload in altre parti del codice
     const transparentImage = new Image();
     transparentImage.src = tmpCanvas.toDataURL();
-    
     return transparentImage;
 }
 
 // --- LOGICA CARICAMENTO WIZARD ---
-/**
- * Gestisce il caricamento completo del Wizard:
- * Immagine statica, Spritesheet animato e Dati Traits.
- */
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
-    
-    // 1. Validazione e prevenzione ricaricamenti inutili
     if (!wizardId || wizardId === gameState.lastLoadedId) return;
     gameState.lastLoadedId = wizardId;
 
-    // Riferimenti UI
     const wizardDisplayName = document.getElementById('wizardDisplayName');
-    const setupWizImage = document.getElementById('setupWizImage');
     const traitHead = document.getElementById('trait-head');
     const traitBody = document.getElementById('trait-body');
     const traitProp = document.getElementById('trait-prop');
@@ -124,63 +86,38 @@ async function handleLoadWizard() {
     const traitFamiliar = document.getElementById('trait-familiar');
     const traitBg = document.getElementById('trait-bg');
 
-    // --- 2. GESTIONE IMMAGINE STATICA (Anteprima UI) ---
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
     
     rawImg.onload = () => {
         const transparentImgObj = makeTransparent(rawImg);
-        // Quando l'immagine processata è pronta (URL base64 caricato)
         transparentImgObj.onload = () => {
             introImage.src = transparentImgObj.src;
             setupWizImage.src = transparentImgObj.src;
-            if (typeof startButton !== 'undefined') startButton.classList.add('visible');
+            if (startButton) startButton.classList.add('visible');
         };
     };
 
-    // --- 3. GESTIONE SPRITESHEET (Movimento in gioco) ---
     const spriteSheetRaw = new Image();
     spriteSheetRaw.crossOrigin = "anonymous";
     spriteSheetRaw.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}/spritesheet.png`;
 
     spriteSheetRaw.onload = () => {
-        // Applichiamo la trasparenza allo spritesheet 14x4
         const transparentSpriteObj = makeTransparent(spriteSheetRaw);
-        
         transparentSpriteObj.onload = () => {
-            // Archiviamo l'oggetto immagine nel gameState
             gameState.wizardSpritesheet = transparentSpriteObj;
-            console.log(`Spritesheet per Wizard #${wizardId} pronto.`);
         };
     };
 
-    // --- 4. RECUPERO DATI DAL DATABASE JSON ---
-    const jsonUrl = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/wizzies.json";
-
     try {
-        const response = await fetch(jsonUrl);
-        if (!response.ok) throw new Error("Errore database");
-        
+        const response = await fetch("https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/wizzies.json");
+        if (!response.ok) throw new Error("Database error");
         const wizzies = await response.json();
         const foundWizard = wizzies[wizardId];
 
         if (foundWizard) {
-            console.log(`Dati caricati per: ${foundWizard.name}`);
-
-            // Salva i dati nel gameState
-            gameState.wizardData = {
-                name: foundWizard.name,
-                head: foundWizard.head,
-                body: foundWizard.body,
-                prop: foundWizard.prop,
-                familiar: foundWizard.familiar || "None",
-                rune: foundWizard.rune || "None",
-                background: foundWizard.background,
-                id: wizardId
-            };
-
-            // Aggiorna i testi nella UI
+            gameState.wizardData = { ...foundWizard, id: wizardId };
             wizardDisplayName.innerText = `${foundWizard.name.toUpperCase()} (#${wizardId})`;
             traitHead.innerText = foundWizard.head;
             traitBody.innerText = foundWizard.body;
@@ -188,66 +125,23 @@ async function handleLoadWizard() {
             traitFamiliar.innerText = foundWizard.familiar || "None";
             traitRune.innerText = foundWizard.rune || "None";
             traitBg.innerText = foundWizard.background;
-
         } else {
             handleError(wizardId, "UNKNOWN WIZARD");
         }
     } catch (e) {
-        console.error("Errore durante il caricamento:", e);
         handleError(wizardId, "CONNECTION ERROR");
     }
 }
 
-/**
- * Reset dei dati in caso di ID non trovato o errore di rete
- */
 function handleError(id, name) {
     const wizardDisplayName = document.getElementById('wizardDisplayName');
     if (wizardDisplayName) wizardDisplayName.innerText = name;
-    
-    // Pulisce i campi dei tratti nella UI
-    ['trait-head', 'trait-body', 'trait-prop', 'trait-familiar', 'trait-rune', 'trait-bg'].forEach(traitId => {
-        const el = document.getElementById(traitId);
+    ['trait-head', 'trait-body', 'trait-prop', 'trait-familiar', 'trait-rune', 'trait-bg'].forEach(t => {
+        const el = document.getElementById(t);
         if (el) el.innerText = "-";
     });
-
-    // Reset dati globali
-    gameState.wizardData = {
-        name: `Wizard #${id}`,
-        head: "Unknown",
-        body: "Unknown",
-        prop: "None",
-        familiar: "None",
-        rune: "None",
-        background: "None",
-        id: id
-    };
-    gameState.wizardSpritesheet = null;
+    gameState.wizardData = { name: `Wizard #${id}`, id: id, prop: "" };
 }
-
-/*
-// Funzione di utility per pulire i tratti se il wizard non viene trovato
-function clearTraits() {
-    ['trait-head', 'trait-body', 'trait-prop', 'trait-familiar', 'trait-rune', 'trait-bg'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.innerText = "-";
-    });
-}
-
-// Funzione di fallback per resettare i dati se il wizard non esiste
-function resetWizardData(id) {
-    gameState.wizardData = {
-        name: `Wizard #${id}`,
-        head: "Unknown",
-        body: "Unknown",
-        prop: "None",
-        familiar: "None",
-        rune: "None",
-        background: "None",
-        id: id
-    };
-}
-*/
 
 // --- STATS TABLE ---
 function renderStatTable() {
@@ -259,11 +153,11 @@ function renderStatTable() {
 
     tbody.innerHTML = Object.keys(gameState.baseStats).map(stat => `
         <tr>
-            <td style="padding: 10px; border-bottom: 1px solid #333;">${stat}</td>
-            <td style="text-align: center;">${gameState.baseStats[stat]}</td>
-            <td style="text-align: center;">
+            <td>${stat}</td>
+            <td>${gameState.baseStats[stat]}</td>
+            <td>
                 <button onclick="changeStat('${stat}', -1)" class="stat-btn">-</button>
-                <span style="display:inline-block; width: 30px;">${gameState.addedStats[stat]}</span>
+                <span>${gameState.addedStats[stat]}</span>
                 <button onclick="changeStat('${stat}', 1)" class="stat-btn">+</button>
             </td>
         </tr>
@@ -272,12 +166,9 @@ function renderStatTable() {
 
 window.changeStat = (stat, amount) => {
     if (amount > 0 && gameState.essences > 0) { 
-        gameState.addedStats[stat]++; 
-        gameState.essences--; 
-    }
-    else if (amount < 0 && gameState.addedStats[stat] > 0) { 
-        gameState.addedStats[stat]--; 
-        gameState.essences++; 
+        gameState.addedStats[stat]++; gameState.essences--; 
+    } else if (amount < 0 && gameState.addedStats[stat] > 0) { 
+        gameState.addedStats[stat]--; gameState.essences++; 
     }
     renderStatTable();
 };
@@ -298,7 +189,6 @@ async function init() {
     startButton.addEventListener('click', () => {
         startScreen.style.display = 'none';
         setupScreen.style.display = 'flex';
-        // Passiamo l'immagine trasparente alla schermata di setup
         setupWizImage.src = introImage.src;
         renderStatTable();
     });
@@ -318,53 +208,26 @@ function startGame() {
     setupScreen.style.display = 'none';
     gameState.currentScreen = 'playing';
     
-    // --- 1. Calcolo Bonus dai Tratti (Esempio di Logica) ---
     let traitSpeedBonus = 0;
     let traitHPBonus = 0;
 
-    // Esempio: Se il mago ha un determinato "Familiar", ottiene un bonus
-    if (gameState.wizardData.familiar && gameState.wizardData.familiar !== "None") {
-        traitHPBonus += 20; // I maghi con un famiglio iniziano con più vita
-    }
-
-    // Esempio: Se la "Prop" è un'arma o un bastone leggero, aumenta la velocità
+    if (gameState.wizardData.familiar && gameState.wizardData.familiar !== "None") traitHPBonus += 20;
     const fastProps = ["Staff", "Wand", "Athame"];
-    if (fastProps.some(p => gameState.wizardData.prop.includes(p))) {
-        traitSpeedBonus += 1.5;
-    }
+    if (gameState.wizardData.prop && fastProps.some(p => gameState.wizardData.prop.includes(p))) traitSpeedBonus += 1.5;
 
-    // --- 2. Calcolo Statistiche Finali ---
-    // Sommiamo: Base (100) + Punti spesi (addedStats) + Bonus dei tratti
     gameState.hp = 100 + (gameState.addedStats["HP"] * 10) + traitHPBonus;
-    
-    // Velocità: Base (5) + Punti Dexterity + Bonus tratti
     gameState.playerSpeed = 5 + (gameState.addedStats["Dexterity"] * 0.3) + traitSpeedBonus;
+    gameState.fireRate = Math.max(100, 400 - (gameState.addedStats["Attack Rate"] * 20));
 
-    // --- 3. Setup Attacco (Attack Rate) ---
-    // Più punti in Attack Rate significano un intervallo (ms) minore tra i colpi
-    const baseFireRate = 400; 
-    gameState.fireRate = baseFireRate - (gameState.addedStats["Attack Rate"] * 20);
-    // Limite minimo di 100ms per non rompere il gioco
-    if (gameState.fireRate < 100) gameState.fireRate = 100;
-
-    // --- 4. Avvio Timer e Loop ---
-    gameState.gameTimer = CONFIG.GAME_TIME; // Reset timer
+    gameState.gameTimer = CONFIG.GAME_TIME;
     if (gameState.timerInterval) clearInterval(gameState.timerInterval);
-    
     gameState.timerInterval = setInterval(() => {
-        if (gameState.gameTimer > 0) {
-            gameState.gameTimer--;
-        } else {
-            // Logica fine tempo (es. spawn Boss se non già presente)
-            gameState.bossActive = true; 
-        }
+        if (gameState.gameTimer > 0) gameState.gameTimer--;
+        else gameState.bossActive = true;
     }, 1000);
 
-    console.log(`Partita iniziata con ${gameState.wizardData.name}. HP: ${gameState.hp}, Speed: ${gameState.playerSpeed}`);
-    
     gameLoop();
 }
-
 
 // --- GAME LOOP ---
 function gameLoop() {
@@ -374,8 +237,8 @@ function gameLoop() {
     if (gameState.isInvulnerable && (now - gameState.lastDamageTime > CONFIG.INVULNERABILITY_TIME)) {
         gameState.isInvulnerable = false;
     }
-    if (gameState.screenShake > 0.1) gameState.screenShake *= CONFIG.SHAKE_DECAY;
-    else gameState.screenShake = 0;
+    
+    gameState.screenShake = gameState.screenShake > 0.1 ? gameState.screenShake * CONFIG.SHAKE_DECAY : 0;
 
     ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     ctx.save(); 
@@ -403,9 +266,7 @@ function gameLoop() {
         } else {
             gameState.bossActive = true;
             gameState.enemies = [];
-            if (!gameState.boss) {
-                gameState.boss = Boss1.spawnBoss((gameState.bossDefeatedCount || 0) + 1);
-            }
+            if (!gameState.boss) gameState.boss = Boss1.spawnBoss((gameState.bossDefeatedCount || 0) + 1);
         }
     }
 
@@ -423,8 +284,10 @@ function gameLoop() {
 
     collision.handleAllCollisions();
 
+    // Draw Player logic
     if (!(gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0)) {
-    Renderer.drawPlayer(ctx, bookImg);
+        Renderer.drawPlayer(ctx, bookImg);
+    }
 
     Enemies.drawEnemies(ctx);
     Enemies.drawEnemyBullets(ctx);
@@ -443,7 +306,6 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// --- HELPERS ---
 function updateAndDrawBackgrounds() {
     gameState.parallaxPositionY = (gameState.parallaxPositionY + CONFIG.PARALLAX_SPEED) % CONFIG.CANVAS_HEIGHT;
     ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
@@ -454,115 +316,38 @@ function updateAndDrawBackgrounds() {
     ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 }
 
-
-// MOVEMENTS
-
-// --- CONFIGURAZIONE TOUCH ---
-const TOUCH_SETTINGS = {
-    LERP: 0.5,
-    OFFSET_Y: 80,
-    TAP_DELAY: 250
-};
-
-
-let secondFingerTimer = null;
-gameState.isTouchActive = false;
-gameState.touchIdentifier = null;
-
-
-// MOVIMENTO TASTIERA
 function updatePlayerMovement() {
     let moving = false;
-    let dx = 0;
-    let dy = 0;
-
     if (gameState.isTouchActive) {
-        dx = (gameState.touchX - gameState.playerX);
-        dy = (gameState.touchY - TOUCH_SETTINGS.OFFSET_Y - gameState.playerY);
-        
-        // Se la distanza è minima, consideriamolo fermo per evitare tremolii
+        let dx = (gameState.touchX - gameState.playerX);
+        let dy = (gameState.touchY - 80 - gameState.playerY);
         if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
-            gameState.playerX += dx * TOUCH_SETTINGS.LERP;
-            gameState.playerY += dy * TOUCH_SETTINGS.LERP;
+            gameState.playerX += dx * 0.5;
+            gameState.playerY += dy * 0.5;
             moving = true;
-
-            // Determina la direzione per lo sprite basata sul vettore maggiore
-            if (Math.abs(dx) > Math.abs(dy)) {
-                gameState.playerDirection = dx > 0 ? 2 : 1; // 2: Destra, 1: Sinistra
-            } else {
-                gameState.playerDirection = dy > 0 ? 0 : 3; // 0: Giù, 3: Su
-            }
+            gameState.playerDirection = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 2 : 1) : (dy > 0 ? 0 : 3);
         }
     } else {
-        // Movimento Tastiera
-        if (gameState.keys['ArrowLeft'] || gameState.keys['a']) {
-            gameState.playerX -= gameState.playerSpeed;
-            gameState.playerDirection = 1;
-            moving = true;
-        }
-        if (gameState.keys['ArrowRight'] || gameState.keys['d']) {
-            gameState.playerX += gameState.playerSpeed;
-            gameState.playerDirection = 2;
-            moving = true;
-        }
-        if (gameState.keys['ArrowUp'] || gameState.keys['w']) {
-            gameState.playerY -= gameState.playerSpeed;
-            gameState.playerDirection = 3;
-            moving = true;
-        }
-        if (gameState.keys['ArrowDown'] || gameState.keys['s']) {
-            gameState.playerY += gameState.playerSpeed;
-            gameState.playerDirection = 0;
-            moving = true;
-        }
+        if (gameState.keys['ArrowLeft'] || gameState.keys['a']) { gameState.playerX -= gameState.playerSpeed; gameState.playerDirection = 1; moving = true; }
+        if (gameState.keys['ArrowRight'] || gameState.keys['d']) { gameState.playerX += gameState.playerSpeed; gameState.playerDirection = 2; moving = true; }
+        if (gameState.keys['ArrowUp'] || gameState.keys['w']) { gameState.playerY -= gameState.playerSpeed; gameState.playerDirection = 3; moving = true; }
+        if (gameState.keys['ArrowDown'] || gameState.keys['s']) { gameState.playerY += gameState.playerSpeed; gameState.playerDirection = 0; moving = true; }
     }
-
     gameState.isMoving = moving;
-    
-    // Boundary check
     gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
     gameState.playerY = Math.max(20, Math.min(CONFIG.CANVAS_HEIGHT - 20, gameState.playerY));
 }
 
-
-// --- INPUT LISTENERS --- MOVIMENTO MOBILE e TRIGEER ATTACHI / SHIELD
+// --- INPUT LISTENERS ---
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        gameState.touchIdentifier = touch.identifier;
+        gameState.touchIdentifier = e.touches[0].identifier;
         gameState.isTouchActive = true;
-        updateCoords(touch, rect);
-    }
-    if (e.touches.length >= 2 && gameState.currentScreen === 'playing') {
-        if (secondFingerTimer) {
-            clearTimeout(secondFingerTimer);
-            secondFingerTimer = null;
-            SpecialAttacks.fireSpecialAttackSequence2();
-        } else {
-            secondFingerTimer = setTimeout(() => {
-                SpecialAttacks.fireSpecialAttackSequence();
-                secondFingerTimer = null;
-            }, TOUCH_SETTINGS.TAP_DELAY);
-        }
+        updateCoords(e.touches[0], rect);
     }
 }, { passive: false });
-
-canvas.addEventListener('touchmove', (e) => {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const touch = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
-    if (touch) updateCoords(touch, rect);
-}, { passive: false });
-
-canvas.addEventListener('touchend', (e) => {
-    const stillDragging = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
-    if (!stillDragging) {
-        gameState.isTouchActive = false;
-        gameState.touchIdentifier = null;
-    }
-});
 
 function updateCoords(touch, rect) {
     gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
@@ -578,7 +363,6 @@ window.addEventListener('keydown', (e) => {
 });
 window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
 
-
 // SKILL TREE
 const playerSkills = { points: 1, offense: 0, defense: 0, speed: 0, magic: 0 };
 function initSkillTree() {
@@ -589,11 +373,13 @@ function initSkillTree() {
             if (playerSkills.points > 0 && level === playerSkills[path] + 1) {
                 playerSkills[path] = level; playerSkills.points--;
                 button.classList.replace('locked', 'unlocked');
-                document.getElementById('skill-points').innerText = playerSkills.points;
+                const spEl = document.getElementById('skill-points');
+                if (spEl) spEl.innerText = playerSkills.points;
             }
         });
     });
-    document.getElementById('closeSkills').addEventListener('click', resumeGame);
+    const closeBtn = document.getElementById('closeSkills');
+    if (closeBtn) closeBtn.addEventListener('click', resumeGame);
 }
 
 function showPowerUpScreen() {
@@ -601,7 +387,8 @@ function showPowerUpScreen() {
     powerUpScreen.style.display = 'flex';
     if (gameState.timerInterval) clearInterval(gameState.timerInterval);
     playerSkills.points++;
-    document.getElementById('skill-points').innerText = playerSkills.points;
+    const spEl = document.getElementById('skill-points');
+    if (spEl) spEl.innerText = playerSkills.points;
 }
 
 function resumeGame() {
