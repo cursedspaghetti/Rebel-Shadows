@@ -339,15 +339,75 @@ function updatePlayerMovement() {
 }
 
 // --- INPUT LISTENERS ---
+
+// --- CONFIGURAZIONE TOUCH ---
+const TOUCH_SETTINGS = {
+    LERP: 0.5,
+    OFFSET_Y: 80,
+    TAP_DELAY: 250
+};
+
+
+let secondFingerTimer = null;
+gameState.isTouchActive = false;
+gameState.touchIdentifier = null;
+
+
+// MOVIMENTO TASTIERA
+function updatePlayerMovement() {
+    if (gameState.isTouchActive) {
+        gameState.playerX += (gameState.touchX - gameState.playerX) * TOUCH_SETTINGS.LERP;
+        gameState.playerY += (gameState.touchY - TOUCH_SETTINGS.OFFSET_Y - gameState.playerY) * TOUCH_SETTINGS.LERP;
+    } else {
+        if (gameState.keys['ArrowLeft']) gameState.playerX -= gameState.playerSpeed;
+        if (gameState.keys['ArrowRight']) gameState.playerX += gameState.playerSpeed;
+        if (gameState.keys['ArrowUp']) gameState.playerY -= gameState.playerSpeed;
+        if (gameState.keys['ArrowDown']) gameState.playerY += gameState.playerSpeed;
+    }
+    gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
+    gameState.playerY = Math.max(20, Math.min(CONFIG.CANVAS_HEIGHT - 20, gameState.playerY));
+}
+
+
+
+// --- INPUT LISTENERS --- MOVIMENTO MOBILE 
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     if (e.touches.length === 1) {
-        gameState.touchIdentifier = e.touches[0].identifier;
+        const touch = e.touches[0];
+        gameState.touchIdentifier = touch.identifier;
         gameState.isTouchActive = true;
-        updateCoords(e.touches[0], rect);
+        updateCoords(touch, rect);
+    }
+    if (e.touches.length >= 2 && gameState.currentScreen === 'playing') {
+        if (secondFingerTimer) {
+            clearTimeout(secondFingerTimer);
+            secondFingerTimer = null;
+            SpecialAttacks.fireSpecialAttackSequence2();
+        } else {
+            secondFingerTimer = setTimeout(() => {
+                SpecialAttacks.fireSpecialAttackSequence();
+                secondFingerTimer = null;
+            }, TOUCH_SETTINGS.TAP_DELAY);
+        }
     }
 }, { passive: false });
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const touch = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
+    if (touch) updateCoords(touch, rect);
+}, { passive: false });
+
+canvas.addEventListener('touchend', (e) => {
+    const stillDragging = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
+    if (!stillDragging) {
+        gameState.isTouchActive = false;
+        gameState.touchIdentifier = null;
+    }
+});
 
 function updateCoords(touch, rect) {
     gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
@@ -362,6 +422,7 @@ window.addEventListener('keydown', (e) => {
     }
 });
 window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
+
 
 // SKILL TREE
 const playerSkills = { points: 1, offense: 0, defense: 0, speed: 0, magic: 0 };
