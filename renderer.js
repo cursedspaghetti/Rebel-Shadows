@@ -173,66 +173,31 @@ function drawPixelBubble(ctx, x, y, text, alpha = 1, targetX) {
     ctx.restore();
 }
 
-export function drawPlayer(ctx, bookImg) {
-    // 1. Controllo caricamento libro
-    if (!bookImg.complete) return;
+export function drawPlayer(ctx, img) {
+    if (!img.complete) return; 
 
-    // --- CONFIGURAZIONE LIBRO (Esistente) ---
-    const bookWidth = 512;
-    const bookHeight = 349;
-    const bookScaleX = 0.09;
-    const bookScaleY = 0.11;
-    const bookFrames = 13;
-    const bookSpeed = 150;
-    const bookFrameIdx = Math.floor(Date.now() / bookSpeed) % bookFrames;
-
-    // --- CONFIGURAZIONE MAGO (Nuova) ---
-    const wizardImg = gameState.wizardSpritesheet; // L'immagine salvata in handleLoadWizard
-    const wizSize = 50;       // Dimensione originale frame (50x50)
-    const wizScale = 1.2;     // Regola questo per ingrandire/rimpicciolire il mago
-    const wizSpeed = 100;     // Velocità animazione camminata
+    const frameWidth = 512;  
+    const frameHeight = 349; 
     
-    // Calcolo frame camminata (0-13)
-    const wizFrameIdx = Math.floor(Date.now() / wizSpeed) % 14;
-
-    // Determinazione riga dello spritesheet in base alla direzione (se disponibile nel tuo gameState)
-    // 0: Giù, 1: Sinistra, 2: Destra, 3: Su
-    let wizRow = 0; 
-    if (gameState.keys) {
-        if (gameState.keys['ArrowUp'] || gameState.keys['w']) wizRow = 3;
-        else if (gameState.keys['ArrowDown'] || gameState.keys['s']) wizRow = 0;
-        else if (gameState.keys['ArrowLeft'] || gameState.keys['a']) wizRow = 1;
-        else if (gameState.keys['ArrowRight'] || gameState.keys['d']) wizRow = 2;
-    }
+    const scaleX = 0.09;      
+    const scaleY = 0.11;        
+    
+    const totalFrames = 13; 
+    const animationSpeed = 150;
+    const frameIndex = Math.floor(Date.now() / animationSpeed) % totalFrames;
 
     ctx.save();
     ctx.translate(gameState.playerX, gameState.playerY);
 
-    // --- DISEGNO MAGO (Sotto) ---
-    if (wizardImg && wizardImg.complete) {
-        ctx.drawImage(
-            wizardImg,
-            wizFrameIdx * wizSize, wizRow * wizSize, // Ritaglio (x, y)
-            wizSize, wizSize,                        // Dimensioni ritaglio
-            -(wizSize * wizScale) / 2,               // Posizione X centrata
-            0,                                       // Posizione Y (sotto il centro/libro)
-            wizSize * wizScale,                      // Larghezza renderizzata
-            wizSize * wizScale                       // Altezza renderizzata
-        );
-    }
-
-    // --- DISEGNO LIBRO (Sopra) ---
-    // Lo spostiamo leggermente verso l'alto (es. -20px) per non coprire la testa del mago
     ctx.drawImage(
-        bookImg,
-        bookFrameIdx * bookWidth, 0,
-        bookWidth, bookHeight,
-        -(bookWidth * bookScaleX) / 2,
-        - (bookHeight * bookScaleY) - 5, // Alzato per fluttuare sopra il mago
-        bookWidth * bookScaleX,
-        bookHeight * bookScaleY
+        img,
+        frameIndex * frameWidth, 0, 
+        frameWidth, frameHeight,    
+        - (frameWidth * scaleX) / 2, 
+        - (frameHeight * scaleY) / 2, 
+        frameWidth * scaleX,         
+        frameHeight * scaleY         
     );
-
     ctx.restore();
 }
 
