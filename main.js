@@ -316,30 +316,7 @@ function updateAndDrawBackgrounds() {
     ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 }
 
-function updatePlayerMovement() {
-    let moving = false;
-    if (gameState.isTouchActive) {
-        let dx = (gameState.touchX - gameState.playerX);
-        let dy = (gameState.touchY - 80 - gameState.playerY);
-        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
-            gameState.playerX += dx * 0.5;
-            gameState.playerY += dy * 0.5;
-            moving = true;
-            gameState.playerDirection = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 2 : 1) : (dy > 0 ? 0 : 3);
-        }
-    } else {
-        if (gameState.keys['ArrowLeft'] || gameState.keys['a']) { gameState.playerX -= gameState.playerSpeed; gameState.playerDirection = 1; moving = true; }
-        if (gameState.keys['ArrowRight'] || gameState.keys['d']) { gameState.playerX += gameState.playerSpeed; gameState.playerDirection = 2; moving = true; }
-        if (gameState.keys['ArrowUp'] || gameState.keys['w']) { gameState.playerY -= gameState.playerSpeed; gameState.playerDirection = 3; moving = true; }
-        if (gameState.keys['ArrowDown'] || gameState.keys['s']) { gameState.playerY += gameState.playerSpeed; gameState.playerDirection = 0; moving = true; }
-    }
-    gameState.isMoving = moving;
-    gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
-    gameState.playerY = Math.max(20, Math.min(CONFIG.CANVAS_HEIGHT - 20, gameState.playerY));
-}
-
 // --- INPUT LISTENERS ---
-
 // --- CONFIGURAZIONE TOUCH ---
 const TOUCH_SETTINGS = {
     LERP: 0.5,
