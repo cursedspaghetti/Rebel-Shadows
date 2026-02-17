@@ -64,12 +64,13 @@ function makeTransparent(img) {
 }
 
 // --- LOGICA CARICAMENTO WIZARD ---
+// --- LOGICA CARICAMENTO WIZARD ---
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
     if (!wizardId || wizardId === lastLoadedId) return;
     lastLoadedId = wizardId;
 
-    // --- 1. Immagine (Sempre via API standard) ---
+    // --- 1. Immagine (Resta invariata, carichiamo l'arte originale) ---
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
@@ -79,32 +80,39 @@ async function handleLoadWizard() {
         startButton.classList.add('visible');
     };
 
-    // --- 2. Fetch Metadata tramite AllOrigins (No CORS, No 403) ---
-    const targetUrl = encodeURIComponent(`https://forgottenrunes.com/api/art/wizards/${wizardId}.json`);
-    const proxyUrl = `https://api.allorigins.win/get?url=${targetUrl}`;
+    // --- 2. Caricamento Dati da wizzies.json (GitHub Raw) ---
+    const jsonUrl = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/wizzies.json";
 
     try {
-        const response = await fetch(proxyUrl);
-        if (!response.ok) throw new Error("Errore Proxy");
+        const response = await fetch(jsonUrl);
+        if (!response.ok) throw new Error("Impossibile caricare il database locale");
         
-        const data = await response.json();
+        const wizzies = await response.json();
         
-        // AllOrigins mette il JSON originale come stringa dentro data.contents
-        const metadata = JSON.parse(data.contents);
-        
-        const affinity = metadata.attributes?.find(a => a.trait_type === 'Affinity')?.value;
-        
-        if (affinity) {
-            console.log(`Wizard #${wizardId} Affinity: ${affinity}`);
-            gameState.playerAffinity = affinity;
+        // Cerchiamo il wizard specifico nell'array (assumendo che wizardId sia l'indice o ci sia una proprietà id)
+        // Se il tuo JSON è un oggetto mappato per ID: wizzies[wizardId]
+        // Se è un array di oggetti: wizzies.find(w => w.id == wizardId)
+        const wizardData = wizzies[wizardId]; 
+
+        if (wizardData) {
+            console.log(`Caricato: ${wizardData.name}`);
+            
+            // Salvataggio nel Game State
+            gameState.playerName = wizardData.name;
+            // Qui puoi mappare altre proprietà se servono (es. background, testa, etc.)
+            gameState.playerData = wizardData.prop;
+
+            
         } else {
-            gameState.playerAffinity = "Neutral";
+            console.warn("Wizard non trovato nel file JSON.");
+            gameState.playerName = `Wizard #${wizardId}`;
         }
     } catch (e) {
-        console.warn("Errore nel recupero affinità:", e);
-        gameState.playerAffinity = "Neutral";
+        console.error("Errore nel recupero dati dal file JSON:", e);
+        gameState.playerName = `Wizard #${wizardId}`;
     }
 }
+
 // --- STATS TABLE ---
 function renderStatTable() {
     const tbody = document.getElementById('statsBody');
