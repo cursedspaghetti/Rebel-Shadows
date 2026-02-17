@@ -81,6 +81,7 @@ async function handleLoadWizard() {
     const traitHead = document.getElementById('trait-head');
     const traitBody = document.getElementById('trait-body');
     const traitProp = document.getElementById('trait-prop');
+    const traitRune = document.getElementById('trait-rune');
     const traitFamiliar = document.getElementById('trait-familiar');
     const traitBg = document.getElementById('trait-bg');
 
