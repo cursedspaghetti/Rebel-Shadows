@@ -69,15 +69,13 @@ function makeTransparent(img) {
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
     
-    // Evita ricaricamenti inutili
     if (!wizardId || wizardId === lastLoadedId) return;
     lastLoadedId = wizardId;
 
-    // Riferimenti agli elementi UI della nuova schermata di Setup
     const wizardDisplayName = document.getElementById('wizardDisplayName');
     const setupWizImage = document.getElementById('setupWizImage');
     
-    // Riferimenti ai nuovi campi dei tratti
+    // Riferimenti ai tratti
     const traitHead = document.getElementById('trait-head');
     const traitBody = document.getElementById('trait-body');
     const traitProp = document.getElementById('trait-prop');
@@ -85,24 +83,35 @@ async function handleLoadWizard() {
     const traitFamiliar = document.getElementById('trait-familiar');
     const traitBg = document.getElementById('trait-bg');
 
-    // 1. Gestione Immagine
+    // --- 1. GESTIONE IMMAGINI (Single e Spritesheet) ---
+    
+    // Immagine Statica
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
     
     rawImg.onload = () => {
-        // Applichiamo la trasparenza (usando la tua funzione esistente)
         const transparentSrc = makeTransparent(rawImg);
-        
-        // Aggiorniamo sia l'immagine di anteprima che quella nel setup
         if (typeof introImage !== 'undefined') introImage.src = transparentSrc;
         setupWizImage.src = transparentSrc;
-        
-        // Se hai un pulsante start nella intro, lo mostriamo
         if (typeof startButton !== 'undefined') startButton.classList.add('visible');
     };
 
-    // 2. Recupero Dati dal Database JSON
+    // NUOVO: Caricamento Spritesheet per il movimento
+    const spriteSheet = new Image();
+    spriteSheet.crossOrigin = "anonymous";
+    spriteSheet.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}/spritesheet.png`;
+
+    spriteSheet.onload = () => {
+        // Applichiamo la trasparenza anche allo spritesheet se necessario
+        const transparentSprite = makeTransparent(spriteSheet);
+        
+        // Archiviamo lo spritesheet nel gameState (come stringa base64 o URL)
+        gameState.wizardSpritesheet = transparentSprite;
+        console.log("Spritesheet caricato e archiviato.");
+    };
+
+    // --- 2. RECUPERO DATI DAL DATABASE JSON ---
     const jsonUrl = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/wizzies.json";
 
     try {
@@ -115,7 +124,6 @@ async function handleLoadWizard() {
         if (foundWizard) {
             console.log(`Mago caricato: ${foundWizard.name}`);
 
-            // Aggiorna lo stato globale del gioco
             gameState.wizardData = {
                 name: foundWizard.name,
                 head: foundWizard.head,
@@ -127,10 +135,8 @@ async function handleLoadWizard() {
                 id: wizardId
             };
 
-            // --- AGGIORNAMENTO UI TESTUALE ---
+            // Aggiornamento UI
             wizardDisplayName.innerText = `${foundWizard.name.toUpperCase()} (#${wizardId})`;
-            
-            // Inserimento Tratti nei nuovi SPAN dell'HTML
             traitHead.innerText = foundWizard.head;
             traitBody.innerText = foundWizard.body;
             traitProp.innerText = foundWizard.prop;
@@ -138,22 +144,23 @@ async function handleLoadWizard() {
             traitRune.innerText = foundWizard.rune || "None";
             traitBg.innerText = foundWizard.background;
 
-            // Se hai una funzione che genera la tabella delle statistiche, chiamala qui
-            // updateStatsTable(foundWizard); 
-
         } else {
-            console.warn(`L'ID ${wizardId} non esiste nel database.`);
-            wizardDisplayName.innerText = "UNKNOWN WIZARD";
-            clearTraits();
-            resetWizardData(wizardId);
+            handleError(wizardId, "UNKNOWN WIZARD");
         }
     } catch (e) {
         console.error("Errore durante il caricamento:", e);
-        clearTraits();
-        resetWizardData(wizardId);
+        handleError(wizardId, "ERROR");
     }
 }
 
+// Funzione helper per pulire e resettare in caso di errore (per evitare duplicazione di codice)
+function handleError(id, name) {
+    const wizardDisplayName = document.getElementById('wizardDisplayName');
+    if (wizardDisplayName) wizardDisplayName.innerText = name;
+    clearTraits();
+    resetWizardData(id);
+    gameState.wizardSpritesheet = null; // Reset dello sprite
+}
 // Funzione di utility per pulire i tratti se il wizard non viene trovato
 function clearTraits() {
     ['trait-head', 'trait-body', 'trait-prop', 'trait-familiar', 'trait-rune', 'trait-bg'].forEach(id => {
