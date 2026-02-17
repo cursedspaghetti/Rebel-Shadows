@@ -211,13 +211,50 @@ function startGame() {
     setupScreen.style.display = 'none';
     gameState.currentScreen = 'playing';
     
-    // Calcolo HP e Speed basato sulle statistiche
-    gameState.hp = 100 + (gameState.addedStats["HP"] * 10);
-    gameState.playerSpeed = 5 + (gameState.addedStats["Dexterity"] * 0.3);
+    // --- 1. Calcolo Bonus dai Tratti (Esempio di Logica) ---
+    let traitSpeedBonus = 0;
+    let traitHPBonus = 0;
 
+    // Esempio: Se il mago ha un determinato "Familiar", ottiene un bonus
+    if (gameState.wizardData.familiar && gameState.wizardData.familiar !== "None") {
+        traitHPBonus += 20; // I maghi con un famiglio iniziano con più vita
+    }
+
+    // Esempio: Se la "Prop" è un'arma o un bastone leggero, aumenta la velocità
+    const fastProps = ["Staff", "Wand", "Athame"];
+    if (fastProps.some(p => gameState.wizardData.prop.includes(p))) {
+        traitSpeedBonus += 1.5;
+    }
+
+    // --- 2. Calcolo Statistiche Finali ---
+    // Sommiamo: Base (100) + Punti spesi (addedStats) + Bonus dei tratti
+    gameState.hp = 100 + (gameState.addedStats["HP"] * 10) + traitHPBonus;
+    
+    // Velocità: Base (5) + Punti Dexterity + Bonus tratti
+    gameState.playerSpeed = 5 + (gameState.addedStats["Dexterity"] * 0.3) + traitSpeedBonus;
+
+    // --- 3. Setup Attacco (Attack Rate) ---
+    // Più punti in Attack Rate significano un intervallo (ms) minore tra i colpi
+    const baseFireRate = 400; 
+    gameState.fireRate = baseFireRate - (gameState.addedStats["Attack Rate"] * 20);
+    // Limite minimo di 100ms per non rompere il gioco
+    if (gameState.fireRate < 100) gameState.fireRate = 100;
+
+    // --- 4. Avvio Timer e Loop ---
+    gameState.gameTimer = CONFIG.GAME_TIME; // Reset timer
+    if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+    
     gameState.timerInterval = setInterval(() => {
-        if (gameState.gameTimer > 0) gameState.gameTimer--;
+        if (gameState.gameTimer > 0) {
+            gameState.gameTimer--;
+        } else {
+            // Logica fine tempo (es. spawn Boss se non già presente)
+            gameState.bossActive = true; 
+        }
     }, 1000);
+
+    console.log(`Partita iniziata con ${gameState.wizardData.name}. HP: ${gameState.hp}, Speed: ${gameState.playerSpeed}`);
+    
     gameLoop();
 }
 
