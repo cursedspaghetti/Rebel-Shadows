@@ -80,8 +80,14 @@ export const CONFIG = {
  */
 export let gameState = {
     // --- Caratteristiche del Mago (Character Setup) ---
-    wizardName: "Unknown Wizard",
-    affinityName: "Neutral",
+    "name",
+    "head",
+    "body",
+    "prop",
+    "familiar",
+    "rune",
+    "background",
+    
     essences: CONFIG.INITIAL_ESSENCES, // Punti da allocare all'inizio
     
     // Statistiche Base (10/100)
@@ -89,7 +95,7 @@ export let gameState = {
         "Attack Power": 10,
         "Attack Rate": 10,
         "Dexterity": 10,
-        "HP": 10,
+        "HP": 100,
         "Constitution": 10,
         "Elusion": 10
     },
