@@ -6,7 +6,6 @@ import * as collision from './collision.js';
 import * as Enemies from './enemies.js';
 
 // --- CONFIGURAZIONE E STATO GLOBALE ---
-const TOUCH_SETTINGS = { LERP: 0.5, OFFSET_Y: 80, TAP_DELAY: 250 };
 let lastLoadedId = ""; // Dichiarata globalmente per handleLoadWizard
 let debounceTimer;    // Dichiarata globalmente per il listener input
 
@@ -389,45 +388,16 @@ function updateAndDrawBackgrounds() {
     ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 }
 
-function updatePlayerMovement() {
-    if (gameState.isTouchActive) {
-        gameState.playerX += (gameState.touchX - gameState.playerX) * TOUCH_SETTINGS.LERP;
-        gameState.playerY += (gameState.touchY - TOUCH_SETTINGS.OFFSET_Y - gameState.playerY) * TOUCH_SETTINGS.LERP;
-    } else {
-        if (gameState.keys['ArrowLeft']) gameState.playerX -= gameState.playerSpeed;
-        if (gameState.keys['ArrowRight']) gameState.playerX += gameState.playerSpeed;
-        if (gameState.keys['ArrowUp']) gameState.playerY -= gameState.playerSpeed;
-        if (gameState.keys['ArrowDown']) gameState.playerY += gameState.playerSpeed;
-    }
-    gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
-    gameState.playerY = Math.max(20, Math.min(CONFIG.CANVAS_HEIGHT - 20, gameState.playerY));
-}
 
-// --- INPUTS & SKILLS ---
-canvas.addEventListener('touchstart', (e) => {
-    e.preventDefault();
-    const rect = canvas.getBoundingClientRect();
-    const touch = e.touches[0];
-    gameState.touchIdentifier = touch.identifier;
-    gameState.isTouchActive = true;
-    gameState.touchX = touch.clientX - rect.left;
-    gameState.touchY = touch.clientY - rect.top;
-    
-    const now = Date.now();
-    const lastTap = canvas.dataset.lastTap || 0;
-    if (now - lastTap < 250) SpecialAttacks.fireSpecialAttackSequence();
-    else { SpecialAttacks.activateShield(); canvas.dataset.lastTap = now; }
-}, { passive: false });
+// MOVEMENTS
+const TOUCH_SETTINGS = { LERP: 0.5, OFFSET_Y: 80, TAP_DELAY: 250 };
 
-window.addEventListener('keydown', (e) => {
-    gameState.keys[e.key] = true;
-    if (e.key === ' ' && gameState.currentScreen === 'playing') {
-        SpecialAttacks.fireSpecialAttackSequence();
-        SpecialAttacks.fireSpecialAttackSequence2();
-    }
-});
-window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
 
+
+
+
+
+// SKILL TREE
 const playerSkills = { points: 1, offense: 0, defense: 0, speed: 0, magic: 0 };
 function initSkillTree() {
     document.querySelectorAll('.skill-node').forEach(button => {
