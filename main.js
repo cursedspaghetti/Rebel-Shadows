@@ -69,6 +69,10 @@ async function handleLoadWizard() {
     if (!wizardId || wizardId === lastLoadedId) return;
     lastLoadedId = wizardId;
 
+    // Riferimenti agli elementi UI
+    const wizName = document.getElementById('wizName');
+    const traitsList = document.getElementById('traitsList');
+
     // 1. Caricamento Immagine
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
@@ -80,7 +84,7 @@ async function handleLoadWizard() {
         startButton.classList.add('visible');
     };
 
-    // 2. Recupero Dati (Accesso Diretto all'Oggetto)
+    // 2. Recupero Dati
     const jsonUrl = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/wizzies.json";
 
     try {
@@ -88,34 +92,46 @@ async function handleLoadWizard() {
         if (!response.ok) throw new Error("Errore nel recupero del database");
         
         const wizzies = await response.json();
-        
-        // --- FIX PER OGGETTO ---
-        // Accediamo direttamente alla proprietà usando l'ID come chiave
         const foundWizard = wizzies[wizardId];
 
         if (foundWizard) {
             console.log(`Mago caricato: ${foundWizard.name}`);
 
+            // Aggiorna lo stato globale
             gameState.wizardData = {
                 name: foundWizard.name,
                 head: foundWizard.head,
                 body: foundWizard.body,
                 prop: foundWizard.prop,
-                familiar: foundWizard.familiar || "None", // Gestisce le stringhe vuote
+                familiar: foundWizard.familiar || "None",
                 rune: foundWizard.rune || "None",
                 background: foundWizard.background,
                 id: wizardId
             };
+
+            // --- AGGIORNAMENTO UI ---
+            wizName.innerText = `${foundWizard.name} (#${wizardId})`;
+            
+            traitsList.innerHTML = `
+                <li><strong>Head:</strong> ${foundWizard.head}</li>
+                <li><strong>Body:</strong> ${foundWizard.body}</li>
+                <li><strong>Prop:</strong> ${foundWizard.prop}</li>
+                <li><strong>Familiar:</strong> ${foundWizard.familiar || "None"}</li>
+                <li><strong>Rune:</strong> ${foundWizard.rune || "None"}</li>
+                <li><strong>Background:</strong> ${foundWizard.background}</li>
+            `;
+
         } else {
-            console.warn(`L'ID ${wizardId} non esiste nel database.`);
+            console.warn(`L'ID ${wizardId} non esiste.`);
+            wizName.innerText = "Mago non trovato";
+            traitsList.innerHTML = "";
             resetWizardData(wizardId);
         }
     } catch (e) {
-        console.error("Errore durante il caricamento:", e);
+        console.error("Errore:", e);
         resetWizardData(wizardId);
     }
 }
-
 // Funzione di fallback per resettare i dati se il wizard non esiste
 function resetWizardData(id) {
     gameState.wizardData = {
