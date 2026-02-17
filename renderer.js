@@ -201,6 +201,44 @@ export function drawPlayer(ctx, img) {
     ctx.restore();
 }
 
+export function drawPlayerWiz(ctx) {
+    // --- CONFIGURAZIONE MAGO (Spritesheet 4x4 da 200x200px) ---
+    const wizardImg = gameState.wizardSpritesheet; 
+    const wizSize = 50;       // Ogni frame è 50x50px
+    const wizScale = 1.5;     // Leggermente più grande ora che è solo
+    const wizSpeed = 120;     // Velocità dell'animazione camminata
+    
+    // Se non c'è l'immagine caricata, non disegnare nulla
+    if (!wizardImg || !wizardImg.complete) return;
+
+    // --- CALCOLO FRAME ---
+    // Colonna (Animazione): tra 0 e 3. Se il mago è fermo, resta sul frame 0.
+    const wizFrameIdx = gameState.isMoving ? (Math.floor(Date.now() / wizSpeed) % 4) : 0;
+
+    // Riga (Direzione): 0: Giù, 1: Sinistra, 2: Destra, 3: Su
+    // Usiamo gameState.playerDirection che viene aggiornata nel tuo updatePlayerMovement
+    const wizRow = gameState.playerDirection || 0; 
+
+    ctx.save();
+    
+    // Spostiamo il contesto alla posizione del giocatore
+    ctx.translate(gameState.playerX, gameState.playerY);
+
+    // --- DISEGNO MAGO ---
+    ctx.drawImage(
+        wizardImg,
+        wizFrameIdx * wizSize, // Coordinata X nello spritesheet
+        wizRow * wizSize,      // Coordinata Y nello spritesheet
+        wizSize, wizSize,      // Dimensioni del ritaglio (50x50)
+        -(wizSize * wizScale) / 2, // Posizione X nel canvas (centrata)
+        -(wizSize * wizScale) / 2, // Posizione Y nel canvas (centrata)
+        wizSize * wizScale,    // Larghezza finale renderizzata
+        wizSize * wizScale     // Altezza finale renderizzata
+    );
+
+    ctx.restore();
+}
+
 // --- UI E BARRA VITA ---
 export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
     const barWidth = 12;
