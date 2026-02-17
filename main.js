@@ -64,53 +64,82 @@ function makeTransparent(img) {
 }
 
 // --- LOGICA CARICAMENTO WIZARD ---
-// --- LOGICA CARICAMENTO WIZARD ---
+// --- LOGICA CARICAMENTO WIZARD AGGIORNATA ---
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
+    
+    // Evita ricaricamenti inutili se l'ID è vuoto o identico all'ultimo caricato
     if (!wizardId || wizardId === lastLoadedId) return;
     lastLoadedId = wizardId;
 
-    // --- 1. Immagine (Resta invariata, carichiamo l'arte originale) ---
+    // 1. Caricamento Immagine (Sempre dall'API ufficiale per coerenza visiva)
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
+    
     rawImg.onload = () => {
+        // Applica la trasparenza (togliendo il background originale)
         introImage.src = makeTransparent(rawImg);
         introImage.dataset.loaded = "true";
+        
+        // Mostra il pulsante Start solo quando l'immagine è pronta
         startButton.classList.add('visible');
     };
 
-    // --- 2. Caricamento Dati da wizzies.json (GitHub Raw) ---
+    // 2. Recupero Dati dal file wizzies.json su GitHub
     const jsonUrl = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/wizzies.json";
 
     try {
         const response = await fetch(jsonUrl);
-        if (!response.ok) throw new Error("Impossibile caricare il database locale");
+        if (!response.ok) throw new Error("Errore nel recupero del database Wizard");
         
         const wizzies = await response.json();
         
-        // Cerchiamo il wizard specifico nell'array (assumendo che wizardId sia l'indice o ci sia una proprietà id)
-        // Se il tuo JSON è un oggetto mappato per ID: wizzies[wizardId]
-        // Se è un array di oggetti: wizzies.find(w => w.id == wizardId)
-        const wizardData = wizzies[wizardId]; 
+        // Il file wizzies.json è un array. Cerchiamo l'oggetto che ha l'ID corrispondente.
+        // Nota: uso == invece di === nel caso in cui wizardId sia una stringa e l'ID nel JSON un numero.
+        const foundWizard = wizzies.find(w => w.id == wizardId);
 
-        if (wizardData) {
-            console.log(`Caricato: ${wizardData.name}`);
-            
-            // Salvataggio nel Game State
-            gameState.playerName = wizardData.name;
-            // Qui puoi mappare altre proprietà se servono (es. background, testa, etc.)
-            gameState.playerData = wizardData.prop;
+        if (foundWizard) {
+            console.log(`Mago trovato: ${foundWizard.name}`);
 
-            
+            // Popoliamo il gameState con i dati del file JSON
+            gameState.wizardData = {
+                name: foundWizard.name,
+                head: foundWizard.head,
+                body: foundWizard.body,
+                prop: foundWizard.prop,
+                familiar: foundWizard.familiar,
+                rune: foundWizard.rune,
+                background: foundWizard.background,
+                id: wizardId
+            };
+
+            // Esempio: Mostra il nome nell'interfaccia se hai un elemento dedicato
+            // const nameDisplay = document.getElementById('wizard-name-display');
+            // if (nameDisplay) nameDisplay.innerText = foundWizard.name;
+
         } else {
-            console.warn("Wizard non trovato nel file JSON.");
-            gameState.playerName = `Wizard #${wizardId}`;
+            console.warn(`Wizard #${wizardId} non trovato nel database locale.`);
+            resetWizardData(wizardId);
         }
     } catch (e) {
-        console.error("Errore nel recupero dati dal file JSON:", e);
-        gameState.playerName = `Wizard #${wizardId}`;
+        console.error("Errore critico durante il fetch dei dati:", e);
+        resetWizardData(wizardId);
     }
+}
+
+// Funzione di fallback per resettare i dati se il wizard non esiste
+function resetWizardData(id) {
+    gameState.wizardData = {
+        name: `Wizard #${id}`,
+        head: "Unknown",
+        body: "Unknown",
+        prop: "None",
+        familiar: "None",
+        rune: "None",
+        background: "None",
+        id: id
+    };
 }
 
 // --- STATS TABLE ---
