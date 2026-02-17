@@ -48,33 +48,75 @@ function resizeCanvas() {
     CONFIG.CANVAS_HEIGHT = canvas.height;
 }
 
+/**
+ * Converte il colore del primo pixel (in alto a sinistra) in trasparenza
+ * su tutta l'immagine e restituisce un oggetto Image.
+ */
 function makeTransparent(img) {
     const tmpCanvas = document.createElement('canvas');
     const tmpCtx = tmpCanvas.getContext('2d');
-    tmpCanvas.width = img.width; tmpCanvas.height = img.height;
+    
+    tmpCanvas.width = img.width;
+    tmpCanvas.height = img.height;
+    
+    // Disegniamo l'immagine originale sul canvas temporaneo
     tmpCtx.drawImage(img, 0, 0);
+    
     const imageData = tmpCtx.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
     const data = imageData.data;
-    const rT = data[0], gT = data[1], bT = data[2];
+
+    // Prendiamo il colore del primo pixel (0,0) come colore "chiave" per lo sfondo
+    const rT = data[0];
+    const gT = data[1];
+    const bT = data[2];
+    
+    // Soglia di tolleranza per catturare sfumature simili allo sfondo
+    const tolerance = 50; 
+
     for (let i = 0; i < data.length; i += 4) {
-        const distance = Math.sqrt(Math.pow(data[i]-rT,2) + Math.pow(data[i+1]-gT,2) + Math.pow(data[i+2]-bT,2));
-        if (distance < 50) data[i+3] = 0;
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+
+        // Calcoliamo la distanza euclidea tra il colore del pixel e il colore target
+        const distance = Math.sqrt(
+            Math.pow(r - rT, 2) + 
+            Math.pow(g - gT, 2) + 
+            Math.pow(b - bT, 2)
+        );
+
+        // Se il colore è vicino a quello di sfondo, rendiamo il pixel trasparente
+        if (distance < tolerance) {
+            data[i + 3] = 0; // Alpha a 0
+        }
     }
+
+    // Applichiamo i dati modificati al canvas
     tmpCtx.putImageData(imageData, 0, 0);
-    return tmpCanvas.toDataURL();
+
+    // Creiamo un nuovo oggetto Image invece di una semplice stringa URL
+    // Questo permette di usare .complete e .onload in altre parti del codice
+    const transparentImage = new Image();
+    transparentImage.src = tmpCanvas.toDataURL();
+    
+    return transparentImage;
 }
 
 // --- LOGICA CARICAMENTO WIZARD ---
+/**
+ * Gestisce il caricamento completo del Wizard:
+ * Immagine statica, Spritesheet animato e Dati Traits.
+ */
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
     
-    if (!wizardId || wizardId === lastLoadedId) return;
-    lastLoadedId = wizardId;
+    // 1. Validazione e prevenzione ricaricamenti inutili
+    if (!wizardId || wizardId === gameState.lastLoadedId) return;
+    gameState.lastLoadedId = wizardId;
 
+    // Riferimenti UI
     const wizardDisplayName = document.getElementById('wizardDisplayName');
     const setupWizImage = document.getElementById('setupWizImage');
-    
-    // Riferimenti ai tratti
     const traitHead = document.getElementById('trait-head');
     const traitBody = document.getElementById('trait-body');
     const traitProp = document.getElementById('trait-prop');
@@ -82,47 +124,51 @@ async function handleLoadWizard() {
     const traitFamiliar = document.getElementById('trait-familiar');
     const traitBg = document.getElementById('trait-bg');
 
-    // --- 1. GESTIONE IMMAGINI (Single e Spritesheet) ---
-    
-    // Immagine Statica
+    // --- 2. GESTIONE IMMAGINE STATICA (Anteprima UI) ---
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
     
     rawImg.onload = () => {
-        const transparentSrc = makeTransparent(rawImg);
-        if (typeof introImage !== 'undefined') introImage.src = transparentSrc;
-        setupWizImage.src = transparentSrc;
-        if (typeof startButton !== 'undefined') startButton.classList.add('visible');
+        const transparentImgObj = makeTransparent(rawImg);
+        // Quando l'immagine processata è pronta (URL base64 caricato)
+        transparentImgObj.onload = () => {
+            introImage.src = transparentImgObj.src;
+            setupWizImage.src = transparentImgObj.src;
+            if (typeof startButton !== 'undefined') startButton.classList.add('visible');
+        };
     };
 
-    // NUOVO: Caricamento Spritesheet per il movimento
-    const spriteSheet = new Image();
-    spriteSheet.crossOrigin = "anonymous";
-    spriteSheet.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}/spritesheet.png`;
+    // --- 3. GESTIONE SPRITESHEET (Movimento in gioco) ---
+    const spriteSheetRaw = new Image();
+    spriteSheetRaw.crossOrigin = "anonymous";
+    spriteSheetRaw.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}/spritesheet.png`;
 
-    spriteSheet.onload = () => {
-        // Applichiamo la trasparenza anche allo spritesheet se necessario
-        const transparentSprite = makeTransparent(spriteSheet);
+    spriteSheetRaw.onload = () => {
+        // Applichiamo la trasparenza allo spritesheet 14x4
+        const transparentSpriteObj = makeTransparent(spriteSheetRaw);
         
-        // Archiviamo lo spritesheet nel gameState (come stringa base64 o URL)
-        gameState.wizardSpritesheet = transparentSprite;
-        console.log("Spritesheet caricato e archiviato.");
+        transparentSpriteObj.onload = () => {
+            // Archiviamo l'oggetto immagine nel gameState
+            gameState.wizardSpritesheet = transparentSpriteObj;
+            console.log(`Spritesheet per Wizard #${wizardId} pronto.`);
+        };
     };
 
-    // --- 2. RECUPERO DATI DAL DATABASE JSON ---
+    // --- 4. RECUPERO DATI DAL DATABASE JSON ---
     const jsonUrl = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/wizzies.json";
 
     try {
         const response = await fetch(jsonUrl);
-        if (!response.ok) throw new Error("Errore nel recupero del database");
+        if (!response.ok) throw new Error("Errore database");
         
         const wizzies = await response.json();
         const foundWizard = wizzies[wizardId];
 
         if (foundWizard) {
-            console.log(`Mago caricato: ${foundWizard.name}`);
+            console.log(`Dati caricati per: ${foundWizard.name}`);
 
+            // Salva i dati nel gameState
             gameState.wizardData = {
                 name: foundWizard.name,
                 head: foundWizard.head,
@@ -134,7 +180,7 @@ async function handleLoadWizard() {
                 id: wizardId
             };
 
-            // Aggiornamento UI
+            // Aggiorna i testi nella UI
             wizardDisplayName.innerText = `${foundWizard.name.toUpperCase()} (#${wizardId})`;
             traitHead.innerText = foundWizard.head;
             traitBody.innerText = foundWizard.body;
@@ -148,18 +194,38 @@ async function handleLoadWizard() {
         }
     } catch (e) {
         console.error("Errore durante il caricamento:", e);
-        handleError(wizardId, "ERROR");
+        handleError(wizardId, "CONNECTION ERROR");
     }
 }
 
-// Funzione helper per pulire e resettare in caso di errore (per evitare duplicazione di codice)
+/**
+ * Reset dei dati in caso di ID non trovato o errore di rete
+ */
 function handleError(id, name) {
     const wizardDisplayName = document.getElementById('wizardDisplayName');
     if (wizardDisplayName) wizardDisplayName.innerText = name;
-    clearTraits();
-    resetWizardData(id);
-    gameState.wizardSpritesheet = null; // Reset dello sprite
+    
+    // Pulisce i campi dei tratti nella UI
+    ['trait-head', 'trait-body', 'trait-prop', 'trait-familiar', 'trait-rune', 'trait-bg'].forEach(traitId => {
+        const el = document.getElementById(traitId);
+        if (el) el.innerText = "-";
+    });
+
+    // Reset dati globali
+    gameState.wizardData = {
+        name: `Wizard #${id}`,
+        head: "Unknown",
+        body: "Unknown",
+        prop: "None",
+        familiar: "None",
+        rune: "None",
+        background: "None",
+        id: id
+    };
+    gameState.wizardSpritesheet = null;
 }
+
+/*
 // Funzione di utility per pulire i tratti se il wizard non viene trovato
 function clearTraits() {
     ['trait-head', 'trait-body', 'trait-prop', 'trait-familiar', 'trait-rune', 'trait-bg'].forEach(id => {
@@ -181,6 +247,7 @@ function resetWizardData(id) {
         id: id
     };
 }
+*/
 
 // --- STATS TABLE ---
 function renderStatTable() {
@@ -357,8 +424,7 @@ function gameLoop() {
     collision.handleAllCollisions();
 
     if (!(gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0)) {
-        Renderer.drawPlayer(ctx, playerSprite);
-    }
+    Renderer.drawPlayer(ctx, bookImg);
 
     Enemies.drawEnemies(ctx);
     Enemies.drawEnemyBullets(ctx);
@@ -406,15 +472,54 @@ gameState.touchIdentifier = null;
 
 // MOVIMENTO TASTIERA
 function updatePlayerMovement() {
+    let moving = false;
+    let dx = 0;
+    let dy = 0;
+
     if (gameState.isTouchActive) {
-        gameState.playerX += (gameState.touchX - gameState.playerX) * TOUCH_SETTINGS.LERP;
-        gameState.playerY += (gameState.touchY - TOUCH_SETTINGS.OFFSET_Y - gameState.playerY) * TOUCH_SETTINGS.LERP;
+        dx = (gameState.touchX - gameState.playerX);
+        dy = (gameState.touchY - TOUCH_SETTINGS.OFFSET_Y - gameState.playerY);
+        
+        // Se la distanza è minima, consideriamolo fermo per evitare tremolii
+        if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+            gameState.playerX += dx * TOUCH_SETTINGS.LERP;
+            gameState.playerY += dy * TOUCH_SETTINGS.LERP;
+            moving = true;
+
+            // Determina la direzione per lo sprite basata sul vettore maggiore
+            if (Math.abs(dx) > Math.abs(dy)) {
+                gameState.playerDirection = dx > 0 ? 2 : 1; // 2: Destra, 1: Sinistra
+            } else {
+                gameState.playerDirection = dy > 0 ? 0 : 3; // 0: Giù, 3: Su
+            }
+        }
     } else {
-        if (gameState.keys['ArrowLeft']) gameState.playerX -= gameState.playerSpeed;
-        if (gameState.keys['ArrowRight']) gameState.playerX += gameState.playerSpeed;
-        if (gameState.keys['ArrowUp']) gameState.playerY -= gameState.playerSpeed;
-        if (gameState.keys['ArrowDown']) gameState.playerY += gameState.playerSpeed;
+        // Movimento Tastiera
+        if (gameState.keys['ArrowLeft'] || gameState.keys['a']) {
+            gameState.playerX -= gameState.playerSpeed;
+            gameState.playerDirection = 1;
+            moving = true;
+        }
+        if (gameState.keys['ArrowRight'] || gameState.keys['d']) {
+            gameState.playerX += gameState.playerSpeed;
+            gameState.playerDirection = 2;
+            moving = true;
+        }
+        if (gameState.keys['ArrowUp'] || gameState.keys['w']) {
+            gameState.playerY -= gameState.playerSpeed;
+            gameState.playerDirection = 3;
+            moving = true;
+        }
+        if (gameState.keys['ArrowDown'] || gameState.keys['s']) {
+            gameState.playerY += gameState.playerSpeed;
+            gameState.playerDirection = 0;
+            moving = true;
+        }
     }
+
+    gameState.isMoving = moving;
+    
+    // Boundary check
     gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
     gameState.playerY = Math.max(20, Math.min(CONFIG.CANVAS_HEIGHT - 20, gameState.playerY));
 }
