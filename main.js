@@ -286,7 +286,7 @@ function gameLoop() {
 
     // Draw Player logic
     if (!(gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0)) {
-        Renderer.drawPlayer(ctx,bookImg);
+        Renderer.drawPlayer(ctx,playerSprite);
         Renderer.drawPlayerWiz(ctx)
     }
 
