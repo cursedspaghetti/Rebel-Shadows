@@ -7,6 +7,7 @@ import * as Enemies from './enemies.js';
 
 // --- CONFIGURAZIONE E STATO GLOBALE ---
 let debounceTimer; 
+let secondFingerTimer = null;
 
 // --- DOM ELEMENTS ---
 const canvas = document.getElementById('gameCanvas');
@@ -325,7 +326,6 @@ const TOUCH = {
     TAP_DELAY: 250
 };
 
-
 gameState.isTouchActive = false;
 gameState.touchIdentifier = null;
 
@@ -426,7 +426,6 @@ export function updatePlayerMovement() {
 }
 
 // 3. INPUT LISTENERS (Mobile & Key)
-let secondFingerTimer = null;
 
 function updateCoords(touch, rect) {
     gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
