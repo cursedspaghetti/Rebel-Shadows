@@ -204,40 +204,44 @@ export function drawPlayer(ctx, img) {
 export function drawPlayerWiz(ctx) {
     const wizardImg = gameState.wizardSpritesheet; 
     
-    // Usiamo i valori dalla CONFIG per coerenza
-    const wizSize = CONFIG.WIZARD_SPRITE.FRAME_SIZE;      // 50
-    const wizScale = CONFIG.WIZARD_SPRITE.RENDER_SCALE;   // 1.2
-    const wizSpeed = CONFIG.WIZARD_SPRITE.ANIM_SPEED;     // 100ms
-    const totalFrames = CONFIG.WIZARD_SPRITE.TOTAL_FRAMES; // 14
+    const wizSize = CONFIG.WIZARD_SPRITE.FRAME_SIZE;     // 50
+    const wizScale = CONFIG.WIZARD_SPRITE.RENDER_SCALE;  // 1.2
+    const wizSpeed = CONFIG.WIZARD_SPRITE.ANIM_SPEED;    // 100ms
+    const animFrames = 4; // Usiamo solo le 4 colonne specificate
     
     if (!wizardImg || !wizardImg.complete) return;
 
-    // --- CALCOLO FRAME ---
-    // Se il mago si muove, cicla su tutti i frame disponibili (0-13)
-    // Se è fermo, possiamo decidere di farlo restare sul frame 0 o un altro di "idle"
     let wizFrameIdx = 0;
+    
     if (gameState.isMoving) {
-        wizFrameIdx = Math.floor(Date.now() / wizSpeed) % totalFrames;
+        // Calcolo base del frame (0, 1, 2, 3)
+        const frameCycle = Math.floor(Date.now() / wizSpeed) % animFrames;
+
+        if (gameState.playerDirection === 3) { 
+            // MOVIMENTO SU: frame da 0 a 3 (0, 1, 2, 3)
+            wizFrameIdx = frameCycle;
+        } else {
+            // MOVIMENTO GIÙ (o dominante giù): frame da 3 a 0 (3, 2, 1, 0)
+            wizFrameIdx = (animFrames - 1) - frameCycle;
+        }
     }
 
-    // Riga (Direzione): Assicurati che playerDirection sia 0, 1, 2 o 3
-    const wizRow = gameState.playerDirection || 0; 
+    // Usiamo sempre la RIGA 3 (indice 2 se conti 0,1,2... o indice 3 se è la quarta)
+    // Se intendevi la QUARTA riga fisica, metti 3. Se intendevi la TERZA, metti 2.
+    const wizRow = 2; 
 
     ctx.save();
-    
-    // Posizionamento
     ctx.translate(gameState.playerX, gameState.playerY);
 
-    // --- DISEGNO ---
     ctx.drawImage(
         wizardImg,
-        wizFrameIdx * wizSize, // X nello spritesheet
-        wizRow * wizSize,      // Y nello spritesheet
-        wizSize, wizSize,      // Dimensioni ritaglio
-        -(wizSize * wizScale) / 2, // Centro X
-        -(wizSize * wizScale) / 2, // Centro Y
-        wizSize * wizScale,    // Larghezza render
-        wizSize * wizScale     // Altezza render
+        wizFrameIdx * wizSize, // Colonna (0-3)
+        wizRow * wizSize,      // Riga fissa
+        wizSize, wizSize,
+        -(wizSize * wizScale) / 2,
+        -(wizSize * wizScale) / 2,
+        wizSize * wizScale,
+        wizSize * wizScale
     );
 
     ctx.restore();
@@ -247,28 +251,25 @@ export function drawPlayerWiz(ctx) {
 export function updatePlayerMovement() {
     let dx = 0;
     let dy = 0;
-    const speed = CONFIG.WIZARD_SPRITE.MOVE_SPEED || 4; // Definisci una velocità in CONFIG
+    const speed = CONFIG.WIZARD_SPRITE.MOVE_SPEED || 4;
 
-    // --- LOGICA TASTIERA ---
+    // Input Tastiera
     if (gameState.keys['ArrowUp'] || gameState.keys['w'] || gameState.keys['W']) dy -= speed;
     if (gameState.keys['ArrowDown'] || gameState.keys['s'] || gameState.keys['S']) dy += speed;
     if (gameState.keys['ArrowLeft'] || gameState.keys['a'] || gameState.keys['A']) dx -= speed;
     if (gameState.keys['ArrowRight'] || gameState.keys['d'] || gameState.keys['D']) dx += speed;
 
-    // --- LOGICA TOUCH (LERP verso il punto toccato) ---
+    // Input Touch
     if (gameState.isTouchActive) {
-        // Calcoliamo la distanza tra il tocco e il giocatore
         const targetDx = gameState.touchX - gameState.playerX;
-        const targetDy = (gameState.touchY - TOUCH.OFFSET_Y) - gameState.playerY; // Sottraiamo l'offset per non coprire il mago col dito
+        const targetDy = (gameState.touchY - (TOUCH.OFFSET_Y || 0)) - gameState.playerY;
 
-        // Se siamo abbastanza lontani dal punto del tocco, ci muoviamo
         if (Math.abs(targetDx) > 5 || Math.abs(targetDy) > 5) {
-            dx = targetDx * TOUCH.LERP;
-            dy = targetDy * TOUCH.LERP;
+            dx = targetDx * (TOUCH.LERP || 0.1);
+            dy = targetDy * (TOUCH.LERP || 0.1);
         }
     }
 
-    // --- APPLICAZIONE MOVIMENTO ---
     const moving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
     gameState.isMoving = moving;
 
@@ -276,15 +277,20 @@ export function updatePlayerMovement() {
         gameState.playerX += dx;
         gameState.playerY += dy;
 
-        // Determina la direzione per l'animazione (Spritesheet)
-        if (Math.abs(dx) > Math.abs(dy)) {
-            gameState.playerDirection = (dx > 0) ? 2 : 1; // 2: Destra, 1: Sinistra
+        /**
+         * LOGICA DIREZIONE DOMINANTE:
+         * Se dy è negativo, stiamo andando verso l'alto (Direzione 3).
+         * Se dy è positivo o nullo (ma dx è attivo), consideriamo "Giù" (Direzione 0)
+         * per attivare l'animazione inversa.
+         */
+        if (dy < 0) {
+            gameState.playerDirection = 3; // Su -> Frame 0-3
         } else {
-            gameState.playerDirection = (dy > 0) ? 0 : 3; // 0: Giù, 3: Su
+            gameState.playerDirection = 0; // Giù/Orizzontale -> Frame 3-0
         }
     }
 
-    // --- VINCOLI BORDI ---
+    // Bordi
     gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
     gameState.playerY = Math.max(20, Math.min(CONFIG.CANVAS_HEIGHT - 20, gameState.playerY));
 }
