@@ -243,6 +243,53 @@ export function drawPlayerWiz(ctx) {
     ctx.restore();
 }
 
+// Update the sprite with the movements
+function updatePlayerMovement() {
+    let dx = 0;
+    let dy = 0;
+    const speed = CONFIG.WIZARD_SPRITE.MOVE_SPEED || 4; // Definisci una velocità in CONFIG
+
+    // --- LOGICA TASTIERA ---
+    if (gameState.keys['ArrowUp'] || gameState.keys['w'] || gameState.keys['W']) dy -= speed;
+    if (gameState.keys['ArrowDown'] || gameState.keys['s'] || gameState.keys['S']) dy += speed;
+    if (gameState.keys['ArrowLeft'] || gameState.keys['a'] || gameState.keys['A']) dx -= speed;
+    if (gameState.keys['ArrowRight'] || gameState.keys['d'] || gameState.keys['D']) dx += speed;
+
+    // --- LOGICA TOUCH (LERP verso il punto toccato) ---
+    if (gameState.isTouchActive) {
+        // Calcoliamo la distanza tra il tocco e il giocatore
+        const targetDx = gameState.touchX - gameState.playerX;
+        const targetDy = (gameState.touchY - TOUCH.OFFSET_Y) - gameState.playerY; // Sottraiamo l'offset per non coprire il mago col dito
+
+        // Se siamo abbastanza lontani dal punto del tocco, ci muoviamo
+        if (Math.abs(targetDx) > 5 || Math.abs(targetDy) > 5) {
+            dx = targetDx * TOUCH.LERP;
+            dy = targetDy * TOUCH.LERP;
+        }
+    }
+
+    // --- APPLICAZIONE MOVIMENTO ---
+    const moving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
+    gameState.isMoving = moving;
+
+    if (moving) {
+        gameState.playerX += dx;
+        gameState.playerY += dy;
+
+        // Determina la direzione per l'animazione (Spritesheet)
+        if (Math.abs(dx) > Math.abs(dy)) {
+            gameState.playerDirection = (dx > 0) ? 2 : 1; // 2: Destra, 1: Sinistra
+        } else {
+            gameState.playerDirection = (dy > 0) ? 0 : 3; // 0: Giù, 3: Su
+        }
+    }
+
+    // --- VINCOLI BORDI ---
+    gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
+    gameState.playerY = Math.max(20, Math.min(CONFIG.CANVAS_HEIGHT - 20, gameState.playerY));
+}
+
+
 // --- UI E BARRA VITA ---
 export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
     const barWidth = 12;
