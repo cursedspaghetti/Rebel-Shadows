@@ -244,7 +244,7 @@ export function drawPlayerWiz(ctx) {
 }
 
 // Update the sprite with the movements
-function updatePlayerMovement() {
+export function updatePlayerMovement() {
     let dx = 0;
     let dy = 0;
     const speed = CONFIG.WIZARD_SPRITE.MOVE_SPEED || 4; // Definisci una velocità in CONFIG
