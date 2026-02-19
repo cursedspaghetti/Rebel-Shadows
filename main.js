@@ -320,15 +320,9 @@ function updateAndDrawBackgrounds() {
 
 // --- INPUT LISTENERS ---
 // --- CONFIGURAZIONE TOUCH ---
-const TOUCH = {
-    LERP: 0.1,
-    OFFSET_Y: 80,
-    TAP_DELAY: 250
-};
 
 gameState.isTouchActive = false;
 gameState.touchIdentifier = null;
-
 
 // 3. INPUT LISTENERS (Mobile & Key)
 
