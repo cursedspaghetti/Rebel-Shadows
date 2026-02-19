@@ -319,7 +319,7 @@ function updateAndDrawBackgrounds() {
 
 // --- INPUT LISTENERS ---
 // --- CONFIGURAZIONE TOUCH ---
-const TOUCH_SETTINGS = {
+const TOUCH = {
     LERP: 0.1,
     OFFSET_Y: 80,
     TAP_DELAY: 250
@@ -330,34 +330,121 @@ let secondFingerTimer = null;
 gameState.isTouchActive = false;
 gameState.touchIdentifier = null;
 
+/**
+ * --- SISTEMA DI MOVIMENTO E ANIMAZIONE MAGO ---
+ */
 
-// MOVIMENTO TASTIERA
-function updatePlayerMovement() {
+// 1. FUNZIONE DI DISEGNO (Rendering dello Spritesheet)
+export function drawPlayerWiz(ctx) {
+    const wizardImg = gameState.wizardSpritesheet; 
+    
+    // Se l'immagine non è caricata, esci
+    if (!wizardImg || !wizardImg.complete) return;
+
+    const wizSize = CONFIG.WIZARD_SPRITE.FRAME_SIZE;      // 50px nativi
+    const wizScale = CONFIG.WIZARD_SPRITE.RENDER_SCALE;   // Scala (es. 1.2)
+    const wizSpeed = CONFIG.WIZARD_SPRITE.ANIM_SPEED;     // ms per frame
+    const totalFrames = CONFIG.WIZARD_SPRITE.TOTAL_FRAMES; // 14 frame per riga
+
+    // CALCOLO FRAME: Se si muove cicla i frame (0-13), altrimenti resta fermo sullo 0
+    const wizFrameIdx = gameState.isMoving 
+        ? (Math.floor(Date.now() / wizSpeed) % totalFrames) 
+        : 0;
+
+    // RIGA DIREZIONE: 0: Giù, 1: Sinistra, 2: Destra, 3: Su
+    const wizRow = gameState.playerDirection || 0; 
+
+    ctx.save();
+    
+    // Sposta il contesto sulla posizione attuale del giocatore
+    ctx.translate(gameState.playerX, gameState.playerY);
+
+    // Disegno con ritaglio dinamico dello spritesheet
+    ctx.drawImage(
+        wizardImg,
+        wizFrameIdx * wizSize,    // X sorgente (colonna)
+        wizRow * wizSize,         // Y sorgente (riga/direzione)
+        wizSize, wizSize,         // Dimensioni ritaglio
+        -(wizSize * wizScale) / 2, // Posizione X (centrata rispetto a playerX)
+        -(wizSize * wizScale) / 2, // Posizione Y (centrata rispetto a playerY)
+        wizSize * wizScale,       // Larghezza finale
+        wizSize * wizScale        // Altezza finale
+    );
+
+    ctx.restore();
+}
+
+// 2. LOGICA DI AGGIORNAMENTO POSIZIONE E STATO
+export function updatePlayerMovement() {
+    let moving = false;
+    let dx = 0; // Direzione X desiderata
+    let dy = 0; // Direzione Y desiderata
+
     if (gameState.isTouchActive) {
-        gameState.playerX += (gameState.touchX - gameState.playerX) * TOUCH_SETTINGS.LERP;
-        gameState.playerY += (gameState.touchY - TOUCH_SETTINGS.OFFSET_Y - gameState.playerY) * TOUCH_SETTINGS.LERP;
+        // --- LOGICA MOBILE / TOUCH ---
+        const targetX = gameState.touchX;
+        const targetY = gameState.touchY - CONFIG.TOUCH.OFFSET_Y;
+        
+        const diffX = targetX - gameState.playerX;
+        const diffY = targetY - gameState.playerY;
+
+        // "Deadzone" di 5px per evitare tremolii e animazioni infinite sotto il dito
+        if (Math.abs(diffX) > 5 || Math.abs(diffY) > 5) {
+            gameState.playerX += diffX * CONFIG.TOUCH.LERP;
+            gameState.playerY += diffY * CONFIG.TOUCH.LERP;
+            dx = diffX;
+            dy = diffY;
+            moving = true;
+        }
     } else {
-        if (gameState.keys['ArrowLeft']) gameState.playerX -= gameState.playerSpeed;
-        if (gameState.keys['ArrowRight']) gameState.playerX += gameState.playerSpeed;
-        if (gameState.keys['ArrowUp']) gameState.playerY -= gameState.playerSpeed;
-        if (gameState.keys['ArrowDown']) gameState.playerY += gameState.playerSpeed;
+        // --- LOGICA TASTIERA ---
+        if (gameState.keys['ArrowLeft'] || gameState.keys['a'])  { dx = -1; moving = true; }
+        if (gameState.keys['ArrowRight'] || gameState.keys['d']) { dx = 1;  moving = true; }
+        if (gameState.keys['ArrowUp'] || gameState.keys['w'])    { dy = -1; moving = true; }
+        if (gameState.keys['ArrowDown'] || gameState.keys['s'])  { dy = 1;  moving = true; }
+
+        if (moving) {
+            gameState.playerX += dx * gameState.playerSpeed;
+            gameState.playerY += dy * gameState.playerSpeed;
+        }
     }
+
+    // --- AGGIORNAMENTO STATO PER L'ANIMAZIONE ---
+    gameState.isMoving = moving;
+
+    if (moving) {
+        // Determina la direzione visiva in base al movimento prevalente
+        if (Math.abs(dx) > Math.abs(dy)) {
+            gameState.playerDirection = (dx > 0) ? 2 : 1; // 2: Destra, 1: Sinistra
+        } else {
+            gameState.playerDirection = (dy > 0) ? 0 : 3; // 0: Giù, 3: Su
+        }
+    }
+
+    // Vincoli bordi schermo
     gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
     gameState.playerY = Math.max(20, Math.min(CONFIG.CANVAS_HEIGHT - 20, gameState.playerY));
 }
 
+// 3. INPUT LISTENERS (Mobile & Key)
+let secondFingerTimer = null;
 
+function updateCoords(touch, rect) {
+    gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
+    gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
+}
 
-// --- INPUT LISTENERS --- MOVIMENTO MOBILE 
+// Touch Start
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        gameState.touchIdentifier = touch.identifier;
+        gameState.touchIdentifier = e.touches[0].identifier;
         gameState.isTouchActive = true;
-        updateCoords(touch, rect);
+        updateCoords(e.touches[0], rect);
     }
+    
+    // Speciali: Double Tap o secondo dito
     if (e.touches.length >= 2 && gameState.currentScreen === 'playing') {
         if (secondFingerTimer) {
             clearTimeout(secondFingerTimer);
@@ -367,11 +454,12 @@ canvas.addEventListener('touchstart', (e) => {
             secondFingerTimer = setTimeout(() => {
                 SpecialAttacks.fireSpecialAttackSequence();
                 secondFingerTimer = null;
-            }, TOUCH_SETTINGS.TAP_DELAY);
+            }, CONFIG.TOUCH.DOUBLE_TAP_DELAY);
         }
     }
 }, { passive: false });
 
+// Touch Move
 canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
@@ -379,13 +467,30 @@ canvas.addEventListener('touchmove', (e) => {
     if (touch) updateCoords(touch, rect);
 }, { passive: false });
 
+// Touch End
 canvas.addEventListener('touchend', (e) => {
     const stillDragging = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
     if (!stillDragging) {
         gameState.isTouchActive = false;
+        gameState.isMoving = false;
         gameState.touchIdentifier = null;
     }
 });
+
+// Keyboard Listeners
+window.addEventListener('keydown', (e) => {
+    gameState.keys[e.key] = true;
+    if (e.key === ' ' && gameState.currentScreen === 'playing') {
+        SpecialAttacks.fireSpecialAttackSequence();
+        SpecialAttacks.fireSpecialAttackSequence2();
+    }
+});
+
+window.addEventListener('keyup', (e) => {
+    gameState.keys[e.key] = false;
+});
+
+// UPDATE COORDS
 
 function updateCoords(touch, rect) {
     gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
