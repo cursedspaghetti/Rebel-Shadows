@@ -154,8 +154,8 @@ export let gameState = {
     // --- Input ---
     keys: {},
     touchIdentifier: null,
-    touchX: null,
-    touchY: null,
+    touchX: CONFIG.CANVAS_WIDTH / 2, // Invece di null
+    touchY: CONFIG.CANVAS_HEIGHT - 300, // Invece di null
     isTouchActive: false,
 
     // --- Sistema di Fuoco ---
