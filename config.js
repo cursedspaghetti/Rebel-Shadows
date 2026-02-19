@@ -149,6 +149,7 @@ export let gameState = {
     playerDirection: 0, // 0: Giù, 1: Sinistra, 2: Destra, 3: Su
     isMoving: false,    // Per fermare l'animazione se il player è fermo
     playerTrail: [],
+
     
     // --- Input ---
     keys: {},
