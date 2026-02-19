@@ -13,7 +13,7 @@ export const CONFIG = {
     LERP: 0.1,
     OFFSET_Y: 80,
     TAP_DELAY: 250
-     };
+     },
     
     // --- Sistema Mago & Sprite ---
     WIZARD_SPRITE: {
