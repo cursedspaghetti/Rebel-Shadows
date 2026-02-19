@@ -489,22 +489,6 @@ window.addEventListener('keyup', (e) => {
     gameState.keys[e.key] = false;
 });
 
-// UPDATE COORDS
-
-function updateCoords(touch, rect) {
-    gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
-    gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
-}
-
-window.addEventListener('keydown', (e) => {
-    gameState.keys[e.key] = true;
-    if (e.key === ' ' && gameState.currentScreen === 'playing') {
-        SpecialAttacks.fireSpecialAttackSequence();
-        SpecialAttacks.fireSpecialAttackSequence2();
-    }
-});
-window.addEventListener('keyup', (e) => gameState.keys[e.key] = false);
-
 
 // SKILL TREE
 const playerSkills = { points: 1, offense: 0, defense: 0, speed: 0, magic: 0 };
