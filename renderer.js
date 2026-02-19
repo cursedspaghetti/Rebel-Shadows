@@ -251,7 +251,8 @@ export function drawPlayerWiz(ctx) {
 export function updatePlayerMovement() {
     let dx = 0;
     let dy = 0;
-    const speed = CONFIG.WIZARD_SPRITE.MOVE_SPEED || 4;
+    // Usa la velocità calcolata in startGame o una di default da CONFIG
+    const speed = gameState.playerSpeed || 4; 
 
     // Input Tastiera
     if (gameState.keys['ArrowUp'] || gameState.keys['w'] || gameState.keys['W']) dy -= speed;
@@ -259,14 +260,14 @@ export function updatePlayerMovement() {
     if (gameState.keys['ArrowLeft'] || gameState.keys['a'] || gameState.keys['A']) dx -= speed;
     if (gameState.keys['ArrowRight'] || gameState.keys['d'] || gameState.keys['D']) dx += speed;
 
-    // Input Touch
+    // Input Touch - Corretto l'accesso a CONFIG.TOUCH
     if (gameState.isTouchActive) {
         const targetDx = gameState.touchX - gameState.playerX;
-        const targetDy = (gameState.touchY - (TOUCH.OFFSET_Y || 0)) - gameState.playerY;
+        const targetDy = (gameState.touchY - (CONFIG.TOUCH.OFFSET_Y || 0)) - gameState.playerY;
 
         if (Math.abs(targetDx) > 5 || Math.abs(targetDy) > 5) {
-            dx = targetDx * (TOUCH.LERP || 0.1);
-            dy = targetDy * (TOUCH.LERP || 0.1);
+            dx = targetDx * (CONFIG.TOUCH.LERP || 0.1);
+            dy = targetDy * (CONFIG.TOUCH.LERP || 0.1);
         }
     }
 
@@ -276,25 +277,14 @@ export function updatePlayerMovement() {
     if (moving) {
         gameState.playerX += dx;
         gameState.playerY += dy;
-
-        /**
-         * LOGICA DIREZIONE DOMINANTE:
-         * Se dy è negativo, stiamo andando verso l'alto (Direzione 3).
-         * Se dy è positivo o nullo (ma dx è attivo), consideriamo "Giù" (Direzione 0)
-         * per attivare l'animazione inversa.
-         */
-        if (dy < 0) {
-            gameState.playerDirection = 3; // Su -> Frame 0-3
-        } else {
-            gameState.playerDirection = 0; // Giù/Orizzontale -> Frame 3-0
-        }
+        // Se dy è negativo va su (3), altrimenti giù (0)
+        gameState.playerDirection = dy < 0 ? 3 : 0;
     }
 
-    // Bordi
+    // Bordi Canvas
     gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
     gameState.playerY = Math.max(20, Math.min(CONFIG.CANVAS_HEIGHT - 20, gameState.playerY));
 }
-
 
 // --- UI E BARRA VITA ---
 export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
