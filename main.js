@@ -288,6 +288,7 @@ function gameLoop() {
     if (!(gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0)) {
         Renderer.drawPlayer(ctx,playerSprite);
         Renderer.drawPlayerWiz(ctx)
+        Renderer.updatePlayerMovement();
     }
 
     Enemies.drawEnemies(ctx);
