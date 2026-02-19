@@ -202,38 +202,42 @@ export function drawPlayer(ctx, img) {
 }
 
 export function drawPlayerWiz(ctx) {
-    // --- CONFIGURAZIONE MAGO (Spritesheet 4x4 da 200x200px) ---
     const wizardImg = gameState.wizardSpritesheet; 
-    const wizSize = 50;       // Ogni frame è 50x50px
-    const wizScale = 1.5;     // Leggermente più grande ora che è solo
-    const wizSpeed = 120;     // Velocità dell'animazione camminata
     
-    // Se non c'è l'immagine caricata, non disegnare nulla
+    // Usiamo i valori dalla CONFIG per coerenza
+    const wizSize = CONFIG.WIZARD_SPRITE.FRAME_SIZE;      // 50
+    const wizScale = CONFIG.WIZARD_SPRITE.RENDER_SCALE;   // 1.2
+    const wizSpeed = CONFIG.WIZARD_SPRITE.ANIM_SPEED;     // 100ms
+    const totalFrames = CONFIG.WIZARD_SPRITE.TOTAL_FRAMES; // 14
+    
     if (!wizardImg || !wizardImg.complete) return;
 
     // --- CALCOLO FRAME ---
-    // Colonna (Animazione): tra 0 e 3. Se il mago è fermo, resta sul frame 0.
-    const wizFrameIdx = gameState.isMoving ? (Math.floor(Date.now() / wizSpeed) % 4) : 0;
+    // Se il mago si muove, cicla su tutti i frame disponibili (0-13)
+    // Se è fermo, possiamo decidere di farlo restare sul frame 0 o un altro di "idle"
+    let wizFrameIdx = 0;
+    if (gameState.isMoving) {
+        wizFrameIdx = Math.floor(Date.now() / wizSpeed) % totalFrames;
+    }
 
-    // Riga (Direzione): 0: Giù, 1: Sinistra, 2: Destra, 3: Su
-    // Usiamo gameState.playerDirection che viene aggiornata nel tuo updatePlayerMovement
+    // Riga (Direzione): Assicurati che playerDirection sia 0, 1, 2 o 3
     const wizRow = gameState.playerDirection || 0; 
 
     ctx.save();
     
-    // Spostiamo il contesto alla posizione del giocatore
+    // Posizionamento
     ctx.translate(gameState.playerX, gameState.playerY);
 
-    // --- DISEGNO MAGO ---
+    // --- DISEGNO ---
     ctx.drawImage(
         wizardImg,
-        wizFrameIdx * wizSize, // Coordinata X nello spritesheet
-        wizRow * wizSize,      // Coordinata Y nello spritesheet
-        wizSize, wizSize,      // Dimensioni del ritaglio (50x50)
-        -(wizSize * wizScale) / 2, // Posizione X nel canvas (centrata)
-        -(wizSize * wizScale) / 2, // Posizione Y nel canvas (centrata)
-        wizSize * wizScale,    // Larghezza finale renderizzata
-        wizSize * wizScale     // Altezza finale renderizzata
+        wizFrameIdx * wizSize, // X nello spritesheet
+        wizRow * wizSize,      // Y nello spritesheet
+        wizSize, wizSize,      // Dimensioni ritaglio
+        -(wizSize * wizScale) / 2, // Centro X
+        -(wizSize * wizScale) / 2, // Centro Y
+        wizSize * wizScale,    // Larghezza render
+        wizSize * wizScale     // Altezza render
     );
 
     ctx.restore();
