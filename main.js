@@ -326,7 +326,6 @@ const TOUCH = {
 };
 
 
-let secondFingerTimer = null;
 gameState.isTouchActive = false;
 gameState.touchIdentifier = null;
 
