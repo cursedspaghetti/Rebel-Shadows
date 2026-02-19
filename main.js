@@ -7,7 +7,6 @@ import * as Enemies from './enemies.js';
 
 // --- CONFIGURAZIONE E STATO GLOBALE ---
 let debounceTimer; 
-let secondFingerTimer = null;
 
 // --- DOM ELEMENTS ---
 const canvas = document.getElementById('gameCanvas');
@@ -330,84 +329,8 @@ gameState.isTouchActive = false;
 gameState.touchIdentifier = null;
 
 /**
- * --- SISTEMA DI MOVIMENTO E ANIMAZIONE MAGO ---
+ * --- SISTEMA DI MOVIMENTO 
  */
-
-// 1. FUNZIONE DI DISEGNO (Rendering dello Spritesheet)
-export function drawPlayerWiz(ctx) {
-    const wizardImg = gameState.wizardSpritesheet; 
-    
-    // Se l'immagine non è caricata, esci
-    if (!wizardImg || !wizardImg.complete) return;
-
-    const wizSize = CONFIG.WIZARD_SPRITE.FRAME_SIZE;      // 50px nativi
-    const wizScale = CONFIG.WIZARD_SPRITE.RENDER_SCALE;   // Scala (es. 1.2)
-    const wizSpeed = CONFIG.WIZARD_SPRITE.ANIM_SPEED;     // ms per frame
-    const totalFrames = CONFIG.WIZARD_SPRITE.TOTAL_FRAMES; // 14 frame per riga
-
-    // CALCOLO FRAME: Se si muove cicla i frame (0-13), altrimenti resta fermo sullo 0
-    const wizFrameIdx = gameState.isMoving 
-        ? (Math.floor(Date.now() / wizSpeed) % totalFrames) 
-        : 0;
-
-    // RIGA DIREZIONE: 0: Giù, 1: Sinistra, 2: Destra, 3: Su
-    const wizRow = gameState.playerDirection || 0; 
-
-    ctx.save();
-    
-    // Sposta il contesto sulla posizione attuale del giocatore
-    ctx.translate(gameState.playerX, gameState.playerY);
-
-    // Disegno con ritaglio dinamico dello spritesheet
-    ctx.drawImage(
-        wizardImg,
-        wizFrameIdx * wizSize,    // X sorgente (colonna)
-        wizRow * wizSize,         // Y sorgente (riga/direzione)
-        wizSize, wizSize,         // Dimensioni ritaglio
-        -(wizSize * wizScale) / 2, // Posizione X (centrata rispetto a playerX)
-        -(wizSize * wizScale) / 2, // Posizione Y (centrata rispetto a playerY)
-        wizSize * wizScale,       // Larghezza finale
-        wizSize * wizScale        // Altezza finale
-    );
-
-    ctx.restore();
-}
-
-// 2. LOGICA DI AGGIORNAMENTO POSIZIONE E STATO
-export function updatePlayerMovement() {
-    let moving = false;
-    let dx = 0; // Direzione X desiderata
-    let dy = 0; // Direzione Y desiderata
-
-    if (gameState.isTouchActive) {
-        // --- LOGICA MOBILE / TOUCH ---
-        const targetX = gameState.touchX;
-        const targetY = gameState.touchY - CONFIG.TOUCH.OFFSET_Y;
-        
-        const diffX = targetX - gameState.playerX;
-        const diffY = targetY - gameState.playerY;
-
-        // "Deadzone" di 5px per evitare tremolii e animazioni infinite sotto il dito
-        if (Math.abs(diffX) > 5 || Math.abs(diffY) > 5) {
-            gameState.playerX += diffX * CONFIG.TOUCH.LERP;
-            gameState.playerY += diffY * CONFIG.TOUCH.LERP;
-            dx = diffX;
-            dy = diffY;
-            moving = true;
-        }
-    } else {
-        // --- LOGICA TASTIERA ---
-        if (gameState.keys['ArrowLeft'] || gameState.keys['a'])  { dx = -1; moving = true; }
-        if (gameState.keys['ArrowRight'] || gameState.keys['d']) { dx = 1;  moving = true; }
-        if (gameState.keys['ArrowUp'] || gameState.keys['w'])    { dy = -1; moving = true; }
-        if (gameState.keys['ArrowDown'] || gameState.keys['s'])  { dy = 1;  moving = true; }
-
-        if (moving) {
-            gameState.playerX += dx * gameState.playerSpeed;
-            gameState.playerY += dy * gameState.playerSpeed;
-        }
-    }
-
     // --- AGGIORNAMENTO STATO PER L'ANIMAZIONE ---
     gameState.isMoving = moving;
 
