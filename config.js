@@ -75,12 +75,6 @@ export const CONFIG = {
         2: 120, 
         3: 70   
     },
-    
-    TOUCH: {
-        LERP: 0.05,
-        OFFSET_Y: 70,
-        DOUBLE_TAP_DELAY: 300
-    }
 };
 
 /**
