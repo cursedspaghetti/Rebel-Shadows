@@ -65,6 +65,7 @@ export const CONFIG = {
     },
     
     PLAYER_MAX_HP: 100,
+    Constitution: 5,
     COLLISION_DAMAGE: 20,    
     INVULNERABILITY_TIME: 1500, 
     
