@@ -247,7 +247,6 @@ function gameLoop() {
     }
 
     updateAndDrawBackgrounds();
-    updatePlayerMovement();
 
     Renderer.autoFire();
     Renderer.updateBullets();
@@ -288,9 +287,10 @@ function gameLoop() {
     if (!(gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0)) {
         Renderer.drawPlayer(ctx,playerSprite);
         Renderer.drawPlayerWiz(ctx)
-        Renderer.updatePlayerMovement();
+       
     }
-
+     Renderer.updatePlayerMovement();
+    
     Enemies.drawEnemies(ctx);
     Enemies.drawEnemyBullets(ctx);
     SpecialAttacks.drawSpecialRay(ctx);
@@ -329,25 +329,6 @@ const TOUCH = {
 gameState.isTouchActive = false;
 gameState.touchIdentifier = null;
 
-/**
- * --- SISTEMA DI MOVIMENTO 
- */
-    // --- AGGIORNAMENTO STATO PER L'ANIMAZIONE ---
-    gameState.isMoving = moving;
-
-    if (moving) {
-        // Determina la direzione visiva in base al movimento prevalente
-        if (Math.abs(dx) > Math.abs(dy)) {
-            gameState.playerDirection = (dx > 0) ? 2 : 1; // 2: Destra, 1: Sinistra
-        } else {
-            gameState.playerDirection = (dy > 0) ? 0 : 3; // 0: Giù, 3: Su
-        }
-    }
-
-    // Vincoli bordi schermo
-    gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
-    gameState.playerY = Math.max(20, Math.min(CONFIG.CANVAS_HEIGHT - 20, gameState.playerY));
-}
 
 // 3. INPUT LISTENERS (Mobile & Key)
 
