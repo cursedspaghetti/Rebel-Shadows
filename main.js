@@ -320,7 +320,7 @@ function updateAndDrawBackgrounds() {
 // --- INPUT LISTENERS ---
 // --- CONFIGURAZIONE TOUCH ---
 const TOUCH_SETTINGS = {
-    LERP: 0.5,
+    LERP: 0.1,
     OFFSET_Y: 80,
     TAP_DELAY: 250
 };
