@@ -7,6 +7,13 @@ export const CONFIG = {
     GAME_TIME: 60,              
     SCROLL_SPEED: 2.5,
     PARALLAX_SPEED: 1,      
+
+   // --- CONFIGURAZIONE TOUCH ---
+    const TOUCH = {
+    LERP: 0.1,
+    OFFSET_Y: 80,
+    TAP_DELAY: 250
+     };
     
     // --- Sistema Mago & Sprite ---
     WIZARD_SPRITE: {
