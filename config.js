@@ -9,7 +9,7 @@ export const CONFIG = {
     PARALLAX_SPEED: 1,      
 
    // --- CONFIGURAZIONE TOUCH ---
-    TOUCH = {
+    TOUCH : {
     LERP: 0.1,
     OFFSET_Y: 80,
     TAP_DELAY: 250
