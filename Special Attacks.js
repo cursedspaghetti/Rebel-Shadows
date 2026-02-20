@@ -176,7 +176,7 @@ export function drawChargeEffect(ctx, chargeImg) {
         ctx.save();
 
         // 1. Spostiamo l'origine sul giocatore per facilitare rotazioni o effetti
-        ctx.translate(gameState.playerX, gameState.playerY);
+        ctx.translate(gameState.playerX, gameState.playerY - 20);
 
         // 2. SETTAGGI PER IL GLOW INTENSO
         // Usiamo 'lighter' per far sì che i colori si sommino (effetto energia pura)
