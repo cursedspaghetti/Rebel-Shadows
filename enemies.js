@@ -53,7 +53,7 @@ export function drawEnemies(ctx) {
     gameState.enemies.forEach(enemy => {
         ctx.save();
         
-        // Calcolo del frame (Assumendo che siano disposti orizzontalmente)
+        // Calcolo del frame
         const currentFrame = Math.floor(enemy.frame) % FRAME_COUNT;
         const sourceX = currentFrame * 160; 
 
@@ -61,14 +61,22 @@ export function drawEnemies(ctx) {
         ctx.shadowBlur = 10;
         ctx.shadowColor = 'rgba(138, 43, 226, 0.5)';
 
-        ctx.drawImage(
-            batSprite, 
-            sourceX, 0, 160, 160,          // Taglio sorgente quadrato (160x160)
-            enemy.x - enemy.size / 2,      // Posizione X centrata
-            enemy.y - enemy.size / 2,      // Posizione Y centrata
-            enemy.size,                    // Larghezza a schermo
-            enemy.size                     // Altezza a schermo (uguale alla larghezza)
-        );
+        // AGGIORNAMENTO: Calcoliamo la Y a schermo sommando la posizione del nemico 
+        // alla posizione attuale della camera.
+        const screenY = (enemy.y + (gameState.cameraY || 0)) - enemy.size / 2;
+        const screenX = enemy.x - enemy.size / 2;
+
+        // Ottimizzazione: Disegna il nemico solo se è visibile nel canvas
+        if (screenY + enemy.size > 0 && screenY < CONFIG.CANVAS_HEIGHT) {
+            ctx.drawImage(
+                batSprite, 
+                sourceX, 0, 160, 160,          // Taglio sorgente
+                screenX,                       // Posizione X a schermo
+                screenY,                       // Posizione Y a schermo (relativa alla camera)
+                enemy.size,                    // Larghezza
+                enemy.size                     // Altezza
+            );
+        }
 
         ctx.restore();
     });
