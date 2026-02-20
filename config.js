@@ -89,6 +89,10 @@ export const CONFIG = {
  * GLOBAL GAME STATE
  */
 export let gameState = {
+    
+cameraY : 0, // La posizione della nostra visuale
+worldY : 0,  // La posizione assoluta del giocatore nel mondo
+    
     // --- Caratteristiche del Mago ---
     wizardData: {
         name: "",
