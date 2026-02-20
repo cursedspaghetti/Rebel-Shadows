@@ -18,7 +18,7 @@ export const CONFIG = {
     // --- Sistema Mago & Sprite ---
     WIZARD_SPRITE: {
         FRAME_SIZE: 50,      // Dimensione nativa del frame FRWC (50x50)
-        RENDER_SCALE: 1.2,   // Scala di visualizzazione in gioco
+        RENDER_SCALE: 1.5,   // Scala di visualizzazione in gioco
         ANIM_SPEED: 100,     // Velocità animazione camminata (ms)
         TOTAL_FRAMES: 14     // Frame per ogni riga dello spritesheet
     },
