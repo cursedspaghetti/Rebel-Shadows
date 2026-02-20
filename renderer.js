@@ -259,80 +259,116 @@ export function drawPlayerWiz(ctx) {
     ctx.restore();
 }
 
-// renderer.js
-
 /**
- * Aggiorna il movimento del giocatore e della camera.
- * @param {HTMLImageElement} bgImage - L'immagine di sfondo (EmptySpace.png) per calcolare i limiti.
- */
-/**
- * Aggiorna il movimento del giocatore e della camera.
- * @param {HTMLImageElement} bgImage - L'immagine di sfondo (EmptySpace.png)
+ * Gestisce il movimento del giocatore (asse X) e della camera (asse Y).
+ * @param {HTMLImageElement} bgImage - L'immagine di sfondo per calcolare i limiti reali.
  */
 export function updatePlayerMovement(bgImage) {
     let dx = 0;
     let dy = 0; 
     const speed = gameState.playerSpeed || 4; 
-    const MAX_DY = speed * 0.4; // Cap massimo per lo scorrimento mappa
+    
+    // CAP della velocità: impostato a 0.4 della velocità base come richiesto
+    const MAX_DY = speed * 0.4; 
 
-    // --- 1. INPUT TASTIERA ---
+    // --- 1. GESTIONE OPACITÀ PAD (Feedback Visivo) ---
+    if (gameState.isTouchActive) {
+        // Appare gradualmente quando si tocca
+        gameState.padOpacity = Math.min(1, (gameState.padOpacity || 0) + 0.1);
+    } else {
+        // Scompare gradualmente quando si rilascia
+        gameState.padOpacity = Math.max(0, (gameState.padOpacity || 0) - 0.1);
+    }
+
+    // --- 2. INPUT TASTIERA ---
     if (gameState.keys['ArrowUp'] || gameState.keys['w'] || gameState.keys['W']) dy = speed;
     if (gameState.keys['ArrowDown'] || gameState.keys['s'] || gameState.keys['S']) dy = -speed;
     if (gameState.keys['ArrowLeft'] || gameState.keys['a'] || gameState.keys['A']) dx -= speed;
     if (gameState.keys['ArrowRight'] || gameState.keys['d'] || gameState.keys['D']) dx += speed;
 
-    // --- 2. INPUT TOUCH ---
+    // --- 3. INPUT TOUCH ---
     if (gameState.isTouchActive) {
-        // Movimento Orizzontale
+        // Movimento Orizzontale (Player X)
         const targetDx = gameState.touchX - gameState.playerX;
         if (Math.abs(targetDx) > 5) {
             dx = targetDx * (CONFIG.TOUCH.LERP || 0.1);
         }
 
-        // Movimento Verticale "Relativo al personaggio"
-        // L'area "avanti" è ora spostata leggermente sotto il giocatore
-        const thresholdY = gameState.playerY + 160; 
-        
-        // Calcoliamo la distanza dal punto di attivazione
+        // Movimento Verticale (Camera Y)
+        // Punto neutro (Pad Center) spostato 120px sotto il giocatore
+        const thresholdY = gameState.playerY + 120; 
         const distY = gameState.touchY - thresholdY;
 
-        // Se tocco SOTTO il thresholdY, la mappa scende (avanzo)
-        // Se tocco SOPRA, la mappa sale (indietreggio)
-        // Invertiamo il segno di distY per dare la direzione corretta a dy
+        // Se tocco sotto il threshold, distY è positivo -> dy diventa negativo (avanzo)
+        // Nota: la logica dy = -distY serve per far scorrere la camera correttamente
         let targetDy = -distY * (CONFIG.TOUCH.LERP || 0.1);
 
-        // Applichiamo il CAP (limite di velocità)
+        // Applichiamo il CAP alla velocità verticale
         dy = Math.max(-MAX_DY, Math.min(MAX_DY, targetDy));
         
-        // Deadzone: se il tocco è vicinissimo al personaggio, non muovere
+        // Deadzone: evita tremolii se il dito è quasi al centro del pad
         if (Math.abs(distY) < 15) dy = 0;
     }
 
-    // --- 3. APPLICAZIONE MOVIMENTO X ---
+    // --- 4. APPLICAZIONE MOVIMENTO X (Giocatore sul Canvas) ---
     gameState.playerX += dx;
-    gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
+    
+    // Limiti laterali dello schermo
+    const padding = 20;
+    gameState.playerX = Math.max(padding, Math.min(CONFIG.CANVAS_WIDTH - padding, gameState.playerX));
 
-    // --- 4. APPLICAZIONE CAMERA (CON CAP E LIMITI MAPPA) ---
+    // --- 5. APPLICAZIONE CAMERA Y (Mappa verticale) ---
     const moving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
     gameState.isMoving = moving;
-if (moving) {
+
+    if (moving) {
+        // Aggiorniamo la coordinata della camera
         gameState.cameraY = (gameState.cameraY || 0) + dy;
 
+        // Limiti basati sulle 15 ripetizioni dello sfondo
         if (bgImage && bgImage.naturalHeight > 0) {
-            // MOLTIPLICATORE: 15 volte l'altezza dell'immagine
             const totalWorldHeight = bgImage.naturalHeight * 15;
             const maxScroll = Math.max(0, totalWorldHeight - CONFIG.CANVAS_HEIGHT);
             
-            // Limiti: non oltre l'inizio e non oltre la fine della 15esima ripetizione
+            // Clamp: Impedisce di andare oltre la cima (0) o il fondo (-maxScroll)
             if (gameState.cameraY > 0) gameState.cameraY = 0;
             if (gameState.cameraY < -maxScroll) gameState.cameraY = -maxScroll;
         }
 
+        // Direzione Sprite: dy > 0 (mappa scende) = Mago guarda SU (3)
         if (Math.abs(dy) > 0.1) {
             gameState.playerDirection = dy > 0 ? 3 : 0;
         }
     }
 }
+
+export function drawTouchPad(ctx) {
+    if (gameState.padOpacity <= 0) return;
+
+    const centerX = gameState.playerX;
+    const centerY = gameState.playerY + 120; // Stesso valore usato nel movimento
+    
+    ctx.save();
+    ctx.globalAlpha = gameState.padOpacity * 0.4;
+    
+    // Cerchio esterno (Base)
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, 60, 0, Math.PI * 2);
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Cerchio interno (Se il touch è attivo, mostriamo dove preme)
+    if (gameState.isTouchActive) {
+        ctx.beginPath();
+        ctx.arc(gameState.touchX, gameState.touchY, 20, 0, Math.PI * 2);
+        ctx.fillStyle = "purple";
+        ctx.fill();
+    }
+    
+    ctx.restore();
+}
+
 
 // --- UI E BARRA VITA ---
 export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
