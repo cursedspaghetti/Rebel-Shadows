@@ -313,7 +313,9 @@ function gameLoop() {
         Renderer.drawPlayerWiz(ctx)
        
     }
-     Renderer.updatePlayerMovement(bgParallax);
+    // Disegna il Pad se siamo su mobile/touch attivo
+    Renderer.drawTouchPad(ctx);
+    Renderer.updatePlayerMovement(bgParallax);
     
     Enemies.drawEnemies(ctx);
     Enemies.drawEnemyBullets(ctx);
