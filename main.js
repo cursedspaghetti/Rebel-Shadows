@@ -285,9 +285,7 @@ function gameLoop() {
 
     // Draw Player logic
     if (!(gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0)) {
-        
-            if not(gameState.isCharging || gameState.isCharging2) Renderer.drawPlayer(ctx,playerSprite);
-            
+            if (gameState.isCharging === false || gameState.isCharging2 === false) Renderer.drawPlayer(ctx,playerSprite);
         Renderer.drawPlayerWiz(ctx)
        
     }
