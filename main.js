@@ -309,13 +309,34 @@ function gameLoop() {
 }
 
 function updateAndDrawBackgrounds() {
-    gameState.parallaxPositionY = (gameState.parallaxPositionY + CONFIG.PARALLAX_SPEED) % CONFIG.CANVAS_HEIGHT;
-    ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-    ctx.drawImage(bgParallax, 0, gameState.parallaxPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    // 1. Disegna prima lo sfondo base (EmptySpaceVoid) fisso o come preferisci
+    ctx.drawImage(bgImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+
+    // 2. Calcola l'offset basato sulla posizione Y del giocatore
+    // Immaginiamo che se il giocatore è in alto, lo sfondo scende, e viceversa.
+    // Usiamo il "panning": lo sfondo si muove in direzione opposta al giocatore.
     
-    gameState.backgroundPositionY = (gameState.backgroundPositionY + CONFIG.SCROLL_SPEED) % CONFIG.CANVAS_HEIGHT;
-    ctx.drawImage(bgImage, 0, gameState.backgroundPositionY, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-    ctx.drawImage(bgImage, 0, gameState.backgroundPositionY - CONFIG.CANVAS_HEIGHT, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    const playerRelativeY = gameState.playerY / CONFIG.CANVAS_HEIGHT;
+    
+    // Calcoliamo quanto spazio extra abbiamo rispetto al canvas
+    // Se bgParallax è più grande del canvas, questo permetterà di vederne diverse parti
+    const overflowY = bgParallax.naturalHeight - CONFIG.CANVAS_HEIGHT;
+    const overflowX = bgParallax.naturalWidth - CONFIG.CANVAS_WIDTH;
+
+    // Calcolo posizione (Lerp)
+    // Se il giocatore è a Y=0 (cima), disegniamo lo sfondo a Y=0
+    // Se il giocatore è a Y=Height (fondo), disegniamo lo sfondo a Y = -overflowY
+    const drawX = (CONFIG.CANVAS_WIDTH / 2) - (bgParallax.naturalWidth / 2); // Centrato orizzontalmente
+    const drawY = - (playerRelativeY * overflowY);
+
+    // 3. Disegna l'immagine EmptySpace.png a dimensioni reali
+    ctx.drawImage(
+        bgParallax, 
+        drawX, 
+        drawY, 
+        bgParallax.naturalWidth, 
+        bgParallax.naturalHeight
+    );
 }
 
 // --- INPUT LISTENERS ---
