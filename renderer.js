@@ -186,21 +186,33 @@ export function drawPlayer(ctx, img) {
     const animationSpeed = 150;
     const frameIndex = Math.floor(Date.now() / animationSpeed) % totalFrames;
 
-    ctx.save();
-    ctx.translate(gameState.playerX, gameState.playerY);
+    // --- EFFETTO FLUTTUANTE ---
+    // Usiamo il seno del tempo corrente per creare un movimento su e giù fluido
+    // 0.005 controlla la velocità, 5 controlla l'ampiezza (pixel)
+    const floatingOffset = Math.sin(Date.now() * 0.005) * 5;
 
+    ctx.save();
+    
+    // Applichiamo la traslazione includendo l'offset fluttuante sulla Y
+    ctx.translate(gameState.playerX, gameState.playerY + floatingOffset);
+
+    // --- ALONE DI LUCE ---
+    // Impostiamo il bagliore. Puoi cambiare il colore in base al tuo personaggio.
+    ctx.shadowBlur = 15 + Math.sin(Date.now() * 0.005) * 5; // intensità che cambia al movimento
+    ctx.shadowColor = "rgba(0, 255, 255, 0.8)"; // Colore (es. azzurro neon)
+    // Disegniamo l'immagine
     ctx.drawImage(
         img,
         frameIndex * frameWidth, 0, 
         frameWidth, frameHeight,    
         - (frameWidth * scaleX) / 2, 
-        - (frameHeight * scaleY) / 2 + 20, 
+        - (frameHeight * scaleY) / 2 - 20, 
         frameWidth * scaleX,         
-        frameHeight * scaleY         
+        frameHeight * scaleY          
     );
+
     ctx.restore();
 }
-
 export function drawPlayerWiz(ctx) {
     const wizardImg = gameState.wizardSpritesheet; 
     
