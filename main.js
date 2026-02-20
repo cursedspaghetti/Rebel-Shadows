@@ -289,7 +289,7 @@ function gameLoop() {
         Renderer.drawPlayerWiz(ctx)
        
     }
-     Renderer.updatePlayerMovement();
+     Renderer.updatePlayerMovement(bgParallax);
     
     Enemies.drawEnemies(ctx);
     Enemies.drawEnemyBullets(ctx);
