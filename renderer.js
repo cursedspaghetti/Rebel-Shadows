@@ -265,13 +265,17 @@ export function drawPlayerWiz(ctx) {
  * Aggiorna il movimento del giocatore e della camera.
  * @param {HTMLImageElement} bgImage - L'immagine di sfondo (EmptySpace.png) per calcolare i limiti.
  */
+/**
+ * Aggiorna il movimento del giocatore e della camera.
+ * @param {HTMLImageElement} bgImage - L'immagine di sfondo (EmptySpace.png)
+ */
 export function updatePlayerMovement(bgImage) {
     let dx = 0;
-    let dy = 0; // Velocità di scorrimento della mappa
+    let dy = 0; 
     const speed = gameState.playerSpeed || 4; 
+    const MAX_DY = speed * 1.5; // Cap massimo per lo scorrimento mappa
 
     // --- 1. INPUT TASTIERA ---
-    // Ricorda: dy positivo = la mappa scende (il giocatore avanza nel mondo)
     if (gameState.keys['ArrowUp'] || gameState.keys['w'] || gameState.keys['W']) dy = speed;
     if (gameState.keys['ArrowDown'] || gameState.keys['s'] || gameState.keys['S']) dy = -speed;
     if (gameState.keys['ArrowLeft'] || gameState.keys['a'] || gameState.keys['A']) dx -= speed;
@@ -279,47 +283,53 @@ export function updatePlayerMovement(bgImage) {
 
     // --- 2. INPUT TOUCH ---
     if (gameState.isTouchActive) {
-        // Movimento Orizzontale (il giocatore si sposta fisicamente sul canvas)
+        // Movimento Orizzontale
         const targetDx = gameState.touchX - gameState.playerX;
         if (Math.abs(targetDx) > 5) {
             dx = targetDx * (CONFIG.TOUCH.LERP || 0.1);
         }
 
-        // Movimento Verticale (Scorrimento Mappa)
-        // Se tocco nella metà superiore dello schermo, dy è positivo (vado avanti)
-        const centerY = CONFIG.CANVAS_HEIGHT / 2;
-        const targetDy = centerY - gameState.touchY; 
+        // Movimento Verticale "Relativo al personaggio"
+        // L'area "avanti" è ora spostata leggermente sotto il giocatore
+        const thresholdY = gameState.playerY + 20; 
+        
+        // Calcoliamo la distanza dal punto di attivazione
+        const distY = gameState.touchY - thresholdY;
 
-        if (Math.abs(targetDy) > 20) {
-            dy = targetDy * (CONFIG.TOUCH.LERP || 0.1);
-        }
+        // Se tocco SOTTO il thresholdY, la mappa scende (avanzo)
+        // Se tocco SOPRA, la mappa sale (indietreggio)
+        // Invertiamo il segno di distY per dare la direzione corretta a dy
+        let targetDy = -distY * (CONFIG.TOUCH.LERP || 0.1);
+
+        // Applichiamo il CAP (limite di velocità)
+        dy = Math.max(-MAX_DY, Math.min(MAX_DY, targetDy));
+        
+        // Deadzone: se il tocco è vicinissimo al personaggio, non muovere
+        if (Math.abs(distY) < 15) dy = 0;
     }
 
     // --- 3. APPLICAZIONE MOVIMENTO X ---
     gameState.playerX += dx;
-    
-    // Bordi laterali del canvas (il giocatore non esce dallo schermo)
     gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
 
-    // --- 4. APPLICAZIONE MOVIMENTO Y (CAMERA) ---
+    // --- 4. APPLICAZIONE CAMERA (CON CAP E LIMITI MAPPA) ---
     const moving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
     gameState.isMoving = moving;
 
     if (moving) {
-        // Aggiorniamo la posizione della camera
+        // Aggiorniamo la camera
         gameState.cameraY = (gameState.cameraY || 0) + dy;
 
-        // Limiti della camera basati sulla dimensione REALE dell'immagine di sfondo
+        // Limiti basati sull'immagine reale
         if (bgImage && bgImage.naturalHeight > 0) {
             const maxScroll = Math.max(0, bgImage.naturalHeight - CONFIG.CANVAS_HEIGHT);
             
-            // Impedisce di scorrere oltre l'inizio (0) o la fine (-maxScroll)
             if (gameState.cameraY > 0) gameState.cameraY = 0;
             if (gameState.cameraY < -maxScroll) gameState.cameraY = -maxScroll;
         }
 
-        // Direzione animazione: se dy > 0 (mappa scende), il mago guarda "Su" (frame 3)
-        // Se dy < 0 (mappa sale), il mago guarda "Giù" (frame 0)
+        // Animazione direzione
+        // Se dy > 0 (avanzo), frame 3 (su). Se dy < 0 (retro), frame 0 (giù)
         if (Math.abs(dy) > 0.1) {
             gameState.playerDirection = dy > 0 ? 3 : 0;
         }
