@@ -29,7 +29,7 @@ export const CONFIG = {
     INITIAL_ESSENCES: 10,
 
     BOSS: {
-        MAX_HP: 100,
+        MAX_HP: 5000,
         PHASE_2_THRESHOLD: 0.5,
         FLOAT_SPEED: 0.003,
         FLOAT_AMP: 15,
