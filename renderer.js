@@ -263,112 +263,155 @@ export function drawPlayerWiz(ctx) {
  * Gestisce il movimento del giocatore (asse X) e della camera (asse Y).
  * @param {HTMLImageElement} bgImage - L'immagine di sfondo per calcolare i limiti reali.
  */
+/**
+ * Gestisce il movimento del giocatore (X) e lo scorrimento del mondo (Y).
+ * @param {HTMLImageElement} bgImage - L'immagine di sfondo (EmptySpace.png).
+ */
 export function updatePlayerMovement(bgImage) {
     let dx = 0;
     let dy = 0; 
     const speed = gameState.playerSpeed || 4; 
     
-    // CAP della velocità: impostato a 0.4 della velocità base come richiesto
-    const MAX_DY = speed * 0.6; 
+    // CAP della velocità verticale (0.4x come richiesto)
+    const MAX_DY = speed * 0.4; 
 
-    // --- 1. GESTIONE OPACITÀ PAD (Feedback Visivo) ---
+    // --- 1. GESTIONE OPACITÀ PAD ---
     if (gameState.isTouchActive) {
-        // Appare gradualmente quando si tocca
         gameState.padOpacity = Math.min(1, (gameState.padOpacity || 0) + 0.1);
     } else {
-        // Scompare gradualmente quando si rilascia
         gameState.padOpacity = Math.max(0, (gameState.padOpacity || 0) - 0.1);
     }
 
     // --- 2. INPUT TASTIERA ---
+    // Ricorda: dy > 0 fa scorrere la mappa verso il basso (il giocatore sale)
     if (gameState.keys['ArrowUp'] || gameState.keys['w'] || gameState.keys['W']) dy = speed;
     if (gameState.keys['ArrowDown'] || gameState.keys['s'] || gameState.keys['S']) dy = -speed;
     if (gameState.keys['ArrowLeft'] || gameState.keys['a'] || gameState.keys['A']) dx -= speed;
     if (gameState.keys['ArrowRight'] || gameState.keys['d'] || gameState.keys['D']) dx += speed;
 
-    // --- 3. INPUT TOUCH ---
+    // --- 3. INPUT TOUCH (Virtual Pad) ---
     if (gameState.isTouchActive) {
-        // Movimento Orizzontale (Player X)
+        // Movimento Orizzontale
         const targetDx = gameState.touchX - gameState.playerX;
         if (Math.abs(targetDx) > 5) {
             dx = targetDx * (CONFIG.TOUCH.LERP || 0.1);
         }
 
-        // Movimento Verticale (Camera Y)
-        // Punto neutro (Pad Center) spostato 120px sotto il giocatore
+        // Movimento Verticale (Relativo al Pad situato 120px sotto il player)
         const thresholdY = gameState.playerY + 120; 
         const distY = gameState.touchY - thresholdY;
 
-        // Se tocco sotto il threshold, distY è positivo -> dy diventa negativo (avanzo)
-        // Nota: la logica dy = -distY serve per far scorrere la camera correttamente
+        // Se tocco SOTTO il centro del pad (distY > 0), dy diventa positivo (vado avanti)
         let targetDy = -distY * (CONFIG.TOUCH.LERP || 0.1);
 
-        // Applichiamo il CAP alla velocità verticale
+        // Applichiamo il CAP alla velocità di scorrimento
         dy = Math.max(-MAX_DY, Math.min(MAX_DY, targetDy));
         
-        // Deadzone: evita tremolii se il dito è quasi al centro del pad
+        // Deadzone per evitare micro-movimenti al centro del pad
         if (Math.abs(distY) < 15) dy = 0;
     }
 
-    // --- 4. APPLICAZIONE MOVIMENTO X (Giocatore sul Canvas) ---
+    // --- 4. APPLICAZIONE MOVIMENTO ORIZZONTALE ---
     gameState.playerX += dx;
-    
-    // Limiti laterali dello schermo
-    const padding = 20;
-    gameState.playerX = Math.max(padding, Math.min(CONFIG.CANVAS_WIDTH - padding, gameState.playerX));
+    // Limiti canvas (il giocatore non esce dai lati)
+    gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
 
-    // --- 5. APPLICAZIONE CAMERA Y (Mappa verticale) ---
+    // --- 5. APPLICAZIONE SCORRIMENTO MAPPA (CAMERA) ---
     const moving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
     gameState.isMoving = moving;
 
     if (moving) {
-        // Aggiorniamo la coordinata della camera
-        gameState.cameraY = (gameState.cameraY || 0) + dy;
+        let nextCameraY = (gameState.cameraY || 0) + dy;
 
-        // Limiti basati sulle 15 ripetizioni dello sfondo
         if (bgImage && bgImage.naturalHeight > 0) {
             const totalWorldHeight = bgImage.naturalHeight * 15;
             const maxScroll = Math.max(0, totalWorldHeight - CONFIG.CANVAS_HEIGHT);
             
-            // Clamp: Impedisce di andare oltre la cima (0) o il fondo (-maxScroll)
-            if (gameState.cameraY > 0) gameState.cameraY = 0;
-            if (gameState.cameraY < -maxScroll) gameState.cameraY = -maxScroll;
+            // LOGICA ARRIVO IN CIMA (BOSS)
+            // Se la camera raggiunge o supera lo 0, blocchiamo e il gameLoop attiverà il boss
+            if (nextCameraY >= 0) {
+                nextCameraY = 0;
+            }
+
+            // Limite fondo mappa (inizio del gioco)
+            if (nextCameraY < -maxScroll) {
+                nextCameraY = -maxScroll;
+            }
         }
 
-        // Direzione Sprite: dy > 0 (mappa scende) = Mago guarda SU (3)
+        gameState.cameraY = nextCameraY;
+
+        // Gestione direzione animazione sprite
         if (Math.abs(dy) > 0.1) {
+            // Se dy > 0 la mappa scende, quindi il mago guarda "Su" (frame 3)
             gameState.playerDirection = dy > 0 ? 3 : 0;
         }
     }
 }
 
+/**
+ * Disegna il joystick virtuale per il feedback del movimento touch.
+ * @param {CanvasRenderingContext2D} ctx - Il contesto del canvas.
+ */
 export function drawTouchPad(ctx) {
-    if (gameState.padOpacity <= 0) return;
+    // Se l'opacità è 0 (non si tocca da un po'), non disegnare nulla
+    if (!gameState.padOpacity || gameState.padOpacity <= 0) return;
 
-    const centerX = gameState.playerX;
-    const centerY = gameState.playerY + 120; // Stesso valore usato nel movimento
-    
     ctx.save();
-    ctx.globalAlpha = gameState.padOpacity * 0.4;
     
-    // Cerchio esterno (Base)
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, 60, 0, Math.PI * 2);
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    // Applichiamo l'opacità globale per l'effetto fade-in/out
+    ctx.globalAlpha = gameState.padOpacity;
 
-    // Cerchio interno (Se il touch è attivo, mostriamo dove preme)
-    if (gameState.isTouchActive) {
-        ctx.beginPath();
-        ctx.arc(gameState.touchX, gameState.touchY, 20, 0, Math.PI * 2);
-        ctx.fillStyle = "purple";
-        ctx.fill();
-    }
+    // Centro del pad: deve corrispondere esattamente al thresholdY usato nel movimento
+    const centerX = gameState.playerX;
+    const centerY = gameState.playerY + 120;
+    const outerRadius = 60; // Raggio del cerchio esterno
+    const innerRadius = 25; // Raggio del pomello mobile
+
+    // 1. DISEGNO CERCHIO ESTERNO (Base del Joystick)
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)"; // Bianco semitrasparente
+    ctx.stroke();
     
+    // Un leggero riempimento per renderlo più visibile
+    ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+    ctx.fill();
+
+    // 2. DISEGNO CERCHIO INTERNO (Il Pomello)
+    if (gameState.isTouchActive) {
+        // Calcoliamo la distanza tra il tocco e il centro del pad
+        const dx = gameState.touchX - centerX;
+        const dy = gameState.touchY - centerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Calcoliamo l'angolo del tocco
+        const angle = Math.atan2(dy, dx);
+        
+        // Vincoliamo il pomello: non deve uscire dal raggio del cerchio esterno
+        const limitedDist = Math.min(distance, outerRadius);
+        
+        const knobX = centerX + Math.cos(angle) * limitedDist;
+        const knobY = centerY + Math.sin(angle) * limitedDist;
+
+        // Ombra/Bagliore viola per il pomello (stile Wizard)
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = "rgba(138, 43, 226, 0.8)";
+
+        ctx.beginPath();
+        ctx.arc(knobX, knobY, innerRadius, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(138, 43, 226, 0.7)"; // Viola magico
+        ctx.fill();
+        
+        // Bordino bianco per il pomello
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
     ctx.restore();
 }
-
 
 // --- UI E BARRA VITA ---
 export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
