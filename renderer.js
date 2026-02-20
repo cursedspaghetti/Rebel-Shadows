@@ -273,7 +273,7 @@ export function updatePlayerMovement(bgImage) {
     let dx = 0;
     let dy = 0; 
     const speed = gameState.playerSpeed || 4; 
-    const MAX_DY = speed * 1.5; // Cap massimo per lo scorrimento mappa
+    const MAX_DY = speed * 0.4; // Cap massimo per lo scorrimento mappa
 
     // --- 1. INPUT TASTIERA ---
     if (gameState.keys['ArrowUp'] || gameState.keys['w'] || gameState.keys['W']) dy = speed;
