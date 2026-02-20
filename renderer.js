@@ -404,7 +404,7 @@ export function drawTouchPad(ctx) {
         ctx.fillStyle = "rgba(138, 43, 226, 0.3)"; // Viola magico
         ctx.fill();
         
-         Bordino bianco per il pomello
+        // Bordino bianco per il pomello
         ctx.strokeStyle = "white";
         ctx.lineWidth = 0.5;
         ctx.stroke();
