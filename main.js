@@ -309,25 +309,29 @@ function gameLoop() {
 }
 
 function updateAndDrawBackgrounds() {
-    // 1. Sfondo base (EmptySpaceVoid)
-    // Lo disegniamo fisso per riempire eventuali spazi vuoti se l'immagine parallax è piccola
+    // 1. Sfondo base nero fisso
     ctx.drawImage(bgImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
-    // 2. Centratura Orizzontale
-    // Calcoliamo la X in modo che l'immagine EmptySpace.png sia centrata rispetto allo schermo
     const drawX = (CONFIG.CANVAS_WIDTH / 2) - (bgParallax.naturalWidth / 2);
+    const imgHeight = bgParallax.naturalHeight;
 
-    // 3. Disegno con Camera
-    // Usiamo gameState.cameraY che ora contiene l'offset di scorrimento reale.
-    // Non servono più calcoli di overflow qui, perché li abbiamo già gestiti 
-    // come limiti (clamp) dentro updatePlayerMovement.
-    ctx.drawImage(
-        bgParallax, 
-        drawX, 
-        gameState.cameraY, 
-        bgParallax.naturalWidth, 
-        bgParallax.naturalHeight
-    );
+    // 2. Disegno ciclico (15 volte)
+    for (let i = 0; i < 15; i++) {
+        // Calcoliamo la posizione Y per ogni "segmento" di mappa
+        // i * imgHeight sposta ogni copia sotto la precedente
+        const currentSegmentY = gameState.cameraY + (i * imgHeight);
+
+        // Ottimizzazione: Disegna la copia solo se è visibile a schermo
+        if (currentSegmentY + imgHeight > 0 && currentSegmentY < CONFIG.CANVAS_HEIGHT) {
+            ctx.drawImage(
+                bgParallax, 
+                drawX, 
+                currentSegmentY, 
+                bgParallax.naturalWidth, 
+                imgHeight
+            );
+        }
+    }
 }
 
 // --- INPUT LISTENERS ---
