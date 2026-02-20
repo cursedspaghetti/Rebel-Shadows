@@ -194,7 +194,7 @@ export function drawPlayer(ctx, img) {
         frameIndex * frameWidth, 0, 
         frameWidth, frameHeight,    
         - (frameWidth * scaleX) / 2, 
-        - (frameHeight * scaleY) / 2, 
+        - (frameHeight * scaleY) / 2 + 20, 
         frameWidth * scaleX,         
         frameHeight * scaleY         
     );
