@@ -259,42 +259,49 @@ export function drawPlayerWiz(ctx) {
     ctx.restore();
 }
 
-export function updatePlayerMovement() {
+// renderer.js
+
+/**
+ * Aggiorna il movimento del giocatore e della camera.
+ * @param {HTMLImageElement} bgImage - L'immagine di sfondo (EmptySpace.png) per calcolare i limiti.
+ */
+export function updatePlayerMovement(bgImage) {
     let dx = 0;
-    let dy = 0; // Questa diventerà la velocità di scorrimento della mappa
+    let dy = 0; // Velocità di scorrimento della mappa
     const speed = gameState.playerSpeed || 4; 
 
-    // 1. Input Tastiera
-    if (gameState.keys['ArrowUp'] || gameState.keys['w'] || gameState.keys['W']) dy = speed; // Mappa va GIÙ (personaggio avanza)
-    if (gameState.keys['ArrowDown'] || gameState.keys['s'] || gameState.keys['S']) dy = -speed; // Mappa va SU (personaggio arretra)
+    // --- 1. INPUT TASTIERA ---
+    // Ricorda: dy positivo = la mappa scende (il giocatore avanza nel mondo)
+    if (gameState.keys['ArrowUp'] || gameState.keys['w'] || gameState.keys['W']) dy = speed;
+    if (gameState.keys['ArrowDown'] || gameState.keys['s'] || gameState.keys['S']) dy = -speed;
     if (gameState.keys['ArrowLeft'] || gameState.keys['a'] || gameState.keys['A']) dx -= speed;
     if (gameState.keys['ArrowRight'] || gameState.keys['d'] || gameState.keys['D']) dx += speed;
 
-    // 2. Input Touch
+    // --- 2. INPUT TOUCH ---
     if (gameState.isTouchActive) {
+        // Movimento Orizzontale (il giocatore si sposta fisicamente sul canvas)
         const targetDx = gameState.touchX - gameState.playerX;
-        
-        // Calcoliamo dy in base a quanto il touch è lontano dal centro Y del canvas
-        // Se tocco sopra il centro, la mappa scorre verso il basso (avanzo)
-        const centerY = CONFIG.CANVAS_HEIGHT / 2;
-        const targetDy = centerY - gameState.touchY; 
-
         if (Math.abs(targetDx) > 5) {
             dx = targetDx * (CONFIG.TOUCH.LERP || 0.1);
         }
-        
-        // Se il touch è sopra o sotto una certa "deadzone" centrale
+
+        // Movimento Verticale (Scorrimento Mappa)
+        // Se tocco nella metà superiore dello schermo, dy è positivo (vado avanti)
+        const centerY = CONFIG.CANVAS_HEIGHT / 2;
+        const targetDy = centerY - gameState.touchY; 
+
         if (Math.abs(targetDy) > 20) {
             dy = targetDy * (CONFIG.TOUCH.LERP || 0.1);
         }
     }
 
-    // 3. Applicazione movimento X (Personaggio)
+    // --- 3. APPLICAZIONE MOVIMENTO X ---
     gameState.playerX += dx;
-    // Bordi laterali
+    
+    // Bordi laterali del canvas (il giocatore non esce dallo schermo)
     gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
 
-    // 4. Applicazione movimento Y alla CAMERA (Mappa)
+    // --- 4. APPLICAZIONE MOVIMENTO Y (CAMERA) ---
     const moving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
     gameState.isMoving = moving;
 
@@ -302,16 +309,20 @@ export function updatePlayerMovement() {
         // Aggiorniamo la posizione della camera
         gameState.cameraY = (gameState.cameraY || 0) + dy;
 
-        // Limiti della camera basati sull'altezza reale dell'immagine (bgParallax)
-        // Impedisce di mostrare il vuoto oltre i pixel della EmptySpace.png
-        const maxScroll = Math.max(0, bgParallax.naturalHeight - CONFIG.CANVAS_HEIGHT);
-        
-        // La cameraY non può essere positiva (sopra l'inizio) né più negativa del fondo
-        if (gameState.cameraY > 0) gameState.cameraY = 0;
-        if (gameState.cameraY < -maxScroll) gameState.cameraY = -maxScroll;
+        // Limiti della camera basati sulla dimensione REALE dell'immagine di sfondo
+        if (bgImage && bgImage.naturalHeight > 0) {
+            const maxScroll = Math.max(0, bgImage.naturalHeight - CONFIG.CANVAS_HEIGHT);
+            
+            // Impedisce di scorrere oltre l'inizio (0) o la fine (-maxScroll)
+            if (gameState.cameraY > 0) gameState.cameraY = 0;
+            if (gameState.cameraY < -maxScroll) gameState.cameraY = -maxScroll;
+        }
 
-        // Aggiorna direzione animazione: se dy > 0 il "mondo" scende, quindi il mago guarda in su (3)
-        gameState.playerDirection = dy > 0 ? 3 : 0;
+        // Direzione animazione: se dy > 0 (mappa scende), il mago guarda "Su" (frame 3)
+        // Se dy < 0 (mappa sale), il mago guarda "Giù" (frame 0)
+        if (Math.abs(dy) > 0.1) {
+            gameState.playerDirection = dy > 0 ? 3 : 0;
+        }
     }
 }
 
