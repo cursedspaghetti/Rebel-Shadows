@@ -365,8 +365,8 @@ export function drawTouchPad(ctx) {
     // Centro del pad: deve corrispondere esattamente al thresholdY usato nel movimento
     const centerX = gameState.playerX;
     const centerY = gameState.playerY + 120;
-    const outerRadius = 60; // Raggio del cerchio esterno
-    const innerRadius = 25; // Raggio del pomello mobile
+    const outerRadius = 50; // Raggio del cerchio esterno
+    const innerRadius = 15; // Raggio del pomello mobile
 
     // 1. DISEGNO CERCHIO ESTERNO (Base del Joystick)
     ctx.beginPath();
@@ -397,16 +397,16 @@ export function drawTouchPad(ctx) {
 
         // Ombra/Bagliore viola per il pomello (stile Wizard)
         ctx.shadowBlur = 15;
-        ctx.shadowColor = "rgba(138, 43, 226, 0.8)";
+        ctx.shadowColor = "rgba(138, 43, 226, 0.3)";
 
         ctx.beginPath();
         ctx.arc(knobX, knobY, innerRadius, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(138, 43, 226, 0.7)"; // Viola magico
+        ctx.fillStyle = "rgba(138, 43, 226, 0.3)"; // Viola magico
         ctx.fill();
         
-        // Bordino bianco per il pomello
+         Bordino bianco per il pomello
         ctx.strokeStyle = "white";
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 0.5;
         ctx.stroke();
     }
 
