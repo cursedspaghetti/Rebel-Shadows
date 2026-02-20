@@ -269,7 +269,7 @@ export function updatePlayerMovement(bgImage) {
     const speed = gameState.playerSpeed || 4; 
     
     // CAP della velocità: impostato a 0.4 della velocità base come richiesto
-    const MAX_DY = speed * 0.4; 
+    const MAX_DY = speed * 0.6; 
 
     // --- 1. GESTIONE OPACITÀ PAD (Feedback Visivo) ---
     if (gameState.isTouchActive) {
