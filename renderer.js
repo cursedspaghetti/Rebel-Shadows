@@ -291,7 +291,7 @@ export function updatePlayerMovement(bgImage) {
 
         // Movimento Verticale "Relativo al personaggio"
         // L'area "avanti" è ora spostata leggermente sotto il giocatore
-        const thresholdY = gameState.playerY + 20; 
+        const thresholdY = gameState.playerY + 90; 
         
         // Calcoliamo la distanza dal punto di attivazione
         const distY = gameState.touchY - thresholdY;
