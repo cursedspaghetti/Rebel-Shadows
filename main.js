@@ -309,31 +309,22 @@ function gameLoop() {
 }
 
 function updateAndDrawBackgrounds() {
-    // 1. Disegna prima lo sfondo base (EmptySpaceVoid) fisso o come preferisci
+    // 1. Sfondo base (EmptySpaceVoid)
+    // Lo disegniamo fisso per riempire eventuali spazi vuoti se l'immagine parallax è piccola
     ctx.drawImage(bgImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
-    // 2. Calcola l'offset basato sulla posizione Y del giocatore
-    // Immaginiamo che se il giocatore è in alto, lo sfondo scende, e viceversa.
-    // Usiamo il "panning": lo sfondo si muove in direzione opposta al giocatore.
-    
-    const playerRelativeY = gameState.playerY / CONFIG.CANVAS_HEIGHT;
-    
-    // Calcoliamo quanto spazio extra abbiamo rispetto al canvas
-    // Se bgParallax è più grande del canvas, questo permetterà di vederne diverse parti
-    const overflowY = bgParallax.naturalHeight - CONFIG.CANVAS_HEIGHT;
-    const overflowX = bgParallax.naturalWidth - CONFIG.CANVAS_WIDTH;
+    // 2. Centratura Orizzontale
+    // Calcoliamo la X in modo che l'immagine EmptySpace.png sia centrata rispetto allo schermo
+    const drawX = (CONFIG.CANVAS_WIDTH / 2) - (bgParallax.naturalWidth / 2);
 
-    // Calcolo posizione (Lerp)
-    // Se il giocatore è a Y=0 (cima), disegniamo lo sfondo a Y=0
-    // Se il giocatore è a Y=Height (fondo), disegniamo lo sfondo a Y = -overflowY
-    const drawX = (CONFIG.CANVAS_WIDTH / 2) - (bgParallax.naturalWidth / 2); // Centrato orizzontalmente
-    const drawY = - (playerRelativeY * overflowY);
-
-    // 3. Disegna l'immagine EmptySpace.png a dimensioni reali
+    // 3. Disegno con Camera
+    // Usiamo gameState.cameraY che ora contiene l'offset di scorrimento reale.
+    // Non servono più calcoli di overflow qui, perché li abbiamo già gestiti 
+    // come limiti (clamp) dentro updatePlayerMovement.
     ctx.drawImage(
         bgParallax, 
         drawX, 
-        drawY, 
+        gameState.cameraY, 
         bgParallax.naturalWidth, 
         bgParallax.naturalHeight
     );
