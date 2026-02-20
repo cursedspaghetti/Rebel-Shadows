@@ -208,6 +208,7 @@ function startGame() {
     setupScreen.style.display = 'none';
     gameState.currentScreen = 'playing';
     
+    // --- 1. CALCOLO BONUS STATISTICHE ---
     let traitSpeedBonus = 0;
     let traitHPBonus = 0;
 
@@ -219,12 +220,35 @@ function startGame() {
     gameState.playerSpeed = 5 + (gameState.addedStats["Dexterity"] * 0.3) + traitSpeedBonus;
     gameState.fireRate = Math.max(100, 400 - (gameState.addedStats["Attack Rate"] * 20));
 
+    // --- 2. POSIZIONAMENTO INIZIALE (CAMERA E PLAYER) ---
+    // Posizioniamo il mago in basso sul canvas (es. all'80% dell'altezza)
+    gameState.playerX = CONFIG.CANVAS_WIDTH / 2;
+    gameState.playerY = CONFIG.CANVAS_HEIGHT * 0.8;
+
+    // Calcoliamo l'altezza totale del mondo (15 volte lo sfondo)
+    // Usiamo bgParallax che è l'immagine caricata in main.js
+    const totalWorldHeight = bgParallax.naturalHeight * 15;
+    
+    // Impostiamo la camera per partire esattamente dal fondo
+    // Il limite massimo di scorrimento verso l'alto è -(AltezzaTotale - AltezzaSchermo)
+    gameState.cameraY = -(totalWorldHeight - CONFIG.CANVAS_HEIGHT);
+
+    // --- 3. GESTIONE TIMER E INTERVALLI ---
     gameState.gameTimer = CONFIG.GAME_TIME;
     if (gameState.timerInterval) clearInterval(gameState.timerInterval);
     gameState.timerInterval = setInterval(() => {
-        if (gameState.gameTimer > 0) gameState.gameTimer--;
-        else gameState.bossActive = true;
+        if (gameState.gameTimer > 0) {
+            gameState.gameTimer--;
+        } else {
+            gameState.bossActive = true;
+            // Se vuoi fermare il timer quando arriva il boss
+            clearInterval(gameState.timerInterval);
+        }
     }, 1000);
+
+    // Reset stati di gioco necessari per un nuovo inizio
+    gameState.bossActive = false;
+    gameState.enemies = [];
 
     gameLoop();
 }
