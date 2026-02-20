@@ -89,7 +89,7 @@ export const CONFIG = {
  * GLOBAL GAME STATE
  */
 export let gameState = {
-    
+padOpacity : 0, // Per l'effetto fade-in/out
 cameraY : 0, // La posizione della nostra visuale
 worldY : 0,  // La posizione assoluta del giocatore nel mondo
     
