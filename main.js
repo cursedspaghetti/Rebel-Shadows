@@ -258,20 +258,42 @@ function gameLoop() {
     if (gameState.currentScreen !== 'playing') return;
     const now = Date.now();
     
+    // --- Logica Invulnerabilità e Screen Shake ---
     if (gameState.isInvulnerable && (now - gameState.lastDamageTime > CONFIG.INVULNERABILITY_TIME)) {
         gameState.isInvulnerable = false;
     }
-    
     gameState.screenShake = gameState.screenShake > 0.1 ? gameState.screenShake * CONFIG.SHAKE_DECAY : 0;
 
+    // --- Preparazione Canvas ---
     ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     ctx.save(); 
     if (gameState.screenShake > 0) {
         ctx.translate((Math.random() - 0.5) * gameState.screenShake, (Math.random() - 0.5) * gameState.screenShake);
     }
 
+    // --- 1. Aggiornamento Movimento e Sfondo ---
+    // Essenziale chiamarlo prima per aggiornare cameraY
+    Renderer.updatePlayerMovement(bgParallax);
     updateAndDrawBackgrounds();
 
+    // --- 2. Logica spawn Nemici / Boss ---
+    if (!gameState.bossActive) {
+        // UNICA CONDIZIONE DI ATTIVAZIONE: Arrivo in cima alla mappa
+        if (gameState.cameraY >= 0) {
+            gameState.bossActive = true;
+            gameState.enemies = []; // Rimuove i nemici piccoli
+            // Opzionale: fermiamo il timer se vuoi che il tempo si congeli durante il boss
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+        } else {
+            // Spawn nemici normale finché non si arriva in cima
+            if (now - (gameState.lastEnemySpawn || 0) > 2000) {
+                Enemies.spawnEnemies(3);
+                gameState.lastEnemySpawn = now;
+            }
+        }
+    }
+
+    // --- 3. Update Entità ---
     Renderer.autoFire();
     Renderer.updateBullets();
     Enemies.updateEnemies();
@@ -280,56 +302,56 @@ function gameLoop() {
     SpecialAttacks.updateSpecialRay();
     SpecialAttacks.updateSpecialRay2();
 
-    if (!gameState.bossActive) {
-        if (gameState.gameTimer > 5) {
-            if (now - (gameState.lastEnemySpawn || 0) > 2000) {
-                Enemies.spawnEnemies(3);
-                gameState.lastEnemySpawn = now;
-            }
+    // --- 4. Logica Boss ---
+    if (gameState.bossActive) {
+        if (!gameState.boss) {
+            // Se il boss è attivo ma non ancora creato, lo spawnamo
+            gameState.boss = Boss1.spawnBoss((gameState.bossDefeatedCount || 0) + 1);
         } else {
-            gameState.bossActive = true;
-            gameState.enemies = [];
-            if (!gameState.boss) gameState.boss = Boss1.spawnBoss((gameState.bossDefeatedCount || 0) + 1);
+            Boss1.updateBoss(gameState.boss);
+            Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
+            
+            if (gameState.boss.hp <= 0) {
+                gameState.bossActive = false;
+                gameState.boss = null;
+                ctx.restore(); 
+                showPowerUpScreen();
+                return; 
+            }
         }
     }
 
-    if (gameState.bossActive && gameState.boss) {
-        Boss1.updateBoss(gameState.boss);
-        Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
-        if (gameState.boss.hp <= 0) {
-            gameState.bossActive = false;
-            gameState.boss = null;
-            ctx.restore(); 
-            showPowerUpScreen();
-            return; 
-        }
-    }
-
+    // --- 5. Collisioni ---
     collision.handleAllCollisions();
 
-    // Draw Player logic
+    // --- 6. Rendering Giocatore e Feedback ---
     if (!(gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0)) {
-         if (!gameState.isCharging && !gameState.isCharging2) {
-             Renderer.drawPlayer(ctx, playerSprite);
-            }
-        Renderer.drawPlayerWiz(ctx)
-       
+        if (!gameState.isCharging && !gameState.isCharging2) {
+            Renderer.drawPlayer(ctx, playerSprite);
+        }
+        Renderer.drawPlayerWiz(ctx);
     }
-    // Disegna il Pad se siamo su mobile/touch attivo
-    Renderer.drawTouchPad(ctx);
-    Renderer.updatePlayerMovement(bgParallax);
     
+    Renderer.drawTouchPad(ctx); // Disegna il pad virtuale
+    
+    // --- 7. Rendering Elementi di Gioco ---
     Enemies.drawEnemies(ctx);
     Enemies.drawEnemyBullets(ctx);
     SpecialAttacks.drawSpecialRay(ctx);
     SpecialAttacks.drawSpecialRay2(ctx);
-    if (gameState.isCharging || gameState.isCharging2) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
+    
+    if (gameState.isCharging || gameState.isCharging2) {
+        SpecialAttacks.drawChargeEffect(ctx, chargeImg);
+    }
+    
     Renderer.drawBullets(ctx);
     collision.drawExplosions(ctx);
     SpecialAttacks.updateShield();
     if (gameState.shieldActive) SpecialAttacks.drawShield(ctx);
 
     ctx.restore(); 
+
+    // --- 8. UI ---
     Renderer.drawUI(ctx);
     Renderer.drawHealthBar(ctx, gameState.hp, 100 + (gameState.addedStats["HP"] * 10), CONFIG.CANVAS_WIDTH);
 
