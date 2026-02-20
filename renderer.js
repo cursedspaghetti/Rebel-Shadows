@@ -315,21 +315,19 @@ export function updatePlayerMovement(bgImage) {
     // --- 4. APPLICAZIONE CAMERA (CON CAP E LIMITI MAPPA) ---
     const moving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
     gameState.isMoving = moving;
-
-    if (moving) {
-        // Aggiorniamo la camera
+if (moving) {
         gameState.cameraY = (gameState.cameraY || 0) + dy;
 
-        // Limiti basati sull'immagine reale
         if (bgImage && bgImage.naturalHeight > 0) {
-            const maxScroll = Math.max(0, bgImage.naturalHeight - CONFIG.CANVAS_HEIGHT);
+            // MOLTIPLICATORE: 15 volte l'altezza dell'immagine
+            const totalWorldHeight = bgImage.naturalHeight * 15;
+            const maxScroll = Math.max(0, totalWorldHeight - CONFIG.CANVAS_HEIGHT);
             
+            // Limiti: non oltre l'inizio e non oltre la fine della 15esima ripetizione
             if (gameState.cameraY > 0) gameState.cameraY = 0;
             if (gameState.cameraY < -maxScroll) gameState.cameraY = -maxScroll;
         }
 
-        // Animazione direzione
-        // Se dy > 0 (avanzo), frame 3 (su). Se dy < 0 (retro), frame 0 (giù)
         if (Math.abs(dy) > 0.1) {
             gameState.playerDirection = dy > 0 ? 3 : 0;
         }
