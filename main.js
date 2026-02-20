@@ -223,7 +223,7 @@ function startGame() {
     // --- 2. POSIZIONAMENTO INIZIALE (CAMERA E PLAYER) ---
     // Posizioniamo il mago in basso sul canvas (es. all'80% dell'altezza)
     gameState.playerX = CONFIG.CANVAS_WIDTH / 2;
-    gameState.playerY = CONFIG.CANVAS_HEIGHT * 0.8;
+    gameState.playerY = CONFIG.CANVAS_HEIGHT * 0.65;
 
     // Calcoliamo l'altezza totale del mondo (15 volte lo sfondo)
     // Usiamo bgParallax che è l'immagine caricata in main.js
