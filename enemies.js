@@ -130,14 +130,13 @@ function getPixelEnemyBullet(color, size) {
  */
  export function spawnEnemySpread(enemy) {
     if (!gameState.enemyBullets) gameState.enemyBullets = [];
-
     const speed = 5; 
     const angles = [-0.4, 0, 0.4]; 
 
     angles.forEach(angle => {
         gameState.enemyBullets.push({
             x: enemy.x,
-            y: enemy.y + (enemy.size / 4), // Coordinata MONDO
+            y: enemy.y, // Questa deve essere la Y del mondo del nemico
             size: 14,
             color: '#ff00ff',
             vx: Math.sin(angle) * speed,
@@ -153,14 +152,19 @@ export function updateEnemyBullets() {
     if (!gameState.enemyBullets) return;
 
     gameState.enemyBullets = gameState.enemyBullets.filter(eb => {
-        // Applica movimento vettoriale
+        // 1. Applica movimento
         eb.x += eb.vx;
         eb.y += eb.vy;
 
-        // Rimuove se esce dai bordi (con margine di 50px)
-        const isOut = eb.y > CONFIG.CANVAS_HEIGHT + 50 || 
-                      eb.x < -50 || 
-                      eb.x > CONFIG.CANVAS_WIDTH + 50;
+        // 2. Calcola la posizione relativa allo schermo per decidere se eliminarlo
+        const screenY = eb.y + (gameState.cameraY || 0);
+        
+        // Rimuovi se il proiettile è troppo lontano dallo schermo (sopra o sotto)
+        // Usiamo un margine di 200px per sicurezza
+        const isOut = screenY > CONFIG.CANVAS_HEIGHT + 200 || 
+                      screenY < -200 || 
+                      eb.x < -100 || 
+                      eb.x > CONFIG.CANVAS_WIDTH + 100;
         
         return !isOut;
     });
@@ -173,14 +177,16 @@ export function drawEnemyBullets(ctx) {
     if (!gameState.enemyBullets) return;
 
     gameState.enemyBullets.forEach(eb => {
-        // ANCHE I PROIETTILI devono scorrere con la camera!
+        // TRASFORMAZIONE: Da coordinata mondo a coordinata schermo
         const screenY = eb.y + (gameState.cameraY || 0);
-        
+        const screenX = eb.x;
+
+        // Disegna solo se è nel rettangolo visibile
         if (screenY > -50 && screenY < CONFIG.CANVAS_HEIGHT + 50) {
             const sprite = getPixelEnemyBullet(eb.color, eb.size);
             ctx.drawImage(
                 sprite, 
-                Math.floor(eb.x - eb.size / 2), 
+                Math.floor(screenX - eb.size / 2), 
                 Math.floor(screenY - eb.size / 2)
             );
         }
