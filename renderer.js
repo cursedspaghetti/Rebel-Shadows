@@ -436,107 +436,90 @@ export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
     ctx.fillText("HP", x + (barWidth / 2), y + barHeight + 38);
 }
 
-// --- PROIETTILI PLAYER ---
-// --- PROIETTILI PLAYER (STILE SUPER MACHINE GUN - GRIGIO SPETTRALE) ---
+// --- PROIETTILI PLAYER (HEAVY MACHINE GUN MODE - GRIGIO SPETTRALE) ---
 
-/**
- * Disegna i proiettili con estetica Pixel Art Metal Slug
- * Palette: Grigio Spettrale / Cold Metal
- */
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
 
-        // Palette Cromatica Spettrale
-        const coreColor = '#FFFFFF';    // Bianco puro (nucleo energetico)
-        const innerColor = '#BDC3C7';   // Grigio argento (corpo proiettile)
-        const edgeColor = '#2C3E50';    // Blu-Grigio scurissimo (contorno pixel)
-        const glowColor = 'rgba(189, 195, 199, 0.4)'; // Alone spettrale
+        // Palette Grigio Spettrale Potenziata
+        const coreColor = '#FFFFFF';    
+        const innerColor = '#95A5A6';   
+        const edgeColor = '#1A252F';    
+        const glowColor = 'rgba(200, 214, 229, 0.4)';
 
-        // Dimensioni tipiche "Slug" (allungate e massicce)
-        const bulletWidth = 6;
-        const bulletHeight = 18;
+        // Dimensioni "Heavy": più grossi e cattivi
+        const bulletWidth = 10;  // Aumentato da 6
+        const bulletHeight = 22; // Aumentato da 18
 
-        const posX = bullet.x - (bulletWidth / 2);
-        const posY = bullet.y - (bulletHeight / 2);
-
-        // 1. Effetto Glow Spettrale (Leggero alone esterno)
+        // Trasliamo e ruotiamo il contesto per seguire la traiettoria del proiettile
+        // (Necessario se aggiungiamo inclinazione laterale)
+        ctx.translate(bullet.x, bullet.y);
+        
+        // 1. Bagliore
         ctx.shadowColor = glowColor;
-        ctx.shadowBlur = 6;
+        ctx.shadowBlur = 10;
 
-        // 2. Disegno Contorno (Bordo Pixel)
+        // 2. Contorno (Stroke alternativo al fill per precisione pixel)
         ctx.fillStyle = edgeColor;
-        ctx.fillRect(posX, posY, bulletWidth, bulletHeight);
+        ctx.fillRect(-bulletWidth / 2, -bulletHeight / 2, bulletWidth, bulletHeight);
 
-        // 3. Disegno Corpo (Inner)
-        ctx.shadowBlur = 0; // Disattiva lo shadow per i dettagli interni nitidi
+        // 3. Corpo
+        ctx.shadowBlur = 0;
         ctx.fillStyle = innerColor;
-        ctx.fillRect(posX + 1, posY + 1, bulletWidth - 2, bulletHeight - 2);
+        ctx.fillRect(-bulletWidth / 2 + 2, -bulletHeight / 2 + 2, bulletWidth - 4, bulletHeight - 4);
 
-        // 4. Riflesso d'Anima (Core con sfarfallio casuale)
-        if (Math.random() > 0.2) {
+        // 4. Nucleo Bianco (Effetto Metal Slug High-Intensity)
+        if (Math.random() > 0.1) {
             ctx.fillStyle = coreColor;
-            // Il riflesso è una linea sottile che dà il senso di proiettile metallico
-            ctx.fillRect(posX + 2, posY + 2, bulletWidth - 4, bulletHeight - 8);
+            ctx.fillRect(-bulletWidth / 2 + 3, -bulletHeight / 2 + 4, bulletWidth - 6, bulletHeight - 10);
         }
-
-        // 5. Scia di particelle spettrali (Trail)
-        // Piccoli pixel che si staccano dal retro
-        ctx.fillStyle = 'rgba(149, 165, 166, 0.6)';
-        const time = Date.now() * 0.01;
-        const trailOffset = Math.sin(time) * 2;
-        ctx.fillRect(posX + 1 + trailOffset, posY + bulletHeight + 2, 2, 2);
-        ctx.fillRect(posX + 3 - trailOffset, posY + bulletHeight + 6, 2, 2);
 
         ctx.restore();
     });
 }
 
-/**
- * Gestisce il fuoco automatico e la disposizione dei proiettili (SMG Style)
- */
 export function autoFire() {
-    // Esci se non siamo in gioco o se il player sta caricando un colpo speciale
     if (gameState.currentScreen !== 'playing' || gameState.isCharging || gameState.isCharging2) return;
 
     const now = Date.now();
-    const currentFireRate = CONFIG.FIRE_RATE_LEVELS[gameState.fireRateLevel] || 180;
+    // Fire rate più frenetico per l'effetto mitragliatrice
+    const currentFireRate = 120; 
 
     if (now - gameState.lastShotTime >= currentFireRate) {
-        // Logica numero proiettili per livello
-        const missileCount = gameState.bulletLevel === 1 ? 1 : (gameState.bulletLevel === 2 ? 3 : 5);
-        const spacing = 10;
-        const totalWidth = (missileCount - 1) * spacing;
-        let startX = gameState.playerX - (totalWidth / 2);
+        // Numero di proiettili per raffica basato sul livello
+        const burstCount = gameState.bulletLevel === 1 ? 1 : (gameState.bulletLevel === 2 ? 2 : 3);
 
-        for (let i = 0; i < missileCount; i++) {
-            // Jitter: piccola variazione casuale sulla X per l'effetto "raffica" arcade
-            const jitterX = (Math.random() - 0.5) * 3;
-            
+        for (let i = 0; i < burstCount; i++) {
+            // VARIANZA ESTREMA:
+            // 1. Jitter sulla X (partenza non perfettamente centrale)
+            const muzzleJitterX = (Math.random() - 0.5) * 12; 
+            // 2. Drift Orizzontale (il proiettile si sposta lateralmente mentre sale)
+            const horizontalDrift = (Math.random() - 0.5) * 4; 
+            // 3. Varianza sulla velocità (alcuni proiettili sono più veloci di altri)
+            const speedVar = 14 + (Math.random() * 4);
+
             gameState.bullets.push({
-                x: startX + i * spacing + jitterX,
-                y: gameState.playerY - 25,
-                speed: 14, // Velocità SMG: molto rapida
-                size: 10
+                x: gameState.playerX + muzzleJitterX,
+                y: gameState.playerY - 30,
+                vx: horizontalDrift, // Nuova proprietà per il movimento laterale
+                speed: speedVar,
+                size: 12
             });
         }
         gameState.lastShotTime = now;
     }
 }
 
-/**
- * Aggiorna la posizione dei proiettili e rimuove quelli fuori schermo
- */
 export function updateBullets() {
-    // Filtra e aggiorna in un unico passaggio per performance
     gameState.bullets = gameState.bullets.filter(bullet => {
+        // Il proiettile ora usa anche la sua velocità orizzontale (vx)
         bullet.y -= bullet.speed;
-        // Rimuovi se esce dalla parte superiore (con un piccolo margine per la scia)
-        return bullet.y > -40;
+        bullet.x += bullet.vx || 0; 
+        
+        return bullet.y > -50 && bullet.x > -50 && bullet.x < 1000; // Sicurezza bordi
     });
 }
-
-
     
 //UI
 
