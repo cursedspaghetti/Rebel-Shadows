@@ -437,63 +437,102 @@ export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
 }
 
 // --- PROIETTILI PLAYER ---
+// --- PROIETTILI PLAYER (STILE SUPER MACHINE GUN - GRIGIO SPETTRALE) ---
+
+/**
+ * Disegna i proiettili con estetica Pixel Art Metal Slug
+ * Palette: Grigio Spettrale / Cold Metal
+ */
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
-        const coreColor = '#ffffff';
-        const edgeColor = '#e0e0e0';
-        const horizontalGap = 2; 
-        const bulletWidth = 4;
-        const bulletHeight = 12;
 
-        const drawPixelBullet = (offsetX) => {
-            const posX = bullet.x + offsetX - (bulletWidth / 2);
-            const posY = bullet.y - (bulletHeight / 2);
-            ctx.fillStyle = edgeColor;
-            ctx.fillRect(posX, posY, bulletWidth, bulletHeight);
+        // Palette Cromatica Spettrale
+        const coreColor = '#FFFFFF';    // Bianco puro (nucleo energetico)
+        const innerColor = '#BDC3C7';   // Grigio argento (corpo proiettile)
+        const edgeColor = '#2C3E50';    // Blu-Grigio scurissimo (contorno pixel)
+        const glowColor = 'rgba(189, 195, 199, 0.4)'; // Alone spettrale
+
+        // Dimensioni tipiche "Slug" (allungate e massicce)
+        const bulletWidth = 6;
+        const bulletHeight = 18;
+
+        const posX = bullet.x - (bulletWidth / 2);
+        const posY = bullet.y - (bulletHeight / 2);
+
+        // 1. Effetto Glow Spettrale (Leggero alone esterno)
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = 6;
+
+        // 2. Disegno Contorno (Bordo Pixel)
+        ctx.fillStyle = edgeColor;
+        ctx.fillRect(posX, posY, bulletWidth, bulletHeight);
+
+        // 3. Disegno Corpo (Inner)
+        ctx.shadowBlur = 0; // Disattiva lo shadow per i dettagli interni nitidi
+        ctx.fillStyle = innerColor;
+        ctx.fillRect(posX + 1, posY + 1, bulletWidth - 2, bulletHeight - 2);
+
+        // 4. Riflesso d'Anima (Core con sfarfallio casuale)
+        if (Math.random() > 0.2) {
             ctx.fillStyle = coreColor;
-            ctx.fillRect(posX + 1, posY + 1, bulletWidth - 2, bulletHeight - 4);
-        };
+            // Il riflesso è una linea sottile che dà il senso di proiettile metallico
+            ctx.fillRect(posX + 2, posY + 2, bulletWidth - 4, bulletHeight - 8);
+        }
 
-        ctx.shadowBlur = 0; 
-        drawPixelBullet(-horizontalGap / 2);
-        drawPixelBullet(horizontalGap / 2);
+        // 5. Scia di particelle spettrali (Trail)
+        // Piccoli pixel che si staccano dal retro
+        ctx.fillStyle = 'rgba(149, 165, 166, 0.6)';
+        const time = Date.now() * 0.01;
+        const trailOffset = Math.sin(time) * 2;
+        ctx.fillRect(posX + 1 + trailOffset, posY + bulletHeight + 2, 2, 2);
+        ctx.fillRect(posX + 3 - trailOffset, posY + bulletHeight + 6, 2, 2);
+
         ctx.restore();
     });
 }
 
+/**
+ * Gestisce il fuoco automatico e la disposizione dei proiettili (SMG Style)
+ */
 export function autoFire() {
+    // Esci se non siamo in gioco o se il player sta caricando un colpo speciale
     if (gameState.currentScreen !== 'playing' || gameState.isCharging || gameState.isCharging2) return;
 
     const now = Date.now();
-    const currentFireRate = CONFIG.FIRE_RATE_LEVELS[gameState.fireRateLevel] || 200;
+    const currentFireRate = CONFIG.FIRE_RATE_LEVELS[gameState.fireRateLevel] || 180;
 
     if (now - gameState.lastShotTime >= currentFireRate) {
+        // Logica numero proiettili per livello
         const missileCount = gameState.bulletLevel === 1 ? 1 : (gameState.bulletLevel === 2 ? 3 : 5);
-        const spacing = 8;
-        const verticalStagger = 6;
+        const spacing = 10;
         const totalWidth = (missileCount - 1) * spacing;
         let startX = gameState.playerX - (totalWidth / 2);
-        const centerIndex = Math.floor(missileCount / 2);
 
         for (let i = 0; i < missileCount; i++) {
-            const distFromCenter = Math.abs(i - centerIndex);
+            // Jitter: piccola variazione casuale sulla X per l'effetto "raffica" arcade
+            const jitterX = (Math.random() - 0.5) * 3;
+            
             gameState.bullets.push({
-                x: startX + i * spacing,
-                y: (gameState.playerY - 20) + (distFromCenter * verticalStagger),
-                speed: 12,
-                size: 8
+                x: startX + i * spacing + jitterX,
+                y: gameState.playerY - 25,
+                speed: 14, // Velocità SMG: molto rapida
+                size: 10
             });
         }
         gameState.lastShotTime = now;
     }
 }
 
+/**
+ * Aggiorna la posizione dei proiettili e rimuove quelli fuori schermo
+ */
 export function updateBullets() {
-    // Rimuove proiettili che escono sopra lo schermo
+    // Filtra e aggiorna in un unico passaggio per performance
     gameState.bullets = gameState.bullets.filter(bullet => {
         bullet.y -= bullet.speed;
-        return bullet.y > -20;
+        // Rimuovi se esce dalla parte superiore (con un piccolo margine per la scia)
+        return bullet.y > -40;
     });
 }
 
