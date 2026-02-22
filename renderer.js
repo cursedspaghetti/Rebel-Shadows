@@ -271,81 +271,69 @@ export function updatePlayerMovement(bgImage) {
     let dx = 0;
     let dy = 0; 
     const speed = gameState.playerSpeed || 4; 
-    
-    // CAP della velocità verticale (0.4x come richiesto)
     const MAX_DY = speed * 0.4; 
 
-    // --- 1. GESTIONE OPACITÀ PAD ---
+    // --- GESTIONE OPACITÀ PAD ---
     if (gameState.isTouchActive) {
         gameState.padOpacity = Math.min(1, (gameState.padOpacity || 0) + 0.1);
     } else {
         gameState.padOpacity = Math.max(0, (gameState.padOpacity || 0) - 0.1);
     }
 
-    // --- 2. INPUT TASTIERA ---
-    // Ricorda: dy > 0 fa scorrere la mappa verso il basso (il giocatore sale)
+    // --- INPUT (Tastiera e Touch) ---
+    // Usiamo una logica unificata per dx e dy
     if (gameState.keys['ArrowUp'] || gameState.keys['w'] || gameState.keys['W']) dy = speed;
     if (gameState.keys['ArrowDown'] || gameState.keys['s'] || gameState.keys['S']) dy = -speed;
     if (gameState.keys['ArrowLeft'] || gameState.keys['a'] || gameState.keys['A']) dx -= speed;
     if (gameState.keys['ArrowRight'] || gameState.keys['d'] || gameState.keys['D']) dx += speed;
 
-    // --- 3. INPUT TOUCH (Virtual Pad) ---
     if (gameState.isTouchActive) {
-        // Movimento Orizzontale
         const targetDx = gameState.touchX - gameState.playerX;
-        if (Math.abs(targetDx) > 5) {
-            dx = targetDx * (CONFIG.TOUCH.LERP || 0.1);
-        }
-
-        // Movimento Verticale (Relativo al Pad situato 120px sotto il player)
         const thresholdY = gameState.playerY + 120; 
         const distY = gameState.touchY - thresholdY;
 
-        // Se tocco SOTTO il centro del pad (distY > 0), dy diventa positivo (vado avanti)
+        dx = Math.abs(targetDx) > 5 ? targetDx * (CONFIG.TOUCH.LERP || 0.1) : 0;
         let targetDy = -distY * (CONFIG.TOUCH.LERP || 0.1);
-
-        // Applichiamo il CAP alla velocità di scorrimento
         dy = Math.max(-MAX_DY, Math.min(MAX_DY, targetDy));
-        
-        // Deadzone per evitare micro-movimenti al centro del pad
         if (Math.abs(distY) < 15) dy = 0;
     }
 
-    // --- 4. APPLICAZIONE MOVIMENTO ORIZZONTALE ---
+    // --- APPLICAZIONE MOVIMENTO ---
+    
+    // Asse X: Sempre libero per il giocatore
     gameState.playerX += dx;
-    // Limiti canvas (il giocatore non esce dai lati)
     gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
 
-    // --- 5. APPLICAZIONE SCORRIMENTO MAPPA (CAMERA) ---
-    const moving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
-    gameState.isMoving = moving;
-
-    if (moving) {
+    // Asse Y: Logica condizionale
+    if (gameState.bossActive) {
+        // 1. FASE BOSS: Il giocatore si muove verticalmente sul canvas
+        // Invertiamo dy perché nel gioco dy > 0 significava "avanti" (mappa giù)
+        // Quindi se dy è positivo (voglio andare su), dobbiamo sottrarre da playerY
+        gameState.playerY -= dy; 
+        
+        // Limiti verticali per non uscire dallo schermo durante il boss
+        gameState.playerY = Math.max(50, Math.min(CONFIG.CANVAS_HEIGHT - 50, gameState.playerY));
+        
+        // La camera rimane bloccata a 0 (cima)
+        gameState.cameraY = 0;
+    } else {
+        // 2. FASE VIAGGIO: Il giocatore è fermo su Y, la camera scorre
         let nextCameraY = (gameState.cameraY || 0) + dy;
 
         if (bgImage && bgImage.naturalHeight > 0) {
-            const totalWorldHeight = bgImage.naturalHeight * 15;
-            const maxScroll = Math.max(0, totalWorldHeight - CONFIG.CANVAS_HEIGHT);
+            const totalHeight = bgImage.naturalHeight * 15;
+            const maxScroll = totalHeight - CONFIG.CANVAS_HEIGHT;
             
-            // LOGICA ARRIVO IN CIMA (BOSS)
-            // Se la camera raggiunge o supera lo 0, blocchiamo e il gameLoop attiverà il boss
-            if (nextCameraY >= 0) {
-                nextCameraY = 0;
-            }
-
-            // Limite fondo mappa (inizio del gioco)
-            if (nextCameraY < -maxScroll) {
-                nextCameraY = -maxScroll;
-            }
+            if (nextCameraY >= 0) nextCameraY = 0;
+            if (nextCameraY < -maxScroll) nextCameraY = -maxScroll;
         }
-
         gameState.cameraY = nextCameraY;
+    }
 
-        // Gestione direzione animazione sprite
-        if (Math.abs(dy) > 0.1) {
-            // Se dy > 0 la mappa scende, quindi il mago guarda "Su" (frame 3)
-            gameState.playerDirection = dy > 0 ? 3 : 0;
-        }
+    // --- DIREZIONE SPRITE ---
+    gameState.isMoving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
+    if (Math.abs(dy) > 0.1) {
+        gameState.playerDirection = dy > 0 ? 3 : 0;
     }
 }
 
