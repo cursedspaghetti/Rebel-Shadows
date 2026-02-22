@@ -13,72 +13,68 @@ const FRAME_COUNT = 4;
 export function spawnEnemies(count) {
     for (let i = 0; i < count; i++) {
         const size = 60 + Math.random() * 20; 
+        
+        // Calcoliamo la Y del "mondo": 
+        // Deve essere sopra il bordo superiore visualizzato (che è -cameraY)
+        const spawnYWorld = (-gameState.cameraY) - 100 - (Math.random() * 300);
+
         gameState.enemies.push({
             x: Math.random() * (CONFIG.CANVAS_WIDTH - 60) + 30, 
-            y: -100 - (Math.random() * 300), 
+            y: spawnYWorld, // Posizione assoluta nel mondo
             size: size,
             speed: 2 + Math.random() * 2,
             hp: 100,
             lastShot: Date.now(),
             shootDelay: 1500 + Math.random() * 2000,
-            // Proprietà per l'animazione
             frame: 0,
-            frameTimer: 0,
-            frameSpeed: 0.15 // Velocità del battito d'ali
+            frameSpeed: 0.15 
         });
     }
 }
 
 export function updateEnemies() {
     gameState.enemies = gameState.enemies.filter(enemy => {
-        enemy.y += enemy.speed;
-        
-        // Aggiorna l'animazione
+        enemy.y += enemy.speed; // Il nemico scende nel mondo
         enemy.frame += enemy.frameSpeed;
 
         const now = Date.now();
         if (now - enemy.lastShot > enemy.shootDelay) {
-            // --- MODIFICA QUI: Chiamiamo la funzione a raggera ---
             spawnEnemySpread(enemy); 
-            // ----------------------------------------------------
             enemy.lastShot = now;
         }
         
-        // Mantieni il nemico se è entro i limiti del canvas
-        return enemy.y < CONFIG.CANVAS_HEIGHT + 150;
+        // Rimuovi se il nemico è "scivolato" troppo sotto il bordo inferiore visualizzato
+        // Il bordo inferiore è (-gameState.cameraY + CANVAS_HEIGHT)
+        const bottomEdge = (-gameState.cameraY) + CONFIG.CANVAS_HEIGHT + 200;
+        return enemy.y < bottomEdge;
     });
 }
 
 export function drawEnemies(ctx) {
     gameState.enemies.forEach(enemy => {
-        ctx.save();
-        
-        // Calcolo del frame
-        const currentFrame = Math.floor(enemy.frame) % FRAME_COUNT;
-        const sourceX = currentFrame * 160; 
+        // Calcoliamo la posizione a schermo
+        const screenY = enemy.y + (gameState.cameraY || 0);
+        const screenX = enemy.x;
 
-        // Opzionale: Bagliore viola
-        ctx.shadowBlur = 10;
-        ctx.shadowColor = 'rgba(138, 43, 226, 0.5)';
+        // Disegna solo se visibile
+        if (screenY + enemy.size > 0 && screenY < CONFIG.CANVAS_HEIGHT + 100) {
+            ctx.save();
+            const currentFrame = Math.floor(enemy.frame) % FRAME_COUNT;
+            const sourceX = currentFrame * 160; 
 
-        // AGGIORNAMENTO: Calcoliamo la Y a schermo sommando la posizione del nemico 
-        // alla posizione attuale della camera.
-        const screenY = (enemy.y + (gameState.cameraY || 0)) - enemy.size / 2;
-        const screenX = enemy.x - enemy.size / 2;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgba(138, 43, 226, 0.5)';
 
-        // Ottimizzazione: Disegna il nemico solo se è visibile nel canvas
-        if (screenY + enemy.size > 0 && screenY < CONFIG.CANVAS_HEIGHT) {
             ctx.drawImage(
                 batSprite, 
-                sourceX, 0, 160, 160,          // Taglio sorgente
-                screenX,                       // Posizione X a schermo
-                screenY,                       // Posizione Y a schermo (relativa alla camera)
-                enemy.size,                    // Larghezza
-                enemy.size                     // Altezza
+                sourceX, 0, 160, 160,
+                Math.floor(screenX - enemy.size / 2), 
+                Math.floor(screenY - enemy.size / 2), 
+                enemy.size, 
+                enemy.size
             );
+            ctx.restore();
         }
-
-        ctx.restore();
     });
 }
 
@@ -135,15 +131,14 @@ function getPixelEnemyBullet(color, size) {
  export function spawnEnemySpread(enemy) {
     if (!gameState.enemyBullets) gameState.enemyBullets = [];
 
-    const bulletCount = 3;
-    const speed = 5; // Un po' più veloce per i nemici
+    const speed = 5; 
     const angles = [-0.4, 0, 0.4]; 
 
     angles.forEach(angle => {
         gameState.enemyBullets.push({
-            x: enemy.x, // Già centrato
-            y: enemy.y + (enemy.size / 4), // Parte leggermente sotto il centro del corpo
-            size: 14, // Dimensione pixel art
+            x: enemy.x,
+            y: enemy.y + (enemy.size / 4), // Coordinata MONDO
+            size: 14,
             color: '#ff00ff',
             vx: Math.sin(angle) * speed,
             vy: Math.cos(angle) * speed
@@ -178,12 +173,16 @@ export function drawEnemyBullets(ctx) {
     if (!gameState.enemyBullets) return;
 
     gameState.enemyBullets.forEach(eb => {
-        const sprite = getPixelEnemyBullet(eb.color, eb.size);
-        // Disegno centrato sulla coordinata x, y
-        ctx.drawImage(
-            sprite, 
-            Math.floor(eb.x - eb.size / 2), 
-            Math.floor(eb.y - eb.size / 2)
-        );
+        // ANCHE I PROIETTILI devono scorrere con la camera!
+        const screenY = eb.y + (gameState.cameraY || 0);
+        
+        if (screenY > -50 && screenY < CONFIG.CANVAS_HEIGHT + 50) {
+            const sprite = getPixelEnemyBullet(eb.color, eb.size);
+            ctx.drawImage(
+                sprite, 
+                Math.floor(eb.x - eb.size / 2), 
+                Math.floor(screenY - eb.size / 2)
+            );
+        }
     });
 }
