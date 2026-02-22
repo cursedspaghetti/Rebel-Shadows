@@ -270,12 +270,7 @@ function gameLoop() {
     if (gameState.screenShake > 0) {
         ctx.translate((Math.random() - 0.5) * gameState.screenShake, (Math.random() - 0.5) * gameState.screenShake);
     }
-
-    // --- 1. Aggiornamento Movimento e Sfondo ---
-    // Essenziale chiamarlo prima per aggiornare cameraY
-    Renderer.updatePlayerMovement(bgParallax);
-    updateAndDrawBackgrounds();
-
+    
     // --- 2. Logica spawn Nemici / Boss ---
     if (!gameState.bossActive) {
         // UNICA CONDIZIONE DI ATTIVAZIONE: Arrivo in cima alla mappa
@@ -292,6 +287,9 @@ function gameLoop() {
             }
         }
     }
+    Renderer.updatePlayerMovement(bgParallax);
+    updateAndDrawBackgrounds();
+    
 
     // --- 3. Update Entità ---
     Renderer.autoFire();
