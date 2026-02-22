@@ -271,7 +271,7 @@ export function updatePlayerMovement(bgImage) {
     let dx = 0;
     let dy = 0; 
     const speed = gameState.playerSpeed || 4; 
-    const MAX_DY = speed * 0.4; 
+    const MAX_DY = speed * 0.5; 
 
     // --- GESTIONE OPACITÀ PAD ---
     if (gameState.isTouchActive) {
@@ -289,7 +289,7 @@ export function updatePlayerMovement(bgImage) {
 
     if (gameState.isTouchActive) {
         const targetDx = gameState.touchX - gameState.playerX;
-        const thresholdY = gameState.playerY + 120; 
+        const thresholdY = gameState.playerY + 140; 
         const distY = gameState.touchY - thresholdY;
 
         dx = Math.abs(targetDx) > 5 ? targetDx * (CONFIG.TOUCH.LERP || 0.1) : 0;
@@ -352,7 +352,7 @@ export function drawTouchPad(ctx) {
 
     // Centro del pad: deve corrispondere esattamente al thresholdY usato nel movimento
     const centerX = gameState.playerX;
-    const centerY = gameState.playerY + 120;
+    const centerY = gameState.playerY + 140;
     const outerRadius = 50; // Raggio del cerchio esterno
     const innerRadius = 15; // Raggio del pomello mobile
 
