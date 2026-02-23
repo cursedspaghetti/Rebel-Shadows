@@ -68,9 +68,7 @@ export const CONFIG = {
             SPEED_P2_MULT: 1.2
         }
     },
-    
-    PLAYER_MAX_HP: 100,  // HP - STAT
-    
+        
     COLLISION_DAMAGE: 20,    
     INVULNERABILITY_TIME: 1500, 
     
@@ -105,7 +103,6 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
     wizardSpritesheet: null, // Memorizza l'immagine trasparente dello sprite
     lastLoadedId: null,      // Evita caricamenti doppi
     
-     
     // --- Skill Tree e Progresso ---
     bossDefeatedCount: 0,
     playerSkills: {
@@ -126,7 +123,7 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
     screenShake: 0,            
     
     // --- Statistiche Effettive in Gioco ---
-    HP: CONFIG.HP,
+    HP: 100,
     Speed: 3, // Speed - STAT
     Defense: 5, // Defense - STAT 
     Elusion: 0.05, // STAT
@@ -171,8 +168,8 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
     specialRay: { 
         active: false,
         x: 0,
-        maxWidth: 250, //
-        Special_Width: 0, // Special_Width
+        Special_Width: 250, //
+        currentWidth: 0, // Special_Width
         Special_Duration: 0.8, // Special_Duration
         startTime: 0
     },
