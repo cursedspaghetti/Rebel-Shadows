@@ -55,12 +55,12 @@ export const CONFIG = {
             INTERVAL: 6000,
             COUNT_P1: 7,
             COUNT_P2: 14,
-            SPEED_P1: 10,
-            SPEED_P2: 13,
+            SPEED_P1: 7,
+            SPEED_P2: 9,
             DELAY_P1: 180,
             DELAY_P2: 100,
-            COLOR: '#00ffff',
-            SIZE: 16          
+            COLOR: '#ff00ff',
+            SIZE: 40          
         },
 
         DASH: {
