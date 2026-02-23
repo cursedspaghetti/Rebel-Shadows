@@ -148,22 +148,35 @@ function renderStatTable() {
     const tbody = document.getElementById('statsBody');
     if (!tbody) return;
 
-    // Poiché non si possono più aggiungere punti, forziamo le essenze a 0
-    // o mostriamo semplicemente il totale disponibile senza poterlo spendere.
-    document.getElementById('availableEssence').innerText = "Fixed"; 
+    // Reset delle statistiche aggiunte: dato che non ci sono più i tasti + e -, 
+    // dobbiamo assicurarci che partano da zero o dai valori base del wizard.
+    // Se hai definito gameState.addedStats nel config, azzeriamolo qui.
+    Object.keys(gameState.baseStats).forEach(stat => {
+        gameState.addedStats[stat] = 0;
+    });
+
+    // Aggiorna l'UI dei testi
+    const essenceDisplay = document.getElementById('availableEssence');
+    if (essenceDisplay) essenceDisplay.innerText = "0 (LOCKED)";
     
-    // Il pulsante START è ora sempre abilitato perché non c'è più nulla da configurare
-    confirmStatsBtn.disabled = false;
+    // Sblocca il pulsante di avvio avventura
+    if (confirmStatsBtn) confirmStatsBtn.disabled = false;
 
-    tbody.innerHTML = Object.keys(gameState.baseStats).map(stat => `
-        <tr style="border-bottom: 1px solid rgba(87, 49, 145, 0.3);">
-            <td style="padding: 8px 0; text-align: left;">${stat}</td>
-            <td style="padding: 8px 0; text-align: center; color: #a382ff;">${gameState.baseStats[stat]}</td>
-            <td style="padding: 8px 0; text-align: center; color: #ffd700;">+0</td>
-        </tr>
-    `).join('');
+    // Genera le righe della tabella (solo 3 colonne: Nome, Base, Affinità/Bonus)
+    tbody.innerHTML = Object.keys(gameState.baseStats).map(stat => {
+        // Calcoliamo un'affinità finta o basata sul wizard se vuoi, 
+        // per ora la lasciamo a 0 o "Standard"
+        let affinity = "Standard";
+        
+        return `
+            <tr style="border-bottom: 1px solid rgba(163, 130, 255, 0.2);">
+                <td style="padding: 10px 5px; text-align: left; font-weight: bold;">${stat.toUpperCase()}</td>
+                <td style="padding: 10px 5px; text-align: center; color: #a382ff;">${gameState.baseStats[stat]}</td>
+                <td style="padding: 10px 5px; text-align: center; color: #ffd700;">${affinity}</td>
+            </tr>
+        `;
+    }).join('');
 }
-
 
 // --- INITIALIZATION ---
 async function init() {
