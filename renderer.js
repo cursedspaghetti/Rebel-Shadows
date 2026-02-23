@@ -496,12 +496,11 @@ export function autoFire() {
 
     const now = Date.now();
     // Fire rate più frenetico per l'effetto mitragliatrice
-    const currentFireRate = 120; 
+    const currentFireRate = gameState.Attack_Rate; 
 
     if (now - gameState.lastShotTime >= currentFireRate) {
         // Numero di proiettili per raffica basato sul livello
-        const burstCount = gameState.bulletLevel === 1 ? 1 : (gameState.bulletLevel === 2 ? 2 : 3);
-
+    const burstCount = gameState.bulletLevel;
         for (let i = 0; i < burstCount; i++) {
             // VARIANZA ESTREMA:
             // 1. Jitter sulla X (partenza non perfettamente centrale)
