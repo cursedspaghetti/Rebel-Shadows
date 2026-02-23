@@ -155,7 +155,7 @@ function renderStatTable() {
     const tbody = document.getElementById('statsBody');
     if (!tbody) return;
 
-    // Lista esatta delle statistiche da pescare dal gameState
+    // Lista esatta delle proprietà da pescare direttamente da gameState
     const statsToRender = [
         'HP', 'Defense', 'Elusion', 'Speed', 
         'Attack_Power', 'Attack_Rate', 
@@ -163,35 +163,36 @@ function renderStatTable() {
         'Special_CD', 'Special_Duration', 'Special_Width'
     ];
 
-    // Sblocca il pulsante di avvio avventura (essendo ora una pura visualizzazione)
-    if (confirmStatsBtn) confirmStatsBtn.disabled = false;
-
     // Genera le righe della tabella
     tbody.innerHTML = statsToRender.map(stat => {
-        // Recupero il valore base dal gameState
-        const baseVal = gameState.baseStats[stat] !== undefined ? gameState.baseStats[stat] : 0;
+        // Pesca direttamente da gameState[stat]
+        // Se il valore è undefined o null, mette 0 come fallback
+        const val = (gameState[stat] !== undefined && gameState[stat] !== null) ? gameState[stat] : 0;
         
-        // Pulizia nome (es: Special_CD -> SPECIAL CD)
+        // Formatta il nome (es: Attack_Power -> ATTACK POWER)
         const displayName = stat.replace(/_/g, ' ').toUpperCase();
         
-        // Gestione Bonus: qui puoi inserire una logica se hai bonus attivi, 
-        // per ora lo impostiamo come valore neutro o "None"
+        // Valore bonus (placeholder per ora)
         let bonusVal = "---"; 
         
         return `
-            <tr style="border-bottom: 1px solid rgba(163, 130, 255, 0.15); transition: background 0.3s;">
+            <tr style="border-bottom: 1px solid rgba(163, 130, 255, 0.15);">
                 <td style="padding: 12px 8px; text-align: left; font-weight: 600; color: #d1d1d1; font-size: 0.85rem;">
                     ${displayName}
                 </td>
-                <td style="padding: 12px 8px; text-align: center; color: #a382ff; font-family: 'Courier New', Courier, monospace; font-size: 1rem; font-weight: bold;">
-                    ${baseVal}
+                <td style="padding: 12px 8px; text-align: center; color: #a382ff; font-family: monospace; font-size: 1rem; font-weight: bold;">
+                    ${val}
                 </td>
-                <td style="padding: 12px 8px; text-align: center; color: #00ffcc; font-size: 0.85rem; font-weight: 500;">
+                <td style="padding: 12px 8px; text-align: center; color: #00ffcc; font-size: 0.85rem;">
                     ${bonusVal}
                 </td>
             </tr>
         `;
     }).join('');
+
+    // Sblocca il pulsante di avvio
+    const confirmStatsBtn = document.getElementById('confirmStats');
+    if (confirmStatsBtn) confirmStatsBtn.disabled = false;
 }
 
 // --- INITIALIZATION ---
