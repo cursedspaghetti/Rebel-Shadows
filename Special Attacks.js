@@ -131,8 +131,8 @@ export function updateSpecialRay() {
     const now = Date.now() / 1000;
     const elapsed = now - ray.startTime;
 
-    if (elapsed < ray.duration) {
-        const lifeLeft = 1 - (elapsed / ray.duration);
+    if (elapsed < ray.Special_Duration) {
+        const lifeLeft = 1 - (elapsed / ray.Special_Duration);
         ray.currentWidth = ray.Special_Width * lifeLeft;
         ray.x = gameState.playerX; 
     } else {
