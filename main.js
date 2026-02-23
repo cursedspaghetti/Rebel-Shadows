@@ -377,7 +377,7 @@ function gameLoop() {
 
     // --- 8. UI ---
     Renderer.drawUI(ctx);
-    Renderer.drawHealthBar(ctx, gameState.hp, 100 + (gameState.addedStats["HP"] * 10), CONFIG.CANVAS_WIDTH);
+    Renderer.drawHealthBar(ctx, gameState.HP, 100 + (gameState.addedStats["HP"] * 10), CONFIG.CANVAS_WIDTH);
 
     requestAnimationFrame(gameLoop);
 }
