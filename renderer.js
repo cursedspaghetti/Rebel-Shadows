@@ -270,7 +270,7 @@ export function drawPlayerWiz(ctx) {
 export function updatePlayerMovement(bgImage) {
     let dx = 0;
     let dy = 0; 
-    const speed = gameState.playerSpeed || 4; 
+    const speed = gameState.Speed || 4; 
     const MAX_DY = speed * 0.75; 
 
     // --- GESTIONE OPACITÀ PAD ---
