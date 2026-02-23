@@ -10,7 +10,7 @@ export const CONFIG = {
 
    // --- CONFIGURAZIONE TOUCH ---
     TOUCH : {
-    LERP: 0.1,
+    LERP: 0.2,
     OFFSET_Y: 80,
     TAP_DELAY: 250
      },
@@ -59,7 +59,7 @@ export const CONFIG = {
             SPEED_P2: 9,
             DELAY_P1: 180,
             DELAY_P2: 100,
-            COLOR: '#ff00ff',
+            COLOR: '##8b008b',
             SIZE: 40          
         },
 
