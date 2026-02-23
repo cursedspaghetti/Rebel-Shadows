@@ -72,97 +72,6 @@ export function drawSpecialRay(ctx) {
     ctx.restore();
 }
 
-export function drawSpecialRay2(ctx) {
-    const ray = gameState.specialRay2;
-    if (!ray || !ray.active2) {
-        gameState.rayParticles2 = [];
-        return;
-    }
-
-    const rayHeight = gameState.playerY;
-    const bottomWidth = ray.currentWidth2; 
-    // Aumentato il moltiplicatore da 4 a 8 per un cono molto più ampio
-    const topWidth = ray.currentWidth2 * 8; 
-
-    // --- LOGICA PARTICELLE (Palette Viola/Nero) ---
-    if (ray.currentWidth2 > 10) { 
-        for (let i = 0; i < 3; i++) {
-            const progress = Math.random(); 
-            const currentWidthAtY = topWidth + (bottomWidth - topWidth) * progress;
-            
-            gameState.rayParticles2.push({
-                x2: ray.x2 + (Math.random() - 0.5) * currentWidthAtY,
-                y2: progress * rayHeight,
-                size2: Math.random() * 4 + 1,
-                speedX2: (Math.random() - 0.5) * 2,
-                speedY2: -Math.random() * 5 - 2,
-                life2: 1.0,
-                decay2: Math.random() * 0.05 + 0.02
-            });
-        }
-    }
-
-    // Disegno particelle con ombre nere come richiesto
-    ctx.save();
-    gameState.rayParticles2.forEach((p, index) => {
-        ctx.fillStyle = `rgba(138, 43, 226, ${p.life2})`;
-        ctx.shadowBlur = 5;
-        ctx.shadowColor = "black";
-        ctx.beginPath();
-        ctx.arc(p.x2, p.y2, p.size2, 0, Math.PI * 2);
-        ctx.fill();
-
-        p.x2 += p.speedX2; 
-        p.y2 += p.speedY2; 
-        p.life2 -= p.decay2;
-        if (p.life2 <= 0) gameState.rayParticles2.splice(index, 1);
-    });
-    ctx.restore();
-
-    // --- DISEGNO DEL RAGGIO A CONO (Palette Originale) ---
-    ctx.save();
-    
-    // Trapezio per il corpo del raggio
-    ctx.beginPath();
-    ctx.moveTo(ray.x2 - topWidth / 2, 0);               
-    ctx.lineTo(ray.x2 + topWidth / 2, 0);               
-    ctx.lineTo(ray.x2 + bottomWidth / 2, rayHeight);    
-    ctx.lineTo(ray.x2 - bottomWidth / 2, rayHeight);    
-    ctx.closePath();
-
-    // Gradiente con la palette del primo raggio (più scuro e profondo)
-    // Usiamo topWidth per assicurarci che il gradiente copra tutta l'apertura
-    let gradient = ctx.createLinearGradient(ray.x2 - topWidth/2, 0, ray.x2 + topWidth/2, 0);
-    gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    gradient.addColorStop(0.2, 'rgba(48, 0, 65, 0.8)');   // Deep Purple
-    gradient.addColorStop(0.5, 'rgba(10, 0, 20, 0.95)');  // Near Black
-    gradient.addColorStop(0.8, 'rgba(75, 0, 130, 0.8)');  // Indigo
-    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-
-    ctx.shadowBlur = 30;
-    ctx.shadowColor = "#4b0082";
-    ctx.fillStyle = gradient;
-    ctx.fill(); 
-
-    // Core instabile (più luminoso al centro)
-    const jitter = Math.random() * 4;
-    const coreTop = (topWidth * 0.15) + jitter;
-    const coreBottom = (bottomWidth * 0.15) + jitter;
-
-    ctx.beginPath();
-    ctx.moveTo(ray.x2 - coreTop / 2, 0);
-    ctx.lineTo(ray.x2 + coreTop / 2, 0);
-    ctx.lineTo(ray.x2 + coreBottom / 2, rayHeight);
-    ctx.lineTo(ray.x2 - coreBottom / 2, rayHeight);
-    ctx.closePath();
-
-    ctx.fillStyle = "#e0b0ff"; // Lavender core
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = "#ff00ff";
-    ctx.fill();
-    
-    ctx.restore();
-}
 
 export function drawChargeEffect(ctx, chargeImg) {
     if (chargeImg.complete && chargeImg.naturalWidth !== 0) {
@@ -224,28 +133,13 @@ export function updateSpecialRay() {
 
     if (elapsed < ray.duration) {
         const lifeLeft = 1 - (elapsed / ray.duration);
-        ray.currentWidth = ray.maxWidth * lifeLeft;
+        ray.currentWidth = ray.Special_Width * lifeLeft;
         ray.x = gameState.playerX; 
     } else {
         ray.active = false;
     }
 }
 
-export function updateSpecialRay2() {
-    if (!gameState.specialRay2.active2) return;
-
-    const ray = gameState.specialRay2;
-    const now = Date.now() / 1000;
-    const elapsed = now - ray.startTime2;
-
-    if (elapsed < ray.duration2) {
-        const lifeLeft = 1 - (elapsed / ray.duration2);
-        ray.currentWidth2 = ray.maxWidth2 * lifeLeft;
-        ray.x2 = gameState.playerX; 
-    } else {
-        ray.active2 = false;
-    }
-}
 
 // --- SPECIAL ATTACK SEQUENCES ---
 export function fireSpecialAttackSequence() {
@@ -257,22 +151,8 @@ export function fireSpecialAttackSequence() {
         gameState.specialRay.x = gameState.playerX;
         gameState.specialOnCooldown = true;
         gameState.specialLastUsed = Date.now() / 1000;
-        setTimeout(() => gameState.specialOnCooldown = false, gameState.specialCooldown * 1000);
-        setTimeout(() => gameState.isCharging = false, gameState.specialRay.duration * 1000);
-    }, 1000);
-}
-
-export function fireSpecialAttackSequence2() {
-    if (gameState.specialOnCooldown2 || gameState.isCharging2) return;
-    gameState.isCharging2 = true;
-    setTimeout(() => {
-        gameState.specialRay2.active2 = true;
-        gameState.specialRay2.startTime2 = Date.now() / 1000;
-        gameState.specialRay2.x2 = gameState.playerX;
-        gameState.specialOnCooldown2 = true;
-        gameState.specialLastUsed2 = Date.now() / 1000;
-        setTimeout(() => gameState.specialOnCooldown2 = false, gameState.specialCooldown2 * 1000);
-        setTimeout(() => gameState.isCharging2 = false, gameState.specialRay2.duration2 * 1000);
+        setTimeout(() => gameState.specialOnCooldown = false, gameState.Special_CD * 1000);
+        setTimeout(() => gameState.isCharging = false, gameState.specialRay.Special_Duration * 1000);
     }, 1000);
 }
 
@@ -291,7 +171,7 @@ export function updateShield() {
     if (!gameState.shieldActive) {
         // Gestione Cooldown
         const now = Date.now() / 1000;
-        if (gameState.shieldOnCooldown && now - gameState.shieldLastUsed > gameState.shieldCooldown) {
+        if (gameState.shieldOnCooldown && now - gameState.shieldLastUsed > gameState.Shield_CD) {
             gameState.shieldOnCooldown = false;
         }
         return;
@@ -300,7 +180,7 @@ export function updateShield() {
     const now = Date.now() / 1000;
     const elapsed = now - gameState.shieldStartTime;
 
-    if (elapsed >= gameState.shieldDuration) {
+    if (elapsed >= gameState.Shield_Duration) {
         gameState.shieldActive = false;
     }
 }
