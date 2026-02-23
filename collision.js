@@ -126,8 +126,14 @@ export function handleAllCollisions() {
                     }
                 }
             }
-            // (Logica Boss invariata poiché è già in coordinate schermo)
-        }
+       // Danno al Boss dal Laser (dentro activeRays.forEach)
+        if (gameState.bossActive && gameState.boss) {
+           if (Math.abs(gameState.boss.x - ray.x) < (ray.width / 2 + BOSS_HITBOX_RAD)) {
+            gameState.boss.hp -= 0.5; // Danno continuo del laser
+            if (Math.random() > 0.8) createExplosion(gameState.boss.x, gameState.boss.y, '#ffffff');
+            }
+        }        
+     }
     });
 
     // --- 5. PLAYER vs CORPO NEMICO ---
@@ -146,6 +152,20 @@ export function handleAllCollisions() {
             gameState.enemies.splice(e, 1);
         }
     }
+
+// --- 6. PLAYER vs CORPO BOSS ---
+if (gameState.bossActive && gameState.boss) {
+    const dist = Math.hypot(gameState.playerX - gameState.boss.x, gameState.playerY - gameState.boss.y);
+    
+    // Se il player tocca il boss
+    if (dist < BOSS_HITBOX_RAD + PLAYER_HITBOX_RAD) {
+        if (!gameState.isInvulnerable) {
+            // Danno maggiore perché è un boss!
+            applyDamage(20, 25); 
+            createExplosion(gameState.playerX, gameState.playerY, '#ff0000');
+        }
+    }
+ }
 }
 
 // ... restanti funzioni applyDamage, createExplosion, etc. rimangono uguali ...
