@@ -88,7 +88,7 @@ export const CONFIG = {
  */
 export let gameState = {
 
-playerSpeed: 3, // Speed - STAT
+Speed: 3, // Speed - STAT
     
 padOpacity : 0, // Per l'effetto fade-in/out
 cameraY : 0, // La posizione della nostra visuale
@@ -151,29 +151,28 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
 
     // --- Sistema di Fuoco ---
     fireRateLevel: 1,
-    bulletLevel: 3,
-    fireRate: 200, // Attack_Rate - STAT
+    Attack_Rate: 200, // Attack_Rate - STAT
     lastShotTime: 0,
     bullets: [], 
     enemyBullets: [], 
 
     // --- Abilità Speciali 1 ---
     shieldActive: false,
-    shieldDuration: 5, // Shield_Duration
+    Shield_Duration: 5, // Shield_Duration
     shieldStartTime: 0,
-    shieldCooldown: 15, //Shield_CD
+    Shield_CD: 15, //Shield_CD
     shieldLastUsed: 0,
     shieldOnCooldown: false,
     
-    specialCooldown: 10, // Special_CD
+    Special_CD: 10, // Special_CD
     specialLastUsed: 0,
     specialOnCooldown: false,
     specialRay: { 
         active: false,
         x: 0,
         maxWidth: 250, //
-        currentWidth: 0, // Special_Width
-        duration: 0.8, // Special_Duration
+        Special_Width: 0, // Special_Width
+        Special_Duration: 0.8, // Special_Duration
         startTime: 0
     },
     isCharging: false,
