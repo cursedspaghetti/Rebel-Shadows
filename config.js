@@ -227,6 +227,8 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
     lastEnemySpawn: 0,
     bossPhaseTransition : false, // Un flag che il main leggerà una sola volta
     flashActive: false,         // Per l'effetto lampo/schermo
+    flashStartTime: null,
+    flashDuration: null, // Il flickering dura 2 secondi
     
     backgroundPositionY: 0,
     parallaxPositionY: 0
