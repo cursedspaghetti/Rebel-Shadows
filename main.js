@@ -313,6 +313,9 @@ function gameLoop() {
             if (gameState.boss.hp <= 0) {
                 gameState.bossActive = false;
                 gameState.boss = null;
+                 flashActive: false,         // Per l'effetto lampo/schermo
+                 flashStartTime: null,
+                 flashDuration: null, // Il flickering dura 2 secondi
                 ctx.restore(); 
                 showPowerUpScreen();
                 return; 
@@ -389,9 +392,6 @@ function updateAndDrawBackgrounds() {
         } else {
             // FASE B: I fulmini sono finiti, resta solo il nero
             ctx.fillStyle = 'black';
-            
-            // Opzionale: se vuoi che il boss fight finisca e torni la luce, 
-            // qui potresti gestire la fine della condizione flashActive.
         }
 
         // Copriamo tutto
