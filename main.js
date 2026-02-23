@@ -294,7 +294,6 @@ function gameLoop() {
     Enemies.updateEnemyBullets();
     collision.updateExplosions(); 
     SpecialAttacks.updateSpecialRay();
-    SpecialAttacks.updateSpecialRay2();
     SpecialAttacks.updateShield();
     
     // --- 4. Logica Boss ---
