@@ -40,7 +40,7 @@ export const CONFIG = {
             INTERVAL: 4000,
             COOLDOWN_P2: 0.6,
             WAVES: 4,
-            BULLETS_PER_WAVE: 14,
+            BULLETS_PER_WAVE: 10,
             SPEED_P1: 5,
             SPEED_P2: 6,
             DELAY_BETWEEN_BULLETS: 30,
