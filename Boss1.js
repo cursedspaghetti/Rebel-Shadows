@@ -11,7 +11,7 @@ export function getPixelBullet(color, size) {
     if (bulletCache[key]) return bulletCache[key];
 
     const canvas = document.createElement('canvas');
-    const pixelSize = Math.max(1, size / 4); 
+    const pixelSize = Math.max(1, size / 2); 
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
@@ -139,7 +139,7 @@ export function updateBoss(boss) {
             boss.isAtCenter = false;
             const marginX = 80;
             const minY = 100;
-            const maxY = CONFIG.CANVAS_HEIGHT * 0.4;
+            const maxY = CONFIG.CANVAS_HEIGHT * 0.7;
 
             // Scelta nuovo target casuale se raggiunto il precedente
             if (!boss.targetX || Math.abs(boss.x - boss.targetX) < 10) {
