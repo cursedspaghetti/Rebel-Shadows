@@ -95,6 +95,8 @@ export function updateBoss(boss) {
         gameState.screenShake = 15;
         gameState.bossPhaseTransition = true; // Un flag che il main leggerà una sola volta
         gameState.flashActive = true;         // Per l'effetto lampo/schermo
+        gameState.flashStartTime = Date.now(); 
+        gameState.flashDuration = 2000; // Il flickering dura 2 secondi
     }
 
     const isP2 = boss.phase === 2;
