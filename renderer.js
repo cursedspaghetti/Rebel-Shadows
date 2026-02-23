@@ -540,10 +540,10 @@ export function drawUI(ctx) {
     const now = Date.now() / 1000;
     
     const elapsed1 = now - (gameState.specialLastUsed || 0);
-    const perc1 = Math.min(1, elapsed1 / gameState.specialCooldown);
+    const perc1 = Math.min(1, elapsed1 / gameState.Special_CD);
 
     const elapsed2 = now - (gameState.shieldLastUsed || 0);
-    const perc2 = Math.min(1, elapsed2 / (gameState.shieldCooldown || 1));
+    const perc2 = Math.min(1, elapsed2 / (gameState.Shield_CD || 1));
 
     const barWidth = 40;
     const barHeight = 4;
