@@ -150,7 +150,6 @@ function handleError(id, name) {
     gameState.wizardData = { name: `Wizard #${id}`, id: id, prop: "" };
 }
 
-// --- STATS TABLE ---
 function renderStatTable() {
     const tbody = document.getElementById('statsBody');
     if (!tbody) return;
@@ -165,18 +164,16 @@ function renderStatTable() {
     tbody.innerHTML = statsToRender.map(stat => {
         let val;
 
-        // Logica di puntamento differenziata
-        if (stat.startsWith('Special_')) {
-            // Se la statistica inizia con "Special_", la cerchiamo in specialRay
+        // Logica specifica: solo Duration e Width sono dentro specialRay
+        if (stat === 'Special_Duration' || stat === 'Special_Width') {
             val = gameState.specialRay ? gameState.specialRay[stat] : 0;
         } else {
-            // Altrimenti la cerchiamo nel corpo principale del gameState
+            // Tutte le altre (incluso Special_CD) sono nella radice
             val = gameState[stat];
         }
 
-        // Fallback a 0 se il valore è undefined o null
+        // Fallback di sicurezza
         const finalVal = (val !== undefined && val !== null) ? val : 0;
-        
         const displayName = stat.replace(/_/g, ' ').toUpperCase();
         
         return `
@@ -196,7 +193,6 @@ function renderStatTable() {
 
     if (confirmStatsBtn) confirmStatsBtn.disabled = false;
 }
-
 // --- INITIALIZATION ---
 async function init() {
     resizeCanvas();
