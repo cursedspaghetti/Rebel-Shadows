@@ -155,31 +155,40 @@ function renderStatTable() {
     const tbody = document.getElementById('statsBody');
     if (!tbody) return;
 
-    // Reset delle statistiche aggiunte: dato che non ci sono più i tasti + e -, 
-    // dobbiamo assicurarci che partano da zero o dai valori base del wizard.
-    // Se hai definito gameState.addedStats nel config, azzeriamolo qui.
-    Object.keys(gameState.baseStats).forEach(stat => {
-        gameState.addedStats[stat] = 0;
-    });
+    // Lista esatta delle statistiche da pescare dal gameState
+    const statsToRender = [
+        'HP', 'Defense', 'Elusion', 'Speed', 
+        'Attack_Power', 'Attack_Rate', 
+        'Shield_CD', 'Shield_Duration', 
+        'Special_CD', 'Special_Duration', 'Special_Width'
+    ];
 
-    // Aggiorna l'UI dei testi
-    const essenceDisplay = document.getElementById('availableEssence');
-    if (essenceDisplay) essenceDisplay.innerText = "0 (LOCKED)";
-    
-    // Sblocca il pulsante di avvio avventura
+    // Sblocca il pulsante di avvio avventura (essendo ora una pura visualizzazione)
     if (confirmStatsBtn) confirmStatsBtn.disabled = false;
 
-    // Genera le righe della tabella (solo 3 colonne: Nome, Base, Affinità/Bonus)
-    tbody.innerHTML = Object.keys(gameState.baseStats).map(stat => {
-        // Calcoliamo un'affinità finta o basata sul wizard se vuoi, 
-        // per ora la lasciamo a 0 o "Standard"
-        let affinity = "Standard";
+    // Genera le righe della tabella
+    tbody.innerHTML = statsToRender.map(stat => {
+        // Recupero il valore base dal gameState
+        const baseVal = gameState.baseStats[stat] !== undefined ? gameState.baseStats[stat] : 0;
+        
+        // Pulizia nome (es: Special_CD -> SPECIAL CD)
+        const displayName = stat.replace(/_/g, ' ').toUpperCase();
+        
+        // Gestione Bonus: qui puoi inserire una logica se hai bonus attivi, 
+        // per ora lo impostiamo come valore neutro o "None"
+        let bonusVal = "---"; 
         
         return `
-            <tr style="border-bottom: 1px solid rgba(163, 130, 255, 0.2);">
-                <td style="padding: 10px 5px; text-align: left; font-weight: bold;">${stat.toUpperCase()}</td>
-                <td style="padding: 10px 5px; text-align: center; color: #a382ff;">${gameState.baseStats[stat]}</td>
-                <td style="padding: 10px 5px; text-align: center; color: #ffd700;">${affinity}</td>
+            <tr style="border-bottom: 1px solid rgba(163, 130, 255, 0.15); transition: background 0.3s;">
+                <td style="padding: 12px 8px; text-align: left; font-weight: 600; color: #d1d1d1; font-size: 0.85rem;">
+                    ${displayName}
+                </td>
+                <td style="padding: 12px 8px; text-align: center; color: #a382ff; font-family: 'Courier New', Courier, monospace; font-size: 1rem; font-weight: bold;">
+                    ${baseVal}
+                </td>
+                <td style="padding: 12px 8px; text-align: center; color: #00ffcc; font-size: 0.85rem; font-weight: 500;">
+                    ${bonusVal}
+                </td>
             </tr>
         `;
     }).join('');
