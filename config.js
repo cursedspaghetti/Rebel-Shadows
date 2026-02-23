@@ -127,7 +127,7 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
     screenShake: 0,            
     
     // --- Statistiche Effettive in Gioco ---
-    hp: CONFIG.HP,
+    HP: CONFIG.HP,
     isInvulnerable: false,
     lastDamageTime: 0,
     playerX: CONFIG.CANVAS_WIDTH / 2,
