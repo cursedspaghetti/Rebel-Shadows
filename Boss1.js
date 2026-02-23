@@ -93,6 +93,8 @@ export function updateBoss(boss) {
     if (boss.phase === 1 && boss.hp <= boss.maxHp * c.PHASE_2_THRESHOLD) {
         boss.phase = 2;
         gameState.screenShake = 15;
+        gameState.bossPhaseTransition = true; // Un flag che il main leggerà una sola volta
+        gameState.flashActive = true;         // Per l'effetto lampo/schermo
     }
 
     const isP2 = boss.phase === 2;
