@@ -129,7 +129,7 @@ export function handleAllCollisions() {
        // Danno al Boss dal Laser (dentro activeRays.forEach)
         if (gameState.bossActive && gameState.boss) {
            if (Math.abs(gameState.boss.x - ray.x) < (ray.width / 2 + BOSS_HITBOX_RAD)) {
-            gameState.boss.hp -= 0.5; // Danno continuo del laser
+            gameState.boss.hp -= 5; // Danno continuo del laser
             if (Math.random() > 0.8) createExplosion(gameState.boss.x, gameState.boss.y, '#ffffff');
             }
         }        
