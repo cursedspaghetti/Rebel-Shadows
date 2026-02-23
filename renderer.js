@@ -436,61 +436,44 @@ export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
     ctx.fillText("HP", x + (barWidth / 2), y + barHeight + 38);
 }
 
-// --- PROIETTILI PLAYER (GHOST MACHINE GUN - VERDE SPETTRALE) ---
+// --- PROIETTILI PLAYER (HEAVY MACHINE GUN MODE - GRIGIO SPETTRALE) ---
 
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
 
-        // Palette Verde Spettrale Estrema
-        const coreColor = '#00FF41';    // Verde Matrix/Neon (Cuore)
-        const innerColor = '#008F11';   // Verde scuro spettrale
-        const edgeColor = '#0D0D0D';    // Nero fumo per il contorno
-        const glowColor = 'rgba(0, 255, 65, 0.3)';
+        // Palette Grigio Spettrale Potenziata
+        const coreColor = '#FFFFFF';    
+        const innerColor = '#95A5A6';   
+        const edgeColor = '#1A252F';    
+        const glowColor = 'rgba(200, 214, 229, 0.4)';
 
-        // Dimensioni Massive
-        const bulletWidth = 14; 
-        const bulletHeight = 28; 
+        // Dimensioni "Heavy": più grossi e cattivi
+        const bulletWidth = 10;  // Aumentato da 6
+        const bulletHeight = 22; // Aumentato da 18
 
+        // Trasliamo e ruotiamo il contesto per seguire la traiettoria del proiettile
+        // (Necessario se aggiungiamo inclinazione laterale)
         ctx.translate(bullet.x, bullet.y);
         
-        // Rotazione basata sulla traiettoria per un effetto più dinamico
-        if (bullet.vx) {
-            ctx.rotate(bullet.vx * 0.05);
-        }
-
-        // 1. Aura Spettrale (Bagliore diffuso)
+        // 1. Bagliore
         ctx.shadowColor = glowColor;
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 10;
 
-        // 2. Forma del proiettile (Punta arrotondata, base irregolare)
+        // 2. Contorno (Stroke alternativo al fill per precisione pixel)
         ctx.fillStyle = edgeColor;
-        // Disegniamo una forma leggermente a "fiamma" invece di un rettangolo
-        ctx.beginPath();
-        ctx.moveTo(-bulletWidth/2, bulletHeight/2);
-        ctx.lineTo(-bulletWidth/2, -bulletHeight/4);
-        ctx.quadraticCurveTo(0, -bulletHeight, bulletWidth/2, -bulletHeight/4);
-        ctx.lineTo(bulletWidth/2, bulletHeight/2);
-        ctx.closePath();
-        ctx.fill();
+        ctx.fillRect(-bulletWidth / 2, -bulletHeight / 2, bulletWidth, bulletHeight);
 
-        // 3. Nucleo Energetico Verde
+        // 3. Corpo
         ctx.shadowBlur = 0;
         ctx.fillStyle = innerColor;
-        ctx.fillRect(-bulletWidth/2 + 3, -bulletHeight/2, bulletWidth - 6, bulletHeight - 6);
+        ctx.fillRect(-bulletWidth / 2 + 2, -bulletHeight / 2 + 2, bulletWidth - 4, bulletHeight - 4);
 
-        // 4. Sfarfallio Centrale (Anima del proiettile)
-        if (Math.random() > 0.15) {
+        // 4. Nucleo Bianco (Effetto Metal Slug High-Intensity)
+        if (Math.random() > 0.1) {
             ctx.fillStyle = coreColor;
-            // Un nucleo più sottile che pulsa
-            const pulse = Math.sin(Date.now() * 0.1) * 2;
-            ctx.fillRect(-bulletWidth/2 + 5, -bulletHeight/2 + 4, (bulletWidth - 10) + pulse, bulletHeight - 14);
+            ctx.fillRect(-bulletWidth / 2 + 3, -bulletHeight / 2 + 4, bulletWidth - 6, bulletHeight - 10);
         }
-
-        // 5. Scia di Ectoplasma (Pixel neri e verdi che fluttuano)
-        ctx.fillStyle = Math.random() > 0.5 ? coreColor : edgeColor;
-        const particleSize = 3 + Math.random() * 2;
-        ctx.fillRect((Math.random() - 0.5) * 10, bulletHeight/2 + Math.random() * 5, particleSize, particleSize);
 
         ctx.restore();
     });
@@ -500,27 +483,28 @@ export function autoFire() {
     if (gameState.currentScreen !== 'playing' || gameState.isCharging || gameState.isCharging2) return;
 
     const now = Date.now();
-    // Cadenza di fuoco rapidissima (Machine Gun)
-    const currentFireRate = 100; 
+    // Fire rate più frenetico per l'effetto mitragliatrice
+    const currentFireRate = 120; 
 
     if (now - gameState.lastShotTime >= currentFireRate) {
-        // Numero di anime sparate basato sul livello
-        const burstCount = gameState.bulletLevel === 1 ? 1 : (gameState.bulletLevel === 2 ? 3 : 4);
+        // Numero di proiettili per raffica basato sul livello
+        const burstCount = gameState.bulletLevel === 1 ? 1 : (gameState.bulletLevel === 2 ? 2 : 3);
 
         for (let i = 0; i < burstCount; i++) {
-            // VARIANZA SPETTRALE:
-            // Partenza dal centro con un raggio di sfarfallio
-            const muzzleJitterX = (Math.random() - 0.5) * 8; 
-            // Sventagliata laterale molto pronunciata
-            const horizontalDrift = (Math.random() - 0.5) * 6; 
-            // Velocità variabile per non creare linee uniformi
-            const speedVar = 12 + (Math.random() * 5);
+            // VARIANZA ESTREMA:
+            // 1. Jitter sulla X (partenza non perfettamente centrale)
+            const muzzleJitterX = (Math.random() - 0.5) * 12; 
+            // 2. Drift Orizzontale (il proiettile si sposta lateralmente mentre sale)
+            const horizontalDrift = (Math.random() - 0.5) * 4; 
+            // 3. Varianza sulla velocità (alcuni proiettili sono più veloci di altri)
+            const speedVar = 14 + (Math.random() * 4);
 
             gameState.bullets.push({
                 x: gameState.playerX + muzzleJitterX,
                 y: gameState.playerY - 30,
-                vx: horizontalDrift,
-                speed: speedVar
+                vx: horizontalDrift, // Nuova proprietà per il movimento laterale
+                speed: speedVar,
+                size: 12
             });
         }
         gameState.lastShotTime = now;
@@ -529,11 +513,11 @@ export function autoFire() {
 
 export function updateBullets() {
     gameState.bullets = gameState.bullets.filter(bullet => {
+        // Il proiettile ora usa anche la sua velocità orizzontale (vx)
         bullet.y -= bullet.speed;
-        bullet.x += bullet.vx; // Applica la deriva orizzontale
+        bullet.x += bullet.vx || 0; 
         
-        // Rimuovi se esce dai bordi (con margine generoso per proiettili grossi)
-        return bullet.y > -100 && bullet.x > -100 && bullet.x < 1100;
+        return bullet.y > -50 && bullet.x > -50 && bullet.x < 1000; // Sicurezza bordi
     });
 }
     
