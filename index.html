@@ -47,24 +47,23 @@
         </div>
         
         <div id="statsContainer" style="background: rgba(20, 20, 20, 0.9); padding: 15px; border: 2px solid #573191; border-radius: 12px; width: 100%; box-sizing: border-box; box-shadow: 0 0 15px rgba(87, 49, 145, 0.5);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 5px;">
-                <span style="font-size: 0.9em; color: #ffd700; font-weight: bold;">CHARACTER STATS</span>
-                <span id="availableEssence" style="font-size: 0.7em; color: #666; font-style: italic;">(LOCKED)</span>
-            </div>
+            <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 8px;">
+                <span style="font-size: 0.9em; color: #ffd700; font-weight: bold; letter-spacing: 2px;">CHARACTER STATS</span>
+                </div>
             
             <table style="border-collapse: collapse; width: 100%; font-size: 0.85em;">
                 <thead>
-                    <tr style="color: #a382ff; font-size: 0.9em;">
+                    <tr style="color: #a382ff; font-size: 0.9em; border-bottom: 1px solid #573191;">
                         <th style="text-align: left; padding: 8px 5px;">STAT</th>
                         <th style="text-align: center; padding: 8px 5px;">BASE</th>
-                        <th style="text-align: right; padding: 8px 5px;">BONUS</th>
+                        <th style="text-align: center; padding: 8px 5px;">BONUS</th>
                     </tr>
                 </thead>
                 <tbody id="statsBody">
                     </tbody>
             </table>
             
-            <button id="confirmStats" style="margin-top: 20px; width: 100%; padding: 15px; cursor: pointer; background: #573191; color: white; border: none; font-weight: bold; font-family: 'Courier New', monospace; border-radius: 6px; font-size: 1.1em; box-shadow: 0 4px #3a1d63;">
+            <button id="confirmStats" style="margin-top: 20px; width: 100%; padding: 15px; cursor: pointer; background: #573191; color: white; border: none; font-weight: bold; font-family: 'Courier New', monospace; border-radius: 6px; font-size: 1.1em; box-shadow: 0 4px #3a1d63; transition: transform 0.1s, box-shadow 0.1s;" onmousedown="this.style.transform='translateY(2px)'; this.style.boxShadow='0 2px #3a1d63'" onmouseup="this.style.transform='translateY(0px)'; this.style.boxShadow='0 4px #3a1d63'">
                 START ADVENTURE
             </button>
         </div>
