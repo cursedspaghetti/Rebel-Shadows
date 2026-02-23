@@ -313,9 +313,9 @@ function gameLoop() {
             if (gameState.boss.hp <= 0) {
                 gameState.bossActive = false;
                 gameState.boss = null;
-                 flashActive: false,         // Per l'effetto lampo/schermo
-                 flashStartTime: null,
-                 flashDuration: null, // Il flickering dura 2 secondi
+                 gameState.flashActive = false,         // Per l'effetto lampo/schermo
+                 gameState.flashStartTime = null,
+                 gameState.flashDuration = null, // Il flickering dura 2 secondi
                 ctx.restore(); 
                 showPowerUpScreen();
                 return; 
