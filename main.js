@@ -377,24 +377,27 @@ function updateAndDrawBackgrounds() {
             );
         }
     }
-
-    // --- NUOVO: LOGICA TRANSIZIONE FASE 2 ---
+// --- LOGICA TRANSIZIONE FASE 2 ---
     if (gameState.flashActive) {
-        // Se è attivo il flash, decidiamo se disegnare nero o un "lampo" bianco
-        // Usiamo Date.now() per creare un effetto sfarfallio (flicker)
-        const isLightning = Math.random() > 0.8; // 20% di probabilità di vedere un lampo bianco
+        const currentTime = Date.now();
+        const elapsed = currentTime - gameState.flashStartTime;
 
-        if (isLightning) {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // Lampo bianco semi-trasparente
+        if (elapsed < gameState.flashDuration) {
+            // FASE A: Il flickering dei fulmini
+            const isLightning = Math.random() > 0.8;
+            ctx.fillStyle = isLightning ? 'rgba(255, 255, 255, 0.8)' : 'black';
         } else {
-            ctx.fillStyle = 'black'; // Buio pesto
+            // FASE B: I fulmini sono finiti, resta solo il nero
+            ctx.fillStyle = 'black';
+            
+            // Opzionale: se vuoi che il boss fight finisca e torni la luce, 
+            // qui potresti gestire la fine della condizione flashActive.
         }
 
-        // Copriamo tutto lo sfondo appena disegnato
+        // Copriamo tutto
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 }
-
 // --- INPUT LISTENERS ---
 
 let secondFingerTimer = null
