@@ -11,7 +11,7 @@ export function getPixelBullet(color, size) {
     if (bulletCache[key]) return bulletCache[key];
 
     const canvas = document.createElement('canvas');
-    const pixelSize = Math.max(1, size / 2); 
+    const pixelSize = Math.max(1, size / 4); 
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
