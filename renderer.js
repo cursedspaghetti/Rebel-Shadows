@@ -438,41 +438,53 @@ export function drawHealthBar(ctx, currentHp, maxHp, canvasWidth) {
 
 // --- PROIETTILI PLAYER (HEAVY MACHINE GUN MODE - GRIGIO SPETTRALE) ---
 
+// --- PROIETTILI PLAYER (SPECTRAL FLAME MODE) ---
+
 export function drawBullets(ctx) {
     gameState.bullets.forEach(bullet => {
         ctx.save();
 
-        // Palette Grigio Spettrale Potenziata
-        const coreColor = '#FFFFFF';    
-        const innerColor = '#95A5A6';   
-        const edgeColor = '#1A252F';    
-        const glowColor = 'rgba(200, 214, 229, 0.4)';
+        // Palette Cromatica Richiesta
+        const flameOuter = '#2C3E50';    // Grigio scuro/Bluastro
+        const flameInner = '#ECF0F1';    // Quasi bianco
+        const flameCore = '#FFFFFF';     // Bianco puro
+        const tealGlow = '#1ABC9C';      // Verde acqua (Bagliore)
 
-        // Dimensioni "Heavy": più grossi e cattivi
-        const bulletWidth = 10;  // Aumentato da 6
-        const bulletHeight = 22; // Aumentato da 18
+        // Dimensioni aumentate per l'effetto "Heavy"
+        const bW = 16;  // Larghezza base fiamma
+        const bH = 32;  // Lunghezza fiamma
 
-        // Trasliamo e ruotiamo il contesto per seguire la traiettoria del proiettile
-        // (Necessario se aggiungiamo inclinazione laterale)
         ctx.translate(bullet.x, bullet.y);
         
-        // 1. Bagliore
-        ctx.shadowColor = glowColor;
-        ctx.shadowBlur = 10;
+        // Se il proiettile ha una velocità orizzontale, lo incliniamo leggermente
+        const angle = bullet.vx ? bullet.vx * 0.05 : 0;
+        ctx.rotate(angle);
 
-        // 2. Contorno (Stroke alternativo al fill per precisione pixel)
-        ctx.fillStyle = edgeColor;
-        ctx.fillRect(-bulletWidth / 2, -bulletHeight / 2, bulletWidth, bulletHeight);
+        // 1. EFFETTO BAGLIORE (Verde Acqua)
+        ctx.shadowColor = tealGlow;
+        ctx.shadowBlur = 15;
 
-        // 3. Corpo
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = innerColor;
-        ctx.fillRect(-bulletWidth / 2 + 2, -bulletHeight / 2 + 2, bulletWidth - 4, bulletHeight - 4);
+        // 2. FORMA DELLA FIAMMA (Corpo Esterno Grigio Scuro)
+        ctx.fillStyle = flameOuter;
+        ctx.beginPath();
+        ctx.moveTo(0, -bH / 2); // Punta superiore
+        ctx.bezierCurveTo(bW / 2, -bH / 4, bW / 2, bH / 2, 0, bH / 2); // Lato destro
+        ctx.bezierCurveTo(-bW / 2, bH / 2, -bW / 2, -bH / 4, 0, -bH / 2); // Lato sinistro
+        ctx.fill();
 
-        // 4. Nucleo Bianco (Effetto Metal Slug High-Intensity)
-        if (Math.random() > 0.1) {
-            ctx.fillStyle = coreColor;
-            ctx.fillRect(-bulletWidth / 2 + 3, -bulletHeight / 2 + 4, bulletWidth - 6, bulletHeight - 10);
+        // 3. ANIMA INTERNA (Grigio Chiaro/Bianco)
+        ctx.shadowBlur = 0; // Rimuoviamo shadow per i layer interni per pulizia pixel
+        ctx.fillStyle = flameInner;
+        ctx.beginPath();
+        ctx.ellipse(0, 2, bW / 4, bH / 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 4. NUCLEO BIANCO (Flicker casuale per dinamismo)
+        if (Math.random() > 0.2) {
+            ctx.fillStyle = flameCore;
+            ctx.beginPath();
+            ctx.arc(0, 4, bW / 6, 0, Math.PI * 2);
+            ctx.fill();
         }
 
         ctx.restore();
