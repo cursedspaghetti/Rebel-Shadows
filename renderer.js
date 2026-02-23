@@ -462,7 +462,7 @@ export function drawBullets(ctx) {
 
         // 1. EFFETTO BAGLIORE (Verde Acqua)
         ctx.shadowColor = tealGlow;
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 20;
 
         // 2. FORMA DELLA FIAMMA (Corpo Esterno Grigio Scuro)
         ctx.fillStyle = flameOuter;
@@ -507,7 +507,7 @@ export function autoFire() {
             // 1. Jitter sulla X (partenza non perfettamente centrale)
             const muzzleJitterX = (Math.random() - 0.5) * 12; 
             // 2. Drift Orizzontale (il proiettile si sposta lateralmente mentre sale)
-            const horizontalDrift = (Math.random() - 0.5) * 4; 
+            const horizontalDrift = (Math.random() - 0.5) * 2; 
             // 3. Varianza sulla velocità (alcuni proiettili sono più veloci di altri)
             const speedVar = 14 + (Math.random() * 4);
 
