@@ -228,31 +228,7 @@ function startGame() {
     setupScreen.style.display = 'none';
     gameState.currentScreen = 'playing';
     
-    // --- 1. CALCOLO BONUS STATISTICHE ---
-    let traitSpeedBonus = 0;
-    let traitHPBonus = 0;
-
-    if (gameState.wizardData.familiar && gameState.wizardData.familiar !== "None") traitHPBonus += 20;
-    const fastProps = ["Staff", "Wand", "Athame"];
-    if (gameState.wizardData.prop && fastProps.some(p => gameState.wizardData.prop.includes(p))) traitSpeedBonus += 1.5;
-
-    gameState.hp = 100 + (gameState.addedStats["HP"] * 10) + traitHPBonus;
-    gameState.playerSpeed = 5 + (gameState.addedStats["Dexterity"] * 0.3) + traitSpeedBonus;
-    gameState.fireRate = Math.max(100, 400 - (gameState.addedStats["Attack Rate"] * 20));
-
-    // --- 2. POSIZIONAMENTO INIZIALE (CAMERA E PLAYER) ---
-    // Posizioniamo il mago in basso sul canvas (es. all'80% dell'altezza)
-    gameState.playerX = CONFIG.CANVAS_WIDTH / 2;
-    gameState.playerY = CONFIG.CANVAS_HEIGHT * 0.65;
-
-    // Calcoliamo l'altezza totale del mondo (15 volte lo sfondo)
-    // Usiamo bgParallax che è l'immagine caricata in main.js
-    const totalWorldHeight = bgParallax.naturalHeight * 15;
-    
-    // Impostiamo la camera per partire esattamente dal fondo
-    // Il limite massimo di scorrimento verso l'alto è -(AltezzaTotale - AltezzaSchermo)
-    gameState.cameraY = -(totalWorldHeight - CONFIG.CANVAS_HEIGHT);
-
+   
     // --- 3. GESTIONE TIMER E INTERVALLI ---
     gameState.gameTimer = CONFIG.GAME_TIME;
     if (gameState.timerInterval) clearInterval(gameState.timerInterval);
