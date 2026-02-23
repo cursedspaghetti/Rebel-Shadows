@@ -70,7 +70,6 @@ export const CONFIG = {
     },
     
     PLAYER_MAX_HP: 100,  // HP - STAT
-    Defense: 5, // Defense - STAT 
     
     COLLISION_DAMAGE: 20,    
     INVULNERABILITY_TIME: 1500, 
@@ -84,7 +83,7 @@ export const CONFIG = {
  */
 export let gameState = {
 
-Speed: 3, // Speed - STAT
+
     
 padOpacity : 0, // Per l'effetto fade-in/out
 cameraY : 0, // La posizione della nostra visuale
@@ -128,6 +127,10 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
     
     // --- Statistiche Effettive in Gioco ---
     HP: CONFIG.HP,
+    Speed: 3, // Speed - STAT
+    Defense: 5, // Defense - STAT 
+    Elusion: 0.05, // STAT
+ 
     isInvulnerable: false,
     lastDamageTime: 0,
     playerX: CONFIG.CANVAS_WIDTH / 2,
