@@ -173,13 +173,13 @@ if (gameState.bossActive && gameState.boss) {
  
 
 function applyDamage(amount, shakeIntensity) {
-    gameState.hp -= amount;
+    gameState.HP -= amount;
     gameState.isInvulnerable = true;
     gameState.lastDamageTime = Date.now();
     gameState.screenShake = shakeIntensity;
 
-    if (gameState.hp <= 0) {
-        gameState.hp = 0;
+    if (gameState.HP <= 0) {
+        gameState.HP = 0;
         alert("GAME OVER");
         location.reload(); 
     }
