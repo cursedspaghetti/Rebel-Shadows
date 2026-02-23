@@ -70,17 +70,13 @@ export const CONFIG = {
     },
     
     PLAYER_MAX_HP: 100,  // HP - STAT
-    Constitution: 5, // Defense - STAT 
+    Defense: 5, // Defense - STAT 
+    
     COLLISION_DAMAGE: 20,    
     INVULNERABILITY_TIME: 1500, 
     
     SHAKE_DECAY: 0.9,        
     
-    FIRE_RATE_LEVELS: {
-        1: 200, 
-        2: 120, 
-        3: 70   
-    },
 };
 
 /**
@@ -150,8 +146,8 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
     isTouchActive: false,
 
     // --- Sistema di Fuoco ---
-    fireRateLevel: 1,
-    Attack_Rate: 200, // Attack_Rate - STAT
+    bulletLevel: 3,  // number of bullet per burst. Influenzato da Formulas 
+    Attack_Rate: 100, // Attack_Rate - STAT
     lastShotTime: 0,
     bullets: [], 
     enemyBullets: [], 
