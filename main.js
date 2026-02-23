@@ -364,13 +364,9 @@ function updateAndDrawBackgrounds() {
     const drawX = (CONFIG.CANVAS_WIDTH / 2) - (bgParallax.naturalWidth / 2);
     const imgHeight = bgParallax.naturalHeight;
 
-    // 2. Disegno ciclico (15 volte)
+    // 2. Disegno ciclico del parallasse
     for (let i = 0; i < 15; i++) {
-        // Calcoliamo la posizione Y per ogni "segmento" di mappa
-        // i * imgHeight sposta ogni copia sotto la precedente
         const currentSegmentY = gameState.cameraY + (i * imgHeight);
-
-        // Ottimizzazione: Disegna la copia solo se è visibile a schermo
         if (currentSegmentY + imgHeight > 0 && currentSegmentY < CONFIG.CANVAS_HEIGHT) {
             ctx.drawImage(
                 bgParallax, 
@@ -380,6 +376,22 @@ function updateAndDrawBackgrounds() {
                 imgHeight
             );
         }
+    }
+
+    // --- NUOVO: LOGICA TRANSIZIONE FASE 2 ---
+    if (gameState.flashActive) {
+        // Se è attivo il flash, decidiamo se disegnare nero o un "lampo" bianco
+        // Usiamo Date.now() per creare un effetto sfarfallio (flicker)
+        const isLightning = Math.random() > 0.8; // 20% di probabilità di vedere un lampo bianco
+
+        if (isLightning) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; // Lampo bianco semi-trasparente
+        } else {
+            ctx.fillStyle = 'black'; // Buio pesto
+        }
+
+        // Copriamo tutto lo sfondo appena disegnato
+        ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 }
 
