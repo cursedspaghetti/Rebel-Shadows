@@ -225,6 +225,8 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
     bossActive: false,
     boss: null, 
     lastEnemySpawn: 0,
+    bossPhaseTransition : false, // Un flag che il main leggerà una sola volta
+    flashActive: false,         // Per l'effetto lampo/schermo
     
     backgroundPositionY: 0,
     parallaxPositionY: 0
