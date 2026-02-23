@@ -37,10 +37,10 @@ export const CONFIG = {
         LERP_SPEED_P2: 0.04,
         
         RADIAL: {
-            INTERVAL: 4000,
+            INTERVAL: 8000,
             COOLDOWN_P2: 0.6,
             WAVES: 4,
-            BULLETS_PER_WAVE: 10,
+            BULLETS_PER_WAVE: 8,
             SPEED_P1: 5,
             SPEED_P2: 6,
             DELAY_BETWEEN_BULLETS: 30,
@@ -48,11 +48,11 @@ export const CONFIG = {
             ANGLE_START: 40,
             ANGLE_END: 140,
             COLOR: '#ff00ff',
-            SIZE: 10          
+            SIZE: 16          
         },
 
         TARGETED: {
-            INTERVAL: 5000,
+            INTERVAL: 6000,
             COUNT_P1: 7,
             COUNT_P2: 14,
             SPEED_P1: 10,
@@ -60,7 +60,7 @@ export const CONFIG = {
             DELAY_P1: 180,
             DELAY_P2: 100,
             COLOR: '#00ffff',
-            SIZE: 10          
+            SIZE: 16          
         },
 
         DASH: {
