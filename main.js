@@ -78,13 +78,14 @@ async function handleLoadWizard() {
     if (!wizardId || wizardId === gameState.lastLoadedId) return;
     gameState.lastLoadedId = wizardId;
 
+    // Riferimenti agli elementi UI - Usiamo l'operatore optional chaining ?. o controlli if
     const wizardDisplayName = document.getElementById('wizardDisplayName');
     const traitHead = document.getElementById('trait-head');
     const traitBody = document.getElementById('trait-body');
     const traitProp = document.getElementById('trait-prop');
     const traitRune = document.getElementById('trait-rune');
     const traitFamiliar = document.getElementById('trait-familiar');
-    const traitBg = document.getElementById('trait-bg');
+    // Nota: traitBg rimosso se non presente nell'HTML mobile per risparmiare spazio
 
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
@@ -94,7 +95,7 @@ async function handleLoadWizard() {
         const transparentImgObj = makeTransparent(rawImg);
         transparentImgObj.onload = () => {
             introImage.src = transparentImgObj.src;
-            setupWizImage.src = transparentImgObj.src;
+            if (setupWizImage) setupWizImage.src = transparentImgObj.src;
             if (startButton) startButton.classList.add('visible');
         };
     };
@@ -118,13 +119,19 @@ async function handleLoadWizard() {
 
         if (foundWizard) {
             gameState.wizardData = { ...foundWizard, id: wizardId };
-            wizardDisplayName.innerText = `${foundWizard.name.toUpperCase()} (#${wizardId})`;
-            traitHead.innerText = foundWizard.head;
-            traitBody.innerText = foundWizard.body;
-            traitProp.innerText = foundWizard.prop;
-            traitFamiliar.innerText = foundWizard.familiar || "None";
-            traitRune.innerText = foundWizard.rune || "None";
-            traitBg.innerText = foundWizard.background;
+            
+            // Aggiornamento testi con protezione (se l'elemento non esiste, non rompe il codice)
+            if (wizardDisplayName) wizardDisplayName.innerText = `${foundWizard.name.toUpperCase()} (#${wizardId})`;
+            if (traitHead) traitHead.innerText = foundWizard.head || "-";
+            if (traitBody) traitBody.innerText = foundWizard.body || "-";
+            if (traitProp) traitProp.innerText = foundWizard.prop || "-";
+            if (traitFamiliar) traitFamiliar.innerText = foundWizard.familiar || "None";
+            if (traitRune) traitRune.innerText = foundWizard.rune || "None";
+            
+            // Se hai rimosso Background dall'HTML, questo IF eviterà errori
+            const traitBg = document.getElementById('trait-bg');
+            if (traitBg) traitBg.innerText = foundWizard.background || "-";
+            
         } else {
             handleError(wizardId, "UNKNOWN WIZARD");
         }
