@@ -386,6 +386,7 @@ function updateAndDrawBackgrounds() {
 // --- INPUT LISTENERS ---
 
 let secondFingerTimer = null
+let secondFingerTapCount = 0;
 gameState.isTouchActive = false;
 gameState.touchIdentifier = null;
 
@@ -400,23 +401,37 @@ function updateCoords(touch, rect) {
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
+
+    // GESTIONE PRIMO DITO (Movimento/Puntatore)
     if (e.touches.length === 1) {
         gameState.touchIdentifier = e.touches[0].identifier;
         gameState.isTouchActive = true;
         updateCoords(e.touches[0], rect);
     }
-    
-    // Speciali: Double Tap o secondo dito
+
+    // GESTIONE SECONDO DITO (Azioni Speciali)
+    // Entriamo qui ogni volta che viene rilevato un tocco aggiuntivo (2, 3, ecc.)
     if (e.touches.length >= 2 && gameState.currentScreen === 'playing') {
-        if (secondFingerTimer) {
-            clearTimeout(secondFingerTimer);
-            secondFingerTimer = null;
-            SpecialAttacks.fireSpecialAttackSequence();
-        } else {
+        
+        secondFingerTapCount++;
+
+        // Se è il primo tocco del secondo dito, facciamo partire il timer
+        if (secondFingerTapCount === 1) {
             secondFingerTimer = setTimeout(() => {
-                SpecialAttacks.activateShield();
+                
+                if (secondFingerTapCount === 1) {
+                    // È rimasto un tocco singolo -> ATTIVA SCUDO
+                    SpecialAttacks.activateShield();
+                } else if (secondFingerTapCount >= 2) {
+                    // Sono avvenuti due o più tocchi -> ATTACCO SPECIALE
+                    SpecialAttacks.fireSpecialAttackSequence();
+                }
+
+                // Reset per la prossima sequenza
+                secondFingerTapCount = 0;
                 secondFingerTimer = null;
-            }, CONFIG.TOUCH.DOUBLE_TAP_DELAY);
+                
+            }, CONFIG.TOUCH.DOUBLE_TAP_DELAY || 300);
         }
     }
 }, { passive: false });
