@@ -27,40 +27,46 @@
             <button id="startButton">START GAME</button>
         </div>
 
-   <div id="characterSetup" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: black; color: white; flex-direction: column; align-items: center; font-family: 'Courier New', monospace; overflow-y: auto; padding: 10px; box-sizing: border-box;">
+<div id="characterSetup" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: black; color: white; flex-direction: column; align-items: center; font-family: 'Courier New', monospace; overflow-y: auto; padding: 15px; box-sizing: border-box; z-index: 100;">
     
-    <h1 id="wizardDisplayName" style="margin: 10px 0; color: #a382ff; text-shadow: 1px 1px #000; font-size: 1.5em; text-align: center;">WIZARD #?</h1>
+    <h1 id="wizardDisplayName" style="margin: 10px 0; color: #a382ff; text-shadow: 2px 2px #000; font-size: 1.4em; text-align: center;">WIZARD #?</h1>
     
-    <div style="display: flex; flex-direction: column; gap: 15px; align-items: center; width: 100%; max-width: 500px;">
+    <div style="display: flex; flex-direction: column; gap: 15px; align-items: center; width: 100%; max-width: 450px;">
         
-        <div style="display: flex; flex-direction: row; gap: 10px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border: 1px dashed #444; width: 100%; box-sizing: border-box; align-items: center;">
-            <img id="setupWizImage" src="" style="width: 100px; height: 100px; image-rendering: pixelated; border: 2px solid #573191;">
+        <div style="display: flex; flex-direction: row; gap: 15px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; border: 1px dashed #573191; width: 100%; box-sizing: border-box; align-items: center;">
+            <img id="setupWizImage" src="" style="width: 110px; height: 110px; image-rendering: pixelated; border: 3px solid #573191; border-radius: 5px; background: #000;">
             
-            <div id="traitsDisplay" style="flex: 1; font-size: 0.75em; line-height: 1.2;">
-                <h3 style="color: #573191; border-bottom: 1px solid #573191; margin: 0 0 5px 0; font-size: 1em;">TRAITS</h3>
-                <p style="margin: 2px 0;"><strong>H:</strong> <span id="trait-head">-</span></p>
-                <p style="margin: 2px 0;"><strong>B:</strong> <span id="trait-body">-</span></p>
-                <p style="margin: 2px 0;"><strong>P:</strong> <span id="trait-prop">-</span></p>
-                <p style="margin: 2px 0;"><strong>F:</strong> <span id="trait-familiar">-</span></p>
+            <div id="traitsDisplay" style="flex: 1; font-size: 0.75em; line-height: 1.3;">
+                <h3 style="color: #a382ff; border-bottom: 1px solid #573191; margin: 0 0 8px 0; font-size: 1em; letter-spacing: 1px;">TRAITS</h3>
+                <p style="margin: 2px 0;"><strong>HEAD:</strong> <span id="trait-head" style="color: #ccc;">-</span></p>
+                <p style="margin: 2px 0;"><strong>BODY:</strong> <span id="trait-body" style="color: #ccc;">-</span></p>
+                <p style="margin: 2px 0;"><strong>PROP:</strong> <span id="trait-prop" style="color: #ccc;">-</span></p>
+                <p style="margin: 2px 0;"><strong>FAM :</strong> <span id="trait-familiar" style="color: #ccc;">-</span></p>
+                <p style="margin: 2px 0;"><strong>RUNE:</strong> <span id="trait-rune" style="color: #a382ff; font-weight: bold;">-</span></p>
             </div>
         </div>
         
-        <div id="statsContainer" style="background: rgba(0,0,0,0.8); padding: 15px; border: 2px solid #573191; border-radius: 10px; width: 100%; box-sizing: border-box;">
-            <p style="font-size: 1em; margin-bottom: 10px; color: #ffd700; text-align: center;">Essences: <span id="availableEssence">10</span></p>
+        <div id="statsContainer" style="background: rgba(20, 20, 20, 0.9); padding: 15px; border: 2px solid #573191; border-radius: 12px; width: 100%; box-sizing: border-box; box-shadow: 0 0 15px rgba(87, 49, 145, 0.5);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid #333; padding-bottom: 5px;">
+                <span style="font-size: 0.9em; color: #ffd700; font-weight: bold;">CHARACTER STATS</span>
+                <span id="availableEssence" style="font-size: 0.7em; color: #666; font-style: italic;">(LOCKED)</span>
+            </div>
             
             <table style="border-collapse: collapse; width: 100%; font-size: 0.85em;">
                 <thead>
-                    <tr style="border-bottom: 1px solid #573191; color: #a382ff;">
-                        <th style="text-align: left; padding: 5px;">STAT</th>
-                        <th style="text-align: center; padding: 5px;">BASE</th>
-                        <th style="text-align: center; padding: 5px;">AFFINITY</th>
+                    <tr style="color: #a382ff; font-size: 0.9em;">
+                        <th style="text-align: left; padding: 8px 5px;">STAT</th>
+                        <th style="text-align: center; padding: 8px 5px;">BASE</th>
+                        <th style="text-align: right; padding: 8px 5px;">BONUS</th>
                     </tr>
                 </thead>
                 <tbody id="statsBody">
                     </tbody>
             </table>
             
-            <button id="confirmStats" style="margin-top: 20px; width: 100%; padding: 12px; cursor: pointer; background: #573191; color: white; border: none; font-weight: bold; font-family: inherit; border-radius: 5px;">START ADVENTURE</button>
+            <button id="confirmStats" style="margin-top: 20px; width: 100%; padding: 15px; cursor: pointer; background: #573191; color: white; border: none; font-weight: bold; font-family: 'Courier New', monospace; border-radius: 6px; font-size: 1.1em; box-shadow: 0 4px #3a1d63;">
+                START ADVENTURE
+            </button>
         </div>
 
     </div>
