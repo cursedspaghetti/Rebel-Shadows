@@ -149,8 +149,10 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
     isTouchActive: false,
 
     // --- Sistema di Fuoco ---
-    bulletLevel: 3,  // number of bullet per burst. Influenzato da Formulas 
+    bulletLevel: 3,  // number of bullet per burst. no real scope now
     Attack_Rate: 100, // Attack_Rate - STAT
+    Attack_Power: 100, // Attack_Rate - STAT
+    
     lastShotTime: 0,
     bullets: [], 
     enemyBullets: [], 
