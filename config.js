@@ -69,8 +69,8 @@ export const CONFIG = {
         }
     },
     
-    PLAYER_MAX_HP: 100,
-    Constitution: 5,
+    PLAYER_MAX_HP: 100,  // HP - STAT
+    Constitution: 5, // Defense - STAT 
     COLLISION_DAMAGE: 20,    
     INVULNERABILITY_TIME: 1500, 
     
@@ -87,6 +87,9 @@ export const CONFIG = {
  * GLOBAL GAME STATE
  */
 export let gameState = {
+
+playerSpeed: 3, // Speed - STAT
+    
 padOpacity : 0, // Per l'effetto fade-in/out
 cameraY : 0, // La posizione della nostra visuale
 worldY : 0,  // La posizione assoluta del giocatore nel mondo
@@ -107,7 +110,7 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
     wizardSpritesheet: null, // Memorizza l'immagine trasparente dello sprite
     lastLoadedId: null,      // Evita caricamenti doppi
     
-    essences: CONFIG.INITIAL_ESSENCES, 
+     
     
     // Statistiche Base
     baseStats: {
@@ -154,7 +157,7 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
     lastDamageTime: 0,
     playerX: CONFIG.CANVAS_WIDTH / 2,
     playerY: CONFIG.CANVAS_HEIGHT - 300,
-    playerSpeed: 3, 
+    
     playerDirection: 0, // 0: Giù, 1: Sinistra, 2: Destra, 3: Su
     isMoving: false,    // Per fermare l'animazione se il player è fermo
     playerTrail: [],
@@ -170,28 +173,28 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
     // --- Sistema di Fuoco ---
     fireRateLevel: 1,
     bulletLevel: 3,
-    fireRate: 200,
+    fireRate: 200, // Attack_Rate - STAT
     lastShotTime: 0,
     bullets: [], 
     enemyBullets: [], 
 
     // --- Abilità Speciali 1 ---
     shieldActive: false,
-    shieldDuration: 5,
+    shieldDuration: 5, // Shield_Duration
     shieldStartTime: 0,
-    shieldCooldown: 15,
+    shieldCooldown: 15, //Shield_CD
     shieldLastUsed: 0,
     shieldOnCooldown: false,
     
-    specialCooldown: 10,
+    specialCooldown: 10, // Special_CD
     specialLastUsed: 0,
     specialOnCooldown: false,
     specialRay: { 
         active: false,
         x: 0,
-        maxWidth: 250,
-        currentWidth: 0,
-        duration: 0.8,
+        maxWidth: 250, //
+        currentWidth: 0, // Special_Width
+        duration: 0.8, // Special_Duration
         startTime: 0
     },
     isCharging: false,
