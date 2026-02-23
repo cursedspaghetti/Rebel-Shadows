@@ -155,7 +155,6 @@ function renderStatTable() {
     const tbody = document.getElementById('statsBody');
     if (!tbody) return;
 
-    // Lista esatta delle proprietà da pescare direttamente da gameState
     const statsToRender = [
         'HP', 'Defense', 'Elusion', 'Speed', 
         'Attack_Power', 'Attack_Rate', 
@@ -163,35 +162,38 @@ function renderStatTable() {
         'Special_CD', 'Special_Duration', 'Special_Width'
     ];
 
-    // Genera le righe della tabella
     tbody.innerHTML = statsToRender.map(stat => {
-        // Pesca direttamente da gameState[stat]
-        // Se il valore è undefined o null, mette 0 come fallback
-        const val = (gameState[stat] !== undefined && gameState[stat] !== null) ? gameState[stat] : 0;
+        let val;
+
+        // Logica di puntamento differenziata
+        if (stat.startsWith('Special_')) {
+            // Se la statistica inizia con "Special_", la cerchiamo in specialRay
+            val = gameState.specialRay ? gameState.specialRay[stat] : 0;
+        } else {
+            // Altrimenti la cerchiamo nel corpo principale del gameState
+            val = gameState[stat];
+        }
+
+        // Fallback a 0 se il valore è undefined o null
+        const finalVal = (val !== undefined && val !== null) ? val : 0;
         
-        // Formatta il nome (es: Attack_Power -> ATTACK POWER)
         const displayName = stat.replace(/_/g, ' ').toUpperCase();
-        
-        // Valore bonus (placeholder per ora)
-        let bonusVal = "---"; 
         
         return `
             <tr style="border-bottom: 1px solid rgba(163, 130, 255, 0.15);">
-                <td style="padding: 12px 8px; text-align: left; font-weight: 600; color: #d1d1d1; font-size: 0.85rem;">
+                <td style="padding: 10px 5px; text-align: left; font-weight: bold; color: #d1d1d1; font-size: 0.85em;">
                     ${displayName}
                 </td>
-                <td style="padding: 12px 8px; text-align: center; color: #a382ff; font-family: monospace; font-size: 1rem; font-weight: bold;">
-                    ${val}
+                <td style="padding: 10px 5px; text-align: center; color: #a382ff; font-family: monospace; font-size: 1em; font-weight: bold;">
+                    ${finalVal}
                 </td>
-                <td style="padding: 12px 8px; text-align: center; color: #00ffcc; font-size: 0.85rem;">
-                    ${bonusVal}
+                <td style="padding: 10px 5px; text-align: center; color: #00ffcc; font-size: 0.8em;">
+                    ---
                 </td>
             </tr>
         `;
     }).join('');
 
-    // Sblocca il pulsante di avvio
-    const confirmStatsBtn = document.getElementById('confirmStats');
     if (confirmStatsBtn) confirmStatsBtn.disabled = false;
 }
 
