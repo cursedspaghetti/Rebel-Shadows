@@ -24,9 +24,7 @@ export const CONFIG = {
     },
 
     // --- Sistema Statistiche ---
-    BASE_STATS_VALUE: 10,
-    MAX_STATS_VALUE: 100,
-    INITIAL_ESSENCES: 10,
+    
 
     BOSS: {
         MAX_HP: 2000,
@@ -199,21 +197,7 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
     isCharging: false,
     rayParticles: [],
 
-    // --- Abilità Speciali 2 ---
-    specialCooldown2: 10,
-    specialLastUsed2: 0,
-    specialOnCooldown2: false,
-    specialRay2: { 
-        active2: false,
-        x2: 0,
-        maxWidth2: 250,
-        currentWidth2: 0,
-        duration2: 0.8,
-        startTime2: 0
-    },
-    isCharging2: false,
-    rayParticles2: [],
-    
+   
     // --- Entità e Mondo ---
     enemies: [],      
     bossBullets: [],  
