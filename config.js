@@ -111,27 +111,6 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
     lastLoadedId: null,      // Evita caricamenti doppi
     
      
-    
-    // Statistiche Base
-    baseStats: {
-        "Attack Power": 10,
-        "Attack Rate": 10,
-        "Dexterity": 10,
-        "HP": 100,
-        "Constitution": 10,
-        "Elusion": 10
-    },
-    
-    addedStats: {
-        "Attack Power": 0, "Attack Rate": 0, "Dexterity": 0, 
-        "HP": 0, "Constitution": 0, "Elusion": 0
-    },
-    
-    traitBonuses: {
-        "Attack Power": 0, "Attack Rate": 0, "Dexterity": 0, 
-        "HP": 0, "Constitution": 0, "Elusion": 0
-    },
-    
     // --- Skill Tree e Progresso ---
     bossDefeatedCount: 0,
     playerSkills: {
