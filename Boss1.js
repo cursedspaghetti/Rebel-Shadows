@@ -143,7 +143,7 @@ export function updateBoss(boss) {
             boss.isAtCenter = false;
             const marginX = 80;
             const minY = 100;
-            const maxY = CONFIG.CANVAS_HEIGHT * 0.7;
+            const maxY = CONFIG.CANVAS_HEIGHT * 0.3;
 
             // Scelta nuovo target casuale se raggiunto il precedente
             if (!boss.targetX || Math.abs(boss.x - boss.targetX) < 10) {
