@@ -227,7 +227,19 @@ function startScreenLoop() {
 function startGame() {
     setupScreen.style.display = 'none';
     gameState.currentScreen = 'playing';
+
+     // --- 2. POSIZIONAMENTO INIZIALE (CAMERA E PLAYER) ---
+    // Posizioniamo il mago in basso sul canvas (es. all'80% dell'altezza)
+    gameState.playerX = CONFIG.CANVAS_WIDTH / 2;
+    gameState.playerY = CONFIG.CANVAS_HEIGHT * 0.65;
+
+    // Calcoliamo l'altezza totale del mondo (15 volte lo sfondo)
+    // Usiamo bgParallax che è l'immagine caricata in main.js
+    const totalWorldHeight = bgParallax.naturalHeight * 15;
     
+    // Impostiamo la camera per partire esattamente dal fondo
+    // Il limite massimo di scorrimento verso l'alto è -(AltezzaTotale - AltezzaSchermo)
+    gameState.cameraY = -(totalWorldHeight - CONFIG.CANVAS_HEIGHT);
    
     // --- 3. GESTIONE TIMER E INTERVALLI ---
     gameState.gameTimer = CONFIG.GAME_TIME;
