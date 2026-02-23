@@ -271,7 +271,7 @@ export function updatePlayerMovement(bgImage) {
     let dx = 0;
     let dy = 0; 
     const speed = gameState.playerSpeed || 4; 
-    const MAX_DY = speed * 0.5; 
+    const MAX_DY = speed * 0.75; 
 
     // --- GESTIONE OPACITÀ PAD ---
     if (gameState.isTouchActive) {
