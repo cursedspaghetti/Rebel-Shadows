@@ -299,7 +299,8 @@ function gameLoop() {
     collision.updateExplosions(); 
     SpecialAttacks.updateSpecialRay();
     SpecialAttacks.updateSpecialRay2();
-
+    SpecialAttacks.updateShield();
+    
     // --- 4. Logica Boss ---
     if (gameState.bossActive) {
         if (!gameState.boss) {
@@ -336,7 +337,7 @@ function gameLoop() {
     Enemies.drawEnemies(ctx);
     Enemies.drawEnemyBullets(ctx);
     SpecialAttacks.drawSpecialRay(ctx);
-    SpecialAttacks.drawSpecialRay2(ctx);
+    SpecialAttacks.drawShield(ctx);
     
     if (gameState.isCharging || gameState.isCharging2) {
         SpecialAttacks.drawChargeEffect(ctx, chargeImg);
@@ -410,10 +411,10 @@ canvas.addEventListener('touchstart', (e) => {
         if (secondFingerTimer) {
             clearTimeout(secondFingerTimer);
             secondFingerTimer = null;
-            SpecialAttacks.fireSpecialAttackSequence2();
+            SpecialAttacks.fireSpecialAttackSequence();
         } else {
             secondFingerTimer = setTimeout(() => {
-                SpecialAttacks.fireSpecialAttackSequence();
+                SpecialAttacks.activateShield();
                 secondFingerTimer = null;
             }, CONFIG.TOUCH.DOUBLE_TAP_DELAY);
         }
@@ -443,7 +444,7 @@ window.addEventListener('keydown', (e) => {
     gameState.keys[e.key] = true;
     if (e.key === ' ' && gameState.currentScreen === 'playing') {
         SpecialAttacks.fireSpecialAttackSequence();
-        SpecialAttacks.fireSpecialAttackSequence2();
+        //SpecialAttacks.fireSpecialAttackSequence2();
     }
 });
 
