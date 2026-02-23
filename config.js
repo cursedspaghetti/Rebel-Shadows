@@ -48,7 +48,7 @@ export const CONFIG = {
             ANGLE_START: 40,
             ANGLE_END: 140,
             COLOR: '#ff00ff',
-            SIZE: 20          
+            SIZE: 10          
         },
 
         TARGETED: {
@@ -60,7 +60,7 @@ export const CONFIG = {
             DELAY_P1: 180,
             DELAY_P2: 100,
             COLOR: '#00ffff',
-            SIZE: 18          
+            SIZE: 10          
         },
 
         DASH: {
