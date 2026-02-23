@@ -308,34 +308,40 @@ export function updateShield() {
 export function drawShield(ctx) {
     if (!gameState.shieldActive) return;
 
-    const playerSize = 40; // Regola in base alla dimensione del tuo player
-    const radius = playerSize + Math.sin(Date.now() * 0.01) * 5; // Effetto pulsante
+    // 1. Pixel Art Settings
+    const pixelSize = 4; // The size of each "pixel" block
+    const baseRadius = 12; // Radius in "pixel units"
+    const pulse = Math.floor(Math.sin(Date.now() * 0.01) * 2); 
+    const radius = baseRadius + pulse;
 
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(gameState.playerX, gameState.playerY, radius, 0, Math.PI * 2);
+    ctx.fillStyle = "#00bfff"; // Primary shield color (Cyan)
     
-    // Gradiente radiale per lo scudo
-    let gradient = ctx.createRadialGradient(
-        gameState.playerX, gameState.playerY, radius * 0.7,
-        gameState.playerX, gameState.playerY, radius
-    );
-    gradient.addColorStop(0, 'rgba(0, 191, 255, 0)');   // Trasparente al centro
-    gradient.addColorStop(0.8, 'rgba(0, 191, 255, 0.3)'); // Celeste tenue
-    gradient.addColorStop(1, 'rgba(255, 255, 255, 0.8)'); // Bordo bianco luminoso
+    // 2. Iterate through a grid to draw a "pixelated" circle
+    // We use a simple circle equation: x^2 + y^2 <= r^2
+    for (let y = -radius; y <= radius; y++) {
+        for (let x = -radius; x <= radius; x++) {
+            if (x * x + y * y <= radius * radius && x * x + y * y > (radius - 1) * (radius - 1)) {
+                // Draw the outer border pixels
+                ctx.fillStyle = "rgba(255, 255, 255, 0.9)"; // White highlight
+                ctx.fillRect(
+                    gameState.playerX + x * pixelSize, 
+                    gameState.playerY + y * pixelSize, 
+                    pixelSize, pixelSize
+                );
+            } else if (x * x + y * y <= (radius - 1) * (radius - 1) && x * x + y * y > (radius - 3) * (radius - 3)) {
+                // Draw the inner glow pixels
+                ctx.fillStyle = "rgba(0, 191, 255, 0.5)"; 
+                ctx.fillRect(
+                    gameState.playerX + x * pixelSize, 
+                    gameState.playerY + y * pixelSize, 
+                    pixelSize, pixelSize
+                );
+            }
+        }
+    }
 
-    ctx.fillStyle = gradient;
-    ctx.shadowBlur = 15;
-    ctx.shadowColor = "#00bfff";
-    ctx.fill();
-    
-    // Un cerchio sottile esterno per dare definizione
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    
     ctx.restore();
 }
-
 
 
