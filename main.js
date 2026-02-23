@@ -148,30 +148,22 @@ function renderStatTable() {
     const tbody = document.getElementById('statsBody');
     if (!tbody) return;
 
-    document.getElementById('availableEssence').innerText = gameState.essences;
-    confirmStatsBtn.disabled = gameState.essences > 0;
+    // Poiché non si possono più aggiungere punti, forziamo le essenze a 0
+    // o mostriamo semplicemente il totale disponibile senza poterlo spendere.
+    document.getElementById('availableEssence').innerText = "Fixed"; 
+    
+    // Il pulsante START è ora sempre abilitato perché non c'è più nulla da configurare
+    confirmStatsBtn.disabled = false;
 
     tbody.innerHTML = Object.keys(gameState.baseStats).map(stat => `
-        <tr>
-            <td>${stat}</td>
-            <td>${gameState.baseStats[stat]}</td>
-            <td>
-                <button onclick="changeStat('${stat}', -1)" class="stat-btn">-</button>
-                <span>${gameState.addedStats[stat]}</span>
-                <button onclick="changeStat('${stat}', 1)" class="stat-btn">+</button>
-            </td>
+        <tr style="border-bottom: 1px solid rgba(87, 49, 145, 0.3);">
+            <td style="padding: 8px 0; text-align: left;">${stat}</td>
+            <td style="padding: 8px 0; text-align: center; color: #a382ff;">${gameState.baseStats[stat]}</td>
+            <td style="padding: 8px 0; text-align: center; color: #ffd700;">+0</td>
         </tr>
     `).join('');
 }
 
-window.changeStat = (stat, amount) => {
-    if (amount > 0 && gameState.essences > 0) { 
-        gameState.addedStats[stat]++; gameState.essences--; 
-    } else if (amount < 0 && gameState.addedStats[stat] > 0) { 
-        gameState.addedStats[stat]--; gameState.essences++; 
-    }
-    renderStatTable();
-};
 
 // --- INITIALIZATION ---
 async function init() {
