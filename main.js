@@ -231,6 +231,7 @@ function renderStatTable() {
 
 // --- INITIALIZATION ---
 async function init() {
+    await loadTraitBonuses(); // Carica prima i bonus
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     Boss1.preloadBossAssets();
