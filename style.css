@@ -90,6 +90,13 @@ body {
     animation-delay: 1s; 
 }
 
+#statsTable {
+    border: 4px solid #ffffff;
+    outline: 4px solid #000000;
+    background-color: #111111;
+    padding: 10px;
+}
+
 /* --- 4. SCHERMATA SKILL TREE (POWER UP) --- */
 #powerUpScreen {
     position: absolute;    /* Sovrappone al canvas */
