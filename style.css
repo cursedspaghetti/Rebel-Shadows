@@ -97,6 +97,11 @@ body {
     padding: 10px;
 }
 
+#characterSetup td {
+    vertical-align: middle;
+    line-height: 1.2;
+}
+
 /* --- 4. SCHERMATA SKILL TREE (POWER UP) --- */
 #powerUpScreen {
     position: absolute;    /* Sovrappone al canvas */
