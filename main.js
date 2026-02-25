@@ -164,28 +164,26 @@ function renderStatTable() {
     tbody.innerHTML = statsToRender.map(stat => {
         let val;
 
-        // Logica specifica: solo Duration e Width sono dentro specialRay
         if (stat === 'Special_Duration' || stat === 'Special_Width') {
             val = gameState.specialRay ? gameState.specialRay[stat] : 0;
         } else {
-            // Tutte le altre (incluso Special_CD) sono nella radice
             val = gameState[stat];
         }
 
-        // Fallback di sicurezza
         const finalVal = (val !== undefined && val !== null) ? val : 0;
         const displayName = stat.replace(/_/g, ' ').toUpperCase();
         
+        // STILE PIXEL ART: Bordi netti, colori GameBoy/NES style
         return `
-            <tr style="border-bottom: 1px solid rgba(163, 130, 255, 0.15);">
-                <td style="padding: 10px 5px; text-align: left; font-weight: bold; color: #d1d1d1; font-size: 0.85em;">
-                    ${displayName}
+            <tr style="image-rendering: pixelated; border-bottom: 2px solid #332244;">
+                <td style="padding: 8px 4px; text-align: left; font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #ffffff; font-size: 12px; text-shadow: 2px 2px #000000; letter-spacing: 1px;">
+                    > ${displayName}
                 </td>
-                <td style="padding: 10px 5px; text-align: center; color: #a382ff; font-family: monospace; font-size: 1em; font-weight: bold;">
+                <td style="padding: 8px 4px; text-align: right; color: #ffff00; font-family: 'Courier New', Courier, monospace; font-size: 14px; font-weight: bold; text-shadow: 2px 2px #554400;">
                     ${finalVal}
                 </td>
-                <td style="padding: 10px 5px; text-align: center; color: #00ffcc; font-size: 0.8em;">
-                    ---
+                <td style="padding: 8px 4px; text-align: center; color: #00ff00; font-family: monospace; font-size: 12px; text-shadow: 1px 1px #004400;">
+                    [OK]
                 </td>
             </tr>
         `;
@@ -193,6 +191,7 @@ function renderStatTable() {
 
     if (confirmStatsBtn) confirmStatsBtn.disabled = false;
 }
+
 // --- INITIALIZATION ---
 async function init() {
     resizeCanvas();
