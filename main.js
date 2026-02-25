@@ -72,6 +72,45 @@ function makeTransparent(img) {
     return transparentImage;
 }
 
+
+async function loadTraitBonuses() {
+    try {
+        const response = await fetch("https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Game%20Attributes%20-%20Wiz%20Bonus.csv");
+        const csvText = await response.text();
+        
+        // Parsing semplice del CSV
+        const lines = csvText.split('\n');
+        const headers = lines[0].split(',');
+
+        lines.slice(1).forEach(line => {
+            const cols = line.split(',');
+            if (cols.length >= 4) {
+                const traitName = cols[0].trim();
+                traitBonusData[traitName] = {
+                    rarity: cols[1].trim(),
+                    attribute: cols[2].trim(),
+                    value: cols[3].trim()
+                };
+            }
+        });
+        console.log("Trait Bonuses Loaded");
+    } catch (e) {
+        console.error("Error loading CSV:", e);
+    }
+}
+
+// Funzione helper per formattare la visualizzazione del tratto + bonus
+function getTraitDisplay(traitName) {
+    if (!traitName || traitName === "-" || traitName === "None") return "-";
+    
+    const bonus = traitBonusData[traitName];
+    if (bonus) {
+        // Ritorna il nome del tratto colorato in base alla rarità (opzionale) e i dettagli
+        return `${traitName} <br> <small style="color: #00ff00;">[${bonus.rarity}] ${bonus.attribute}: +${bonus.value}</small>`;
+    }
+    return traitName;
+}
+
 // --- LOGICA CARICAMENTO WIZARD ---
 async function handleLoadWizard() {
     const wizardId = wizardIdInput.value.trim();
@@ -120,17 +159,15 @@ async function handleLoadWizard() {
         if (foundWizard) {
             gameState.wizardData = { ...foundWizard, id: wizardId };
             
-            // Aggiornamento testi con protezione (se l'elemento non esiste, non rompe il codice)
-            if (wizardDisplayName) wizardDisplayName.innerText = `${foundWizard.name.toUpperCase()} (#${wizardId})`;
-            if (traitHead) traitHead.innerText = foundWizard.head || "-";
-            if (traitBody) traitBody.innerText = foundWizard.body || "-";
-            if (traitProp) traitProp.innerText = foundWizard.prop || "-";
-            if (traitFamiliar) traitFamiliar.innerText = foundWizard.familiar || "None";
-            if (traitRune) traitRune.innerText = foundWizard.rune || "None";
+            // Aggiornamento con Bonus dal CSV
+            if (traitHead) traitHead.innerHTML = getTraitDisplay(foundWizard.head);
+            if (traitBody) traitBody.innerHTML = getTraitDisplay(foundWizard.body);
+            if (traitProp) traitProp.innerHTML = getTraitDisplay(foundWizard.prop);
+            if (traitFamiliar) traitFamiliar.innerHTML = getTraitDisplay(foundWizard.familiar);
+            if (traitRune) traitRune.innerHTML = getTraitDisplay(foundWizard.rune);
             
-            // Se hai rimosso Background dall'HTML, questo IF eviterà errori
             const traitBg = document.getElementById('trait-bg');
-            if (traitBg) traitBg.innerText = foundWizard.background || "-";
+            if (traitBg) traitBg.innerHTML = getTraitDisplay(foundWizard.background);
             
         } else {
             handleError(wizardId, "UNKNOWN WIZARD");
