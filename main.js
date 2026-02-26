@@ -88,7 +88,7 @@ async function loadTraitBonuses() {
     
       if (cols.length >= 4) {
         const traitName = cols[0].toLowerCase(); // Convertiamo in minuscolo per il match
-        traitBonusData[traitName] = {
+        gameState.traitBonusData[traitName] = {
             rarity: cols[1],
             attribute: cols[2],
             value: parseFloat(cols[3]) || 0 // Assicuriamoci che sia un numero
@@ -107,7 +107,7 @@ function getTraitDisplay(traitName) {
     
     // Pulizia: togliamo spazi e portiamo in minuscolo per il confronto
     const cleanName = traitName.trim().toLowerCase();
-    const bonus = traitBonusData[cleanName];
+    const bonus = gameState.traitBonusData[cleanName];
 
     if (bonus) {
         return `${traitName} <br> 
