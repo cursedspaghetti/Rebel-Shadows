@@ -103,7 +103,7 @@ async function loadTraitBonuses() {
 function getTraitDisplay(traitName) {
     if (!traitName || traitName === "-" || traitName === "None") return "-";
     
-    const bonus = traitBonusData[traitName];
+    const bonus = gameState.traitBonusData[traitName];
     if (bonus) {
         // Ritorna il nome del tratto colorato in base alla rarità (opzionale) e i dettagli
         return `${traitName} <br> <small style="color: #00ff00;">[${bonus.rarity}] ${bonus.attribute}: +${bonus.value}</small>`;
