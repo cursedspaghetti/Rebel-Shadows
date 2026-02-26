@@ -95,7 +95,7 @@ async function loadTraitBonuses() {
                 // Pulizia estrema: togliamo virgolette, spazi bianchi e portiamo in minuscolo
                 const traitName = cols[0].replace(/^"|"$/g, '').trim().toLowerCase();
                 
-                traitBonusData[traitName] = {
+                gameState.traitBonusData[traitName] = {
                     rarity: cols[1].replace(/^"|"$/g, '').trim(),
                     attribute: cols[2].replace(/^"|"$/g, '').trim(),
                     value: cols[3].replace(/^"|"$/g, '').trim()
