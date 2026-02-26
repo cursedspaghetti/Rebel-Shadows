@@ -76,28 +76,39 @@ function makeTransparent(img) {
 async function loadTraitBonuses() {
     try {
         const response = await fetch("https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Game%20Attributes%20-%20Wiz%20Bonus.csv");
-        const csvText = await response.text();
+        if (!response.ok) throw new Error("CSV non trovato");
         
-        // Parsing semplice del CSV
-        const lines = csvText.split('\n');
-        const headers = lines[0].split(',');
+        const csvText = await response.text();
+        const lines = csvText.split(/\r?\n/); // Gestisce bene i ritorni a capo Windows/Unix
 
-     lines.slice(1).forEach(line => {
-    // Gestisce sia virgole che punti e virgola, pulendo spazi e virgolette
-      const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-    
-      if (cols.length >= 4) {
-        const traitName = cols[0].toLowerCase(); // Convertiamo in minuscolo per il match
-        gameState.traitBonusData[traitName] = {
-            rarity: cols[1],
-            attribute: cols[2],
-            value: parseFloat(cols[3]) || 0 // Assicuriamoci che sia un numero
-        };
-    }
-    });
-        console.log("Trait Bonuses Loaded");
+        // Reset dei dati per evitare duplicati
+        traitBonusData = {};
+
+        lines.slice(1).forEach((line, index) => {
+            if (!line.trim()) return; // Salta righe vuote
+
+            // Prova a dividere per virgola, se non trova almeno 3 colonne prova col punto e virgola
+            let cols = line.split(',');
+            if (cols.length < 3) cols = line.split(';');
+
+            if (cols.length >= 4) {
+                // Pulizia estrema: togliamo virgolette, spazi bianchi e portiamo in minuscolo
+                const traitName = cols[0].replace(/^"|"$/g, '').trim().toLowerCase();
+                
+                traitBonusData[traitName] = {
+                    rarity: cols[1].replace(/^"|"$/g, '').trim(),
+                    attribute: cols[2].replace(/^"|"$/g, '').trim(),
+                    value: cols[3].replace(/^"|"$/g, '').trim()
+                };
+            }
+        });
+        
+        console.log("Bonus caricati correttamente:", Object.keys(traitBonusData).length);
+        // Debug: stampa i primi 3 nomi caricati per vedere come appaiono
+        console.log("Esempio chiavi nel dizionario:", Object.keys(traitBonusData).slice(0, 3));
+        
     } catch (e) {
-        console.error("Error loading CSV:", e);
+        console.error("Errore critico CSV:", e);
     }
 }
 
