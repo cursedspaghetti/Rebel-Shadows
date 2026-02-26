@@ -103,9 +103,9 @@ async function loadTraitBonuses() {
             }
         });
         
-        console.log("Bonus caricati correttamente:", Object.keys(traitBonusData).length);
+        console.log("Bonus caricati correttamente:", Object.keys(gameState.traitBonusData).length);
         // Debug: stampa i primi 3 nomi caricati per vedere come appaiono
-        console.log("Esempio chiavi nel dizionario:", Object.keys(traitBonusData).slice(0, 3));
+        console.log("Esempio chiavi nel dizionario:", Object.keys(gameState.traitBonusData).slice(0, 3));
         
     } catch (e) {
         console.error("Errore critico CSV:", e);
