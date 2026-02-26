@@ -82,7 +82,7 @@ async function loadTraitBonuses() {
         const lines = csvText.split(/\r?\n/); // Gestisce bene i ritorni a capo Windows/Unix
 
         // Reset dei dati per evitare duplicati
-        traitBonusData = {};
+        gameState.traitBonusData = {};
 
         lines.slice(1).forEach((line, index) => {
             if (!line.trim()) return; // Salta righe vuote
