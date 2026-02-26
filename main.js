@@ -82,17 +82,19 @@ async function loadTraitBonuses() {
         const lines = csvText.split('\n');
         const headers = lines[0].split(',');
 
-        lines.slice(1).forEach(line => {
-            const cols = line.split(',');
-            if (cols.length >= 4) {
-                const traitName = cols[0].trim();
-                gameState.traitBonusData[traitName] = {
-                    rarity: cols[1].trim(),
-                    attribute: cols[2].trim(),
-                    value: cols[3].trim()
-                };
-            }
-        });
+     lines.slice(1).forEach(line => {
+    // Gestisce sia virgole che punti e virgola, pulendo spazi e virgolette
+      const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+    
+      if (cols.length >= 4) {
+        const traitName = cols[0].toLowerCase(); // Convertiamo in minuscolo per il match
+        traitBonusData[traitName] = {
+            rarity: cols[1],
+            attribute: cols[2],
+            value: parseFloat(cols[3]) || 0 // Assicuriamoci che sia un numero
+        };
+    }
+    });
         console.log("Trait Bonuses Loaded");
     } catch (e) {
         console.error("Error loading CSV:", e);
@@ -103,11 +105,19 @@ async function loadTraitBonuses() {
 function getTraitDisplay(traitName) {
     if (!traitName || traitName === "-" || traitName === "None") return "-";
     
-    const bonus = gameState.traitBonusData[traitName];
+    // Pulizia: togliamo spazi e portiamo in minuscolo per il confronto
+    const cleanName = traitName.trim().toLowerCase();
+    const bonus = traitBonusData[cleanName];
+
     if (bonus) {
-        // Ritorna il nome del tratto colorato in base alla rarità (opzionale) e i dettagli
-        return `${traitName} <br> <small style="color: #00ff00;">[${bonus.rarity}] ${bonus.attribute}: +${bonus.value}</small>`;
+        return `${traitName} <br> 
+                <small style="color: #00ff00; font-size: 10px;">
+                [${bonus.rarity}] ${bonus.attribute}: +${bonus.value}
+                </small>`;
     }
+    
+    // Se non trova il bonus, stampa un log per aiutarti a capire cosa non combacia
+    console.warn(`Nessun bonus trovato per il tratto: "${traitName}"`);
     return traitName;
 }
 
