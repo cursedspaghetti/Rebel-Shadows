@@ -86,7 +86,7 @@ async function loadTraitBonuses() {
             const cols = line.split(',');
             if (cols.length >= 4) {
                 const traitName = cols[0].trim();
-                traitBonusData[traitName] = {
+                gameState.traitBonusData[traitName] = {
                     rarity: cols[1].trim(),
                     attribute: cols[2].trim(),
                     value: cols[3].trim()
