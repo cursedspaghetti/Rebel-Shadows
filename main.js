@@ -79,36 +79,44 @@ async function loadTraitBonuses() {
         if (!response.ok) throw new Error("CSV non trovato");
         
         const csvText = await response.text();
-        const lines = csvText.split(/\r?\n/); // Gestisce bene i ritorni a capo Windows/Unix
+        const lines = csvText.split(/\r?\n/);
 
-        // Reset dei dati per evitare duplicati
         gameState.traitBonusData = {};
 
-        lines.slice(1).forEach((line, index) => {
-            if (!line.trim()) return; // Salta righe vuote
+        lines.slice(1).forEach(line => {
+            if (!line.trim()) return;
 
-            // Prova a dividere per virgola, se non trova almeno 3 colonne prova col punto e virgola
+            // Split per virgola
             let cols = line.split(',');
-            if (cols.length < 3) cols = line.split(';');
 
-            if (cols.length >= 4) {
-                // Pulizia estrema: togliamo virgolette, spazi bianchi e portiamo in minuscolo
-                const traitName = cols[0].replace(/^"|"$/g, '').trim().toLowerCase();
+            // Se i dati sono tra virgolette, lo split per virgola potrebbe 
+            // rompere i numeri (es. "10,00" diventa ["10", "00"]).
+            // Usiamo una Regex per splittare solo le virgole FUORI dalle virgolette:
+            const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+            cols = line.split(regex);
+
+            if (cols.length >= 5) {
+                // Pulizia: rimuove le virgolette esterne e gli spazi
+                const clean = (str) => str ? str.replace(/^"|"$/g, '').trim() : "";
+
+                const traitName = clean(cols[1]).toLowerCase();
+                const rarity = clean(cols[3]);
+                const attribute = clean(cols[4]);
                 
+                // Pulizia Numero: toglie virgolette, cambia virgola in punto
+                let valStr = clean(cols[5]).replace(',', '.');
+                const value = parseFloat(valStr) || 0;
+
                 gameState.traitBonusData[traitName] = {
-                    rarity: cols[1].replace(/^"|"$/g, '').trim(),
-                    attribute: cols[2].replace(/^"|"$/g, '').trim(),
-                    value: cols[3].replace(/^"|"$/g, '').trim()
+                    rarity: rarity,
+                    attribute: attribute,
+                    value: value
                 };
             }
         });
-        
         console.log("Bonus caricati correttamente:", Object.keys(gameState.traitBonusData).length);
-        // Debug: stampa i primi 3 nomi caricati per vedere come appaiono
-        console.log("Esempio chiavi nel dizionario:", Object.keys(gameState.traitBonusData).slice(0, 3));
-        
     } catch (e) {
-        console.error("Errore critico CSV:", e);
+        console.error("Errore CSV:", e);
     }
 }
 
@@ -138,15 +146,15 @@ async function handleLoadWizard() {
     if (!wizardId || wizardId === gameState.lastLoadedId) return;
     gameState.lastLoadedId = wizardId;
 
-    // Riferimenti agli elementi UI - Usiamo l'operatore optional chaining ?. o controlli if
+    // Riferimenti agli elementi UI
     const wizardDisplayName = document.getElementById('wizardDisplayName');
     const traitHead = document.getElementById('trait-head');
     const traitBody = document.getElementById('trait-body');
     const traitProp = document.getElementById('trait-prop');
     const traitRune = document.getElementById('trait-rune');
     const traitFamiliar = document.getElementById('trait-familiar');
-    // Nota: traitBg rimosso se non presente nell'HTML mobile per risparmiare spazio
 
+    // --- CARICAMENTO IMMAGINI (Logica esistente) ---
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
@@ -171,6 +179,7 @@ async function handleLoadWizard() {
         };
     };
 
+    // --- LOGICA DATI E BONUS ---
     try {
         const response = await fetch("https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/wizzies.json");
         if (!response.ok) throw new Error("Database error");
@@ -179,8 +188,41 @@ async function handleLoadWizard() {
 
         if (foundWizard) {
             gameState.wizardData = { ...foundWizard, id: wizardId };
-            
-            // Aggiornamento con Bonus dal CSV
+
+            // 1. RESET STATISTICHE BASE (Valori di partenza prima dei bonus)
+            gameState.HP = 100;
+            gameState.Defense = 10;
+            gameState.Elusion = 0.05;
+            gameState.Speed = 5;
+            gameState.Attack_Power = 10;
+            gameState.Attack_Rate = 500;
+            // Aggiungi qui altri reset se necessario
+
+            // 2. CALCOLO DEI BONUS DAI TRATTI
+            const categories = ['head', 'body', 'prop', 'familiar', 'rune', 'background'];
+            categories.forEach(cat => {
+                const traitFullValue = foundWizard[cat];
+                if (traitFullValue && traitFullValue !== "None") {
+                    // Pulizia: Rimuove "Body: " o "Head: " per isolare il nome del tratto
+                    let nameOnly = traitFullValue.includes(':') 
+                        ? traitFullValue.split(':')[1].trim() 
+                        : traitFullValue.trim();
+                    
+                    const bonus = gameState.traitBonusData[nameOnly.toLowerCase()];
+                    
+                    if (bonus) {
+                        // Somma il valore al gameState se la proprietà esiste
+                        // Gestisce sia nomi esatti che nomi con underscore (es. "Attack_Power")
+                        const targetStat = bonus.attribute; 
+                        if (gameState.hasOwnProperty(targetStat)) {
+                            gameState[targetStat] += bonus.value;
+                        }
+                    }
+                }
+            });
+
+            // 3. AGGIORNAMENTO TESTI UI CON BONUS VISIBILI
+            if (wizardDisplayName) wizardDisplayName.innerText = `${foundWizard.name.toUpperCase()} (#${wizardId})`;
             if (traitHead) traitHead.innerHTML = getTraitDisplay(foundWizard.head);
             if (traitBody) traitBody.innerHTML = getTraitDisplay(foundWizard.body);
             if (traitProp) traitProp.innerHTML = getTraitDisplay(foundWizard.prop);
@@ -189,11 +231,15 @@ async function handleLoadWizard() {
             
             const traitBg = document.getElementById('trait-bg');
             if (traitBg) traitBg.innerHTML = getTraitDisplay(foundWizard.background);
+
+            // 4. RE-RENDER DELLA TABELLA STATISTICHE GIALLA
+            renderStatTable();
             
         } else {
             handleError(wizardId, "UNKNOWN WIZARD");
         }
     } catch (e) {
+        console.error("Errore in handleLoadWizard:", e);
         handleError(wizardId, "CONNECTION ERROR");
     }
 }
