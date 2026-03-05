@@ -97,7 +97,20 @@ worldY : 0,  // La posizione assoluta del giocatore nel mondo
         id: null
     },
     traitBonusData : {}, // Conterrà la mappatura Trait -> Bonus    
-
+    
+    buffs: {
+        HP: 0,
+        Defense: 0,
+        Elusion: 0,
+        Speed: 0,
+        Attack_Power: 0,
+        Attack_Rate: 0,
+        Shield_CD: 0,
+        Shield_Duration: 0,
+        Special_CD: 0,
+        Special_Duration: 0,
+        Special_Width: 0
+    },
 
     
     // Asset Caricati Dinamicamente
