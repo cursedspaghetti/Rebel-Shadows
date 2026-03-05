@@ -193,7 +193,7 @@ async function handleLoadWizard() {
             gameState.HP = 100;
             gameState.Defense = 10;
             gameState.Elusion = 0.05;
-            gameState.Speed = 5;
+            gameState.Speed = 3;
             gameState.Attack_Power = 10;
             gameState.Attack_Rate = 500;
             // Aggiungi qui altri reset se necessario
@@ -267,7 +267,7 @@ function renderStatTable() {
 
     tbody.innerHTML = statsToRender.map(stat => {
         let val;
-
+        // Recupero valore base
         if (stat === 'Special_Duration' || stat === 'Special_Width') {
             val = gameState.specialRay ? gameState.specialRay[stat] : 0;
         } else {
@@ -275,25 +275,35 @@ function renderStatTable() {
         }
 
         const finalVal = (val !== undefined && val !== null) ? val : 0;
+        
+        // --- GESTIONE BUFF ---
+        // Supponendo che i buff siano salvati in gameState.buffs[stat]
+        // Se non hai un oggetto buff, puoi inizialmente impostarlo a 0
+        const buffVal = (gameState.buffs && gameState.buffs[stat]) ? gameState.buffs[stat] : 0;
+        const buffDisplay = buffVal > 0 ? `+${buffVal}` : (buffVal < 0 ? `${buffVal}` : '--');
+        const buffColor = buffVal > 0 ? '#00ff00' : (buffVal < 0 ? '#ff0044' : '#666666');
+        // ---------------------
+
         const displayName = stat.replace(/_/g, ' ').toUpperCase();
         
-        // STILE PIXEL ART: Bordi netti, colori GameBoy/NES style
         return `
-            <tr style="image-rendering: pixelated; border-bottom: 2px solid #332244;">
-                <td style="padding: 8px 4px; text-align: left; font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #ffffff; font-size: 12px; text-shadow: 2px 2px #000000; letter-spacing: 1px;">
+            <tr style="image-rendering: pixelated; border-bottom: 2px solid #003366;">
+                <td style="padding: 8px 4px; text-align: left; font-family: 'Courier New', monospace; font-weight: bold; color: #ffffff; font-size: 12px; text-shadow: 2px 2px #000000; letter-spacing: 1px;">
                     > ${displayName}
                 </td>
-                <td style="padding: 8px 4px; text-align: right; color: #ffff00; font-family: 'Courier New', Courier, monospace; font-size: 14px; font-weight: bold; text-shadow: 2px 2px #554400;">
+                <td style="padding: 8px 4px; text-align: right; color: #ffff00; font-family: 'Courier New', monospace; font-size: 14px; font-weight: bold; text-shadow: 2px 2px #554400;">
                     ${finalVal}
                 </td>
-                <td style="padding: 8px 4px; text-align: center; color: #00ff00; font-family: monospace; font-size: 12px; text-shadow: 1px 1px #004400;">
-                    [OK]
+                <td style="padding: 8px 4px; text-align: center; color: ${buffColor}; font-family: 'Courier New', monospace; font-size: 12px; font-weight: bold; text-shadow: 1px 1px #000;">
+                    ${buffDisplay}
                 </td>
             </tr>
         `;
     }).join('');
 
-    if (confirmStatsBtn) confirmStatsBtn.disabled = false;
+    if (typeof confirmStatsBtn !== 'undefined' && confirmStatsBtn) {
+        confirmStatsBtn.disabled = false;
+    }
 }
 
 // --- INITIALIZATION ---
