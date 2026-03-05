@@ -289,24 +289,18 @@ function renderStatTable() {
     ];
 
     tbody.innerHTML = statsToRender.map(stat => {
-        let val;
-        // Recupero valore base
+        let currentVal;
+
+        // Recupero il valore ATTUALE (già incrementato dai bonus in handleLoadWizard)
         if (stat === 'Special_Duration' || stat === 'Special_Width') {
-            val = gameState.specialRay ? gameState.specialRay[stat] : 0;
+            currentVal = gameState.specialRay ? gameState.specialRay[stat] : 0;
         } else {
-            val = gameState[stat];
+            currentVal = gameState[stat];
         }
 
-        const finalVal = (val !== undefined && val !== null) ? val : 0;
-        
-        // --- GESTIONE BUFF ---
-        // Supponendo che i buff siano salvati in gameState.buffs[stat]
-        // Se non hai un oggetto buff, puoi inizialmente impostarlo a 0
         const buffVal = (gameState.buffs && gameState.buffs[stat]) ? gameState.buffs[stat] : 0;
         const buffDisplay = buffVal > 0 ? `+${buffVal}` : (buffVal < 0 ? `${buffVal}` : '--');
         const buffColor = buffVal > 0 ? '#00ff00' : (buffVal < 0 ? '#ff0044' : '#666666');
-        // ---------------------
-
         const displayName = stat.replace(/_/g, ' ').toUpperCase();
         
         return `
@@ -315,7 +309,7 @@ function renderStatTable() {
                     > ${displayName}
                 </td>
                 <td style="padding: 8px 4px; text-align: right; color: #ffff00; font-family: 'Courier New', monospace; font-size: 14px; font-weight: bold; text-shadow: 2px 2px #554400;">
-                    ${finalVal}
+                    ${currentVal.toFixed(1).replace('.0', '')}
                 </td>
                 <td style="padding: 8px 4px; text-align: center; color: ${buffColor}; font-family: 'Courier New', monospace; font-size: 12px; font-weight: bold; text-shadow: 1px 1px #000;">
                     ${buffDisplay}
@@ -323,10 +317,6 @@ function renderStatTable() {
             </tr>
         `;
     }).join('');
-
-    if (typeof confirmStatsBtn !== 'undefined' && confirmStatsBtn) {
-        confirmStatsBtn.disabled = false;
-    }
 }
 
 // --- INITIALIZATION ---
