@@ -154,7 +154,31 @@ async function handleLoadWizard() {
     const traitRune = document.getElementById('trait-rune');
     const traitFamiliar = document.getElementById('trait-familiar');
 
-    // --- CARICAMENTO IMMAGINI (Logica esistente) ---
+    // --- 1. RESET STATISTICHE E BUFFS ---
+    // Definiamo i valori base (modificali qui per bilanciare il gioco)
+    gameState.HP = 100;
+    gameState.Defense = 10;
+    gameState.Elusion = 0.05;
+    gameState.Speed = 3;
+    gameState.Attack_Power = 10;
+    gameState.Attack_Rate = 500;
+    gameState.Shield_CD = 15;
+    gameState.Shield_Duration = 5;
+    gameState.Special_CD = 10;
+    // Reset valori speciali se presenti
+    if(gameState.specialRay) {
+        gameState.specialRay.Special_Duration = 0.8;
+        gameState.specialRay.Special_Width = 250;
+    }
+
+    // Inizializziamo l'oggetto buffs a zero (questo alimenta la colonna verde)
+    gameState.buffs = {
+        HP: 0, Defense: 0, Elusion: 0, Speed: 0, 
+        Attack_Power: 0, Attack_Rate: 0, Shield_CD: 0, 
+        Shield_Duration: 0, Special_CD: 0, Special_Duration: 0, Special_Width: 0
+    };
+
+    // --- 2. CARICAMENTO IMMAGINI ---
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
@@ -179,7 +203,7 @@ async function handleLoadWizard() {
         };
     };
 
-    // --- LOGICA DATI E BONUS ---
+    // --- 3. LOGICA DATI E BONUS DAL CSV ---
     try {
         const response = await fetch("https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/wizzies.json");
         if (!response.ok) throw new Error("Database error");
@@ -189,21 +213,11 @@ async function handleLoadWizard() {
         if (foundWizard) {
             gameState.wizardData = { ...foundWizard, id: wizardId };
 
-            // 1. RESET STATISTICHE BASE (Valori di partenza prima dei bonus)
-            gameState.HP = 100;
-            gameState.Defense = 10;
-            gameState.Elusion = 0.05;
-            gameState.Speed = 3;
-            gameState.Attack_Power = 10;
-            gameState.Attack_Rate = 500;
-            // Aggiungi qui altri reset se necessario
-
-            // 2. CALCOLO DEI BONUS DAI TRATTI
             const categories = ['head', 'body', 'prop', 'familiar', 'rune', 'background'];
             categories.forEach(cat => {
                 const traitFullValue = foundWizard[cat];
                 if (traitFullValue && traitFullValue !== "None") {
-                    // Pulizia: Rimuove "Body: " o "Head: " per isolare il nome del tratto
+                    // Pulizia nome tratto
                     let nameOnly = traitFullValue.includes(':') 
                         ? traitFullValue.split(':')[1].trim() 
                         : traitFullValue.trim();
@@ -211,17 +225,24 @@ async function handleLoadWizard() {
                     const bonus = gameState.traitBonusData[nameOnly.toLowerCase()];
                     
                     if (bonus) {
-                        // Somma il valore al gameState se la proprietà esiste
-                        // Gestisce sia nomi esatti che nomi con underscore (es. "Attack_Power")
-                        const targetStat = bonus.attribute; 
+                        const targetStat = bonus.attribute; // Es: "Attack_Power" o "HP"
+                        
+                        // Aggiorna la statistica effettiva
                         if (gameState.hasOwnProperty(targetStat)) {
                             gameState[targetStat] += bonus.value;
+                        } else if (gameState.specialRay && gameState.specialRay.hasOwnProperty(targetStat)) {
+                            gameState.specialRay[targetStat] += bonus.value;
+                        }
+
+                        // Aggiorna il buffer per la colonna BUFF della UI
+                        if (gameState.buffs.hasOwnProperty(targetStat)) {
+                            gameState.buffs[targetStat] += bonus.value;
                         }
                     }
                 }
             });
 
-            // 3. AGGIORNAMENTO TESTI UI CON BONUS VISIBILI
+            // --- 4. AGGIORNAMENTO UI ---
             if (wizardDisplayName) wizardDisplayName.innerText = `${foundWizard.name.toUpperCase()} (#${wizardId})`;
             if (traitHead) traitHead.innerHTML = getTraitDisplay(foundWizard.head);
             if (traitBody) traitBody.innerHTML = getTraitDisplay(foundWizard.body);
@@ -232,7 +253,7 @@ async function handleLoadWizard() {
             const traitBg = document.getElementById('trait-bg');
             if (traitBg) traitBg.innerHTML = getTraitDisplay(foundWizard.background);
 
-            // 4. RE-RENDER DELLA TABELLA STATISTICHE GIALLA
+            // Rerender della tabella con i nuovi valori calcolati
             renderStatTable();
             
         } else {
