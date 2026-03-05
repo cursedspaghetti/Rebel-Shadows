@@ -214,10 +214,10 @@ async function handleLoadWizard() {
             gameState.wizardData = { ...foundWizard, id: wizardId };
 
             const categories = ['head', 'body', 'prop', 'familiar', 'rune', 'background'];
+
             categories.forEach(cat => {
                 const traitFullValue = foundWizard[cat];
                 if (traitFullValue && traitFullValue !== "None") {
-                    // Pulizia nome tratto
                     let nameOnly = traitFullValue.includes(':') 
                         ? traitFullValue.split(':')[1].trim() 
                         : traitFullValue.trim();
@@ -225,23 +225,25 @@ async function handleLoadWizard() {
                     const bonus = gameState.traitBonusData[nameOnly.toLowerCase()];
                     
                     if (bonus) {
-                        const targetStat = bonus.attribute; // Es: "Attack_Power" o "HP"
+                        const targetStat = bonus.attribute; 
                         
-                        // Aggiorna la statistica effettiva
+                        // 1. Applica al gameState (Statistiche reali)
                         if (gameState.hasOwnProperty(targetStat)) {
                             gameState[targetStat] += bonus.value;
-                        } else if (gameState.specialRay && gameState.specialRay.hasOwnProperty(targetStat)) {
+                        } 
+                        // CONTROLLO PER SPECIAL ATTACK (Proprietà annidate)
+                        else if (gameState.specialRay && gameState.specialRay.hasOwnProperty(targetStat)) {
                             gameState.specialRay[targetStat] += bonus.value;
                         }
 
-                        // Aggiorna il buffer per la colonna BUFF della UI
+                        // 2. Aggiorna sempre il buffer BUFFS per la UI
                         if (gameState.buffs.hasOwnProperty(targetStat)) {
                             gameState.buffs[targetStat] += bonus.value;
                         }
                     }
                 }
             });
-
+            
             // --- 4. AGGIORNAMENTO UI ---
             if (wizardDisplayName) wizardDisplayName.innerText = `${foundWizard.name.toUpperCase()} (#${wizardId})`;
             if (traitHead) traitHead.innerHTML = getTraitDisplay(foundWizard.head);
