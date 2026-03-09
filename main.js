@@ -278,6 +278,14 @@ function handleError(id, name) {
 }
 
 function renderStatTable() {
+    // 1. SFONDO
+    if (bgIntro.complete && bgIntro.naturalWidth !== 0) {
+        ctx.drawImage(bgIntro, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    } else {
+        ctx.fillStyle = '#000033'; 
+        ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    }
+    
     const tbody = document.getElementById('statsBody');
     if (!tbody) return;
 
