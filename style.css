@@ -49,16 +49,10 @@ body {
     max-height: 932px; /* Altezza tipica di un iPhone Pro Max */
     
     /* Centra il contenitore nella pagina */
-    margin: auto; 
     
     background-color: #000;
     overflow: hidden;
     image-rendering: pixelated;
-    
-    /* Effetto estetico: bordi arrotondati e ombra solo su desktop */
-    border: 4px solid #333;
-    border-radius: 20px;
-    box-shadow: 0 0 50px rgba(0,0,0,0.5);
 }
 
 #gameCanvas {
