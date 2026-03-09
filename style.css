@@ -41,14 +41,8 @@ body {
 /* --- 2. CONTENITORI PRINCIPALI --- */
 #game-container {
     position: relative;
-    /* Forza le dimensioni da smartphone su desktop */
     width: 100dvw;
     height: 100dvh;
-    max-width: 430px; /* Larghezza tipica di un iPhone Pro Max */
-    max-height: 932px; /* Altezza tipica di un iPhone Pro Max */
-    
-    /* Centra il contenitore nella pagina */
-    
     background-color: #000;
     overflow: hidden;
     image-rendering: pixelated;
