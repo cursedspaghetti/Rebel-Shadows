@@ -2,10 +2,10 @@ import { CONFIG, gameState } from './config.js';
 
 let hoverCounter = 0;
 
-export function drawStartScreen(ctx, bgParallax, introImage, wiz1, bookImg) {
+export function drawStartScreen(ctx, bgIntro, introImage, wiz1, bookImg) {
     // 1. SFONDO
-    if (bgParallax.complete && bgParallax.naturalWidth !== 0) {
-        ctx.drawImage(bgParallax, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    if (bgIntro.complete && bgIntro.naturalWidth !== 0) {
+        ctx.drawImage(bgIntro, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     } else {
         ctx.fillStyle = '#000033'; 
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
