@@ -346,7 +346,7 @@ async function init() {
 
 function startScreenLoop() {
     if (gameState.currentScreen === 'start') {
-        Renderer.drawStartScreen(ctx, bgParallax, introImage, Wiz1, bookImg);
+        Renderer.drawStartScreen(ctx, bgIntro, introImage, Wiz1, bookImg);
         requestAnimationFrame(startScreenLoop);
     }
 }
