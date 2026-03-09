@@ -42,9 +42,9 @@ body {
 #game-container {
     position: relative;
     /* Forza le dimensioni da smartphone su desktop */
-    width: 100%;
+    width: 100dvw;
+    height: 100dvh;
     max-width: 430px; /* Larghezza tipica di un iPhone Pro Max */
-    height: 100%;
     max-height: 932px; /* Altezza tipica di un iPhone Pro Max */
     
     /* Centra il contenitore nella pagina */
