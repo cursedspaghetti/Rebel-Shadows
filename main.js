@@ -496,7 +496,7 @@ function gameLoop() {
 
 function updateAndDrawBackgrounds() {
     // 1. Sfondo base nero fisso
-    ctx.drawImage(bgImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+   //ctx.drawImage(bgImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
     const drawX = (CONFIG.CANVAS_WIDTH / 2) - (bgParallax.naturalWidth / 2);
     const imgHeight = bgParallax.naturalHeight;
