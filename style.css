@@ -57,24 +57,6 @@ body {
 }
 
 
-#characterSetup {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start; 
-    align-items: center;
-    color: white;
-    text-align: center;
-    z-index: 10;
-    padding-top: calc(env(safe-area-inset-top, 0px) + 100px);
-    background: transparent;
-
-}
-
 /* --- 3. SCHERMATA INIZIALE --- */
 #startScreen {
     position: absolute;
@@ -120,6 +102,114 @@ body {
     vertical-align: middle;
     line-height: 1.2;
 }
+
+/* Shermata wizard */
+
+#characterSetup {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: #000b1e; /* Sfondo principale scuro */
+        color: #ffffff; /* Testo globale bianco */
+        font-family: 'Courier New', monospace;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 10px;
+        box-sizing: border-box;
+        overflow-y: auto;
+        image-rendering: pixelated;
+        z-index: 1000;
+    }
+
+    .setup-container {
+        width: 100%;
+        max-width: 500px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .wiz-title {
+        width: 100%;
+        text-align: center;
+        color: #ffffff; /* Bianco */
+        font-size: clamp(1.2rem, 5vw, 1.8rem);
+        border-bottom: 2px solid #ffffff;
+        margin: 10px 0;
+        text-transform: uppercase;
+        padding-bottom: 5px;
+    }
+
+    .profile-card, .stats-panel {
+        display: flex;
+        background: rgba(255, 255, 255, 0.05); /* Trasparenza quasi totale */
+        padding: 15px;
+        border: 2px solid #ffffff; /* Bordo sottile bianco */
+        box-sizing: border-box;
+    }
+
+    .profile-card {
+        flex-wrap: wrap;
+        gap: 15px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #setupWizImage {
+        width: 80px; 
+        height: 80px;
+        border: 2px solid #ffffff;
+        background: transparent;
+    }
+
+    .traits-list {
+        flex: 1;
+        min-width: 150px;
+        font-size: 0.8rem;
+    }
+
+    .trait-val, .rune-val { color: #ffffff !important; font-weight: bold; text-shadow: none; }
+
+    .stats-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+        background: transparent;
+    }
+
+    .stats-table th { 
+        color: #ffffff; 
+        text-align: left; 
+        padding: 8px 4px; 
+        border-bottom: 1px solid rgba(255,255,255,0.3); 
+    }
+
+    .stats-table td { 
+        padding: 8px 4px; 
+        border-bottom: 1px solid rgba(255,255,255,0.1); 
+        color: #ffffff;
+    }
+
+    .btn-start {
+        width: 100%;
+        padding: 15px;
+        margin-top: 10px;
+        background: transparent;
+        color: #ffffff;
+        font-weight: bold;
+        font-size: 1.2rem;
+        border: 2px solid #ffffff;
+        cursor: pointer;
+        text-transform: uppercase;
+        transition: all 0.2s;
+    }
+
+    .btn-start:active {
+        background: #ffffff;
+        color: #000b1e;
+    }
+
 
 /* --- 4. SCHERMATA SKILL TREE (POWER UP) --- */
 #powerUpScreen {
