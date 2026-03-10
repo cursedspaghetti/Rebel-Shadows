@@ -265,6 +265,7 @@ async function handleLoadWizard() {
         console.error("Errore in handleLoadWizard:", e);
         handleError(wizardId, "CONNECTION ERROR");
     }
+    console.log("DEBUG BUFFS:", gameState.buffs);
 }
 
 function handleError(id, name) {
