@@ -156,8 +156,8 @@ html, body {
 }
 
 #setupWizImage {
-    width: 200px;
-    height: 200px;
+    width: 150px;
+    height: 150px;
     /* border: 2px solid #ffffff; */
     image-rendering: pixelated;
 }
