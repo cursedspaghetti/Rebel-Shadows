@@ -34,8 +34,14 @@
         
         <div class="profile-card">
             <img id="setupWizImage" src="">
+            
             <div id="traitsDisplay" class="traits-list">
-                </div>
+                <p><strong>HEAD:</strong> <span id="trait-head" class="trait-val">-</span></p>
+                <p><strong>BODY:</strong> <span id="trait-body" class="trait-val">-</span></p>
+                <p><strong>PROP:</strong> <span id="trait-prop" class="trait-val">-</span></p>
+                <p><strong>FAMILIAR:</strong> <span id="trait-familiar" class="trait-val">-</span></p>
+                <p><strong>RUNE:</strong> <span id="trait-rune" class="rune-val">-</span></p>
+            </div>
         </div>
         
         <div id="statsContainer" class="stats-panel">
@@ -47,10 +53,10 @@
                         <th style="text-align: center;">BUFF</th>
                     </tr>
                 </thead>
-                <tbody id="statsBody"></tbody>
+                <tbody id="statsBody">
+                    </tbody>
             </table>
-        </div> 
-        <button id="confirmStats" class="btn-start">
+        </div> <button id="confirmStats" class="btn-start">
             START HUNTING
         </button>
 
