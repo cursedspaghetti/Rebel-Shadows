@@ -148,9 +148,9 @@ async function handleLoadWizard() {
     const traitProp = document.getElementById('trait-prop');
     const traitRune = document.getElementById('trait-rune');
     const traitFamiliar = document.getElementById('trait-familiar');
+    const traitBg = document.getElementById('trait-bg');
 
-    // --- 1. RESET STATISTICHE E BUFFS ---
-    // Definiamo i valori base (modificali qui per bilanciare il gioco)
+    // --- 1. RESET STATISTICHE BASE ---
     gameState.HP = 100;
     gameState.Defense = 10;
     gameState.Elusion = 0.05;
@@ -160,20 +160,20 @@ async function handleLoadWizard() {
     gameState.Shield_CD = 15;
     gameState.Shield_Duration = 5;
     gameState.Special_CD = 10;
-    // Reset valori speciali se presenti
+
     if(gameState.specialRay) {
         gameState.specialRay.Special_Duration = 0.8;
         gameState.specialRay.Special_Width = 250;
     }
 
-    // Inizializziamo l'oggetto buffs a zero (questo alimenta la colonna verde)
+    // --- 2. RESET BUFFS (IMPORTANTE: Farlo PRIMA del caricamento bonus) ---
     gameState.buffs = {
         HP: 0, Defense: 0, Elusion: 0, Speed: 0, 
         Attack_Power: 0, Attack_Rate: 0, Shield_CD: 0, 
         Shield_Duration: 0, Special_CD: 0, Special_Duration: 0, Special_Width: 0
     };
 
-    // --- 2. CARICAMENTO IMMAGINI ---
+    // --- 3. CARICAMENTO IMMAGINI (WIZARD & SPRITESHEET) ---
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
@@ -190,15 +190,12 @@ async function handleLoadWizard() {
     const spriteSheetRaw = new Image();
     spriteSheetRaw.crossOrigin = "anonymous";
     spriteSheetRaw.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}/spritesheet.png`;
-
     spriteSheetRaw.onload = () => {
         const transparentSpriteObj = makeTransparent(spriteSheetRaw);
-        transparentSpriteObj.onload = () => {
-            gameState.wizardSpritesheet = transparentSpriteObj;
-        };
+        transparentSpriteObj.onload = () => { gameState.wizardSpritesheet = transparentSpriteObj; };
     };
 
-    // --- 3. LOGICA DATI E BONUS DAL CSV ---
+    // --- 4. LOGICA DATI E APPLICAZIONE BONUS ---
     try {
         const response = await fetch("https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/wizzies.json");
         if (!response.ok) throw new Error("Database error");
@@ -207,49 +204,59 @@ async function handleLoadWizard() {
 
         if (foundWizard) {
             gameState.wizardData = { ...foundWizard, id: wizardId };
-
             const categories = ['head', 'body', 'prop', 'familiar', 'rune', 'background'];
 
             categories.forEach(cat => {
-          const traitFullValue = foundWizard[cat];
-         if (traitFullValue && traitFullValue !== "None") {
-    
-    // Pulizia estrema: prendiamo il nome e rimuoviamo eventuali spazi extra
-    // Esempio: "Salamander's Tongue: the Fire Spell" 
-    let nameOnly = traitFullValue.trim(); 
+                const traitFullValue = foundWizard[cat];
+                if (traitFullValue && traitFullValue !== "None") {
+                    
+                    // Normalizzazione nome: proviamo il nome intero o quello dopo i ":"
+                    let nameVariants = [traitFullValue.trim().toLowerCase()];
+                    if (traitFullValue.includes(':')) {
+                        nameVariants.push(traitFullValue.split(':')[1].trim().toLowerCase());
+                    }
 
-    // Proviamo il match diretto
-    let bonus = gameState.traitBonusData[nameOnly.toLowerCase()];
+                    // Cerchiamo se esiste un bonus per una delle varianti
+                    let bonus = null;
+                    for (let variant of nameVariants) {
+                        if (gameState.traitBonusData[variant]) {
+                            bonus = gameState.traitBonusData[variant];
+                            break;
+                        }
+                    }
 
-    // Se non lo trova, proviamo a cercare solo la parte dopo i ":" (come facevi prima)
-    if (!bonus && nameOnly.includes(':')) {
-        let parts = nameOnly.split(':');
-        let secondaryName = parts[1].trim();
-        bonus = gameState.traitBonusData[secondaryName.toLowerCase()];
-    }
+                    if (bonus) {
+                        const targetStat = bonus.attribute; // Es: "Shield_Duration"
+                        const valueToAdd = parseFloat(bonus.value) || 0;
 
-    if (bonus) {
-        const targetStat = bonus.attribute;
-        // ... resto della logica di assegnazione ...
-        console.log(`SUCCESSO: Applicato ${targetStat} da ${nameOnly}`);
-    } else {
-        console.warn(`FALLITO: Nessun bonus per "${nameOnly.toLowerCase()}"`);
-    }
-}
+                        // A. Applica al gameState (Statistica reale)
+                        if (gameState.hasOwnProperty(targetStat)) {
+                            gameState[targetStat] += valueToAdd;
+                        } else if (gameState.specialRay && gameState.specialRay.hasOwnProperty(targetStat)) {
+                            gameState.specialRay[targetStat] += valueToAdd;
+                        }
+
+                        // B. Aggiorna l'oggetto BUFFS (per la colonna verde della UI)
+                        // Usiamo una ricerca case-insensitive per sicurezza
+                        const buffKey = Object.keys(gameState.buffs).find(k => k.toLowerCase() === targetStat.toLowerCase());
+                        if (buffKey) {
+                            gameState.buffs[buffKey] += valueToAdd;
+                            console.log(`Bonus Applicato: ${buffKey} +${valueToAdd} (Tratto: ${traitFullValue})`);
+                        }
+                    }
+                }
             });
-            
-            // --- 4. AGGIORNAMENTO UI ---
+
+            // --- 5. AGGIORNAMENTO UI ---
             if (wizardDisplayName) wizardDisplayName.innerText = `${foundWizard.name.toUpperCase()} (#${wizardId})`;
             if (traitHead) traitHead.innerHTML = getTraitDisplay(foundWizard.head);
             if (traitBody) traitBody.innerHTML = getTraitDisplay(foundWizard.body);
             if (traitProp) traitProp.innerHTML = getTraitDisplay(foundWizard.prop);
             if (traitFamiliar) traitFamiliar.innerHTML = getTraitDisplay(foundWizard.familiar);
             if (traitRune) traitRune.innerHTML = getTraitDisplay(foundWizard.rune);
-            
-            const traitBg = document.getElementById('trait-bg');
             if (traitBg) traitBg.innerHTML = getTraitDisplay(foundWizard.background);
 
-            // Rerender della tabella con i nuovi valori calcolati
+            console.log("DEBUG FINALE BUFFS:", gameState.buffs);
             renderStatTable();
             
         } else {
@@ -259,7 +266,6 @@ async function handleLoadWizard() {
         console.error("Errore in handleLoadWizard:", e);
         handleError(wizardId, "CONNECTION ERROR");
     }
-    console.log("DEBUG BUFFS:", gameState.buffs);
 }
 
 function handleError(id, name) {
