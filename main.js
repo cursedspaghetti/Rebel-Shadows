@@ -86,13 +86,7 @@ async function loadTraitBonuses() {
         lines.slice(1).forEach(line => {
             if (!line.trim()) return;
 
-            // Split per virgola
-            let cols = line.split(',');
-
-            // Se i dati sono tra virgolette, lo split per virgola potrebbe 
-            // rompere i numeri (es. "10,00" diventa ["10", "00"]).
-            // Usiamo una Regex per splittare solo le virgole FUORI dalle virgolette:
-// --- DENTRO loadTraitBonuses ---
+            
 const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
 let cols = line.split(regex);
 
