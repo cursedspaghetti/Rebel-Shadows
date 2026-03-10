@@ -1,29 +1,28 @@
-/* --- 0. RESET E FONT --- */
+/* --- 0. RESET E VARIABILI --- */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 * {
     box-sizing: border-box;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
-    -webkit-user-select: none;
     user-select: none;
     touch-action: manipulation;
 }
 
-html,
-body {
+html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
     width: 100%;
     height: 100%;
     background-color: #1a1a1a;
+    color: #ffffff;
     display: flex;
     justify-content: center;
     align-items: center;
     font-family: 'Press Start 2P', cursive;
     overscroll-behavior: none;
-    position: fixed; /* Impedisce movimenti indesiderati su iOS */
+    position: fixed; /* Fix per scroll indesiderato iOS */
 }
 
 /* --- 1. ANIMAZIONI --- */
@@ -36,6 +35,11 @@ body {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+.animate-fade {
+    animation: fadeIn 1.5s ease-out forwards;
+    animation-delay: 1s;
 }
 
 /* --- 2. CONTENITORI PRINCIPALI --- */
@@ -56,9 +60,8 @@ body {
     background: transparent;
 }
 
-
-/* --- 3. SCHERMATA INIZIALE --- */
-#startScreen {
+/* --- 3. STRUTTURA SCHERMATE (Layout Comune) --- */
+.screen-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -66,18 +69,20 @@ body {
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start; 
     align-items: center;
-    color: white;
-    text-align: center;
-    z-index: 10;
+    z-index: 100;
+}
+
+/* Schermata Iniziale */
+#startScreen {
+    @extend .screen-overlay;
+    justify-content: flex-start;
     padding-top: calc(env(safe-area-inset-top, 0px) + 100px);
+    z-index: 10;
 }
 
 #wizardIdInput {
     opacity: 0;
-    animation: fadeIn 1.5s ease-out forwards;
-    animation-delay: 1s;
 }
 
 #startButton {
@@ -86,183 +91,103 @@ body {
 }
 
 #startButton.visible {
-    display: block; 
-    animation: fadeIn 1.5s ease-out forwards;
-    animation-delay: 1s; 
+    display: block;
 }
 
-#statsTable {
-    border: 4px solid #ffffff;
-    outline: 4px solid #000000;
-    background-color: #111111;
-    padding: 10px;
-}
-
-#characterSetup td {
-    vertical-align: middle;
-    line-height: 1.2;
-}
-
-/* Shermata wizard */
-
-/* 1. CONTAINER PRINCIPALE - Qui caricherai il tuo sfondo */
-    #characterSetup {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        /* Sostituisci il background scuro con la tua immagine se necessario, 
-           o lascialo trasparente se lo sfondo è nell'elemento padre */
-        background: rgba(0, 0, 0, 0); /* Un velo scuro per far leggere il bianco */
-        color: #ffffff;
-        font-family: 'Courier New', monospace;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 15px;
-        box-sizing: border-box;
-        overflow-y: auto;
-        z-index: 1000;
-    }
-
-    .setup-container {
-        width: 100%;
-        max-width: 480px;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    .wiz-title {
-        width: 100%;
-        text-align: center;
-        color: #ffffff;
-        font-size: clamp(1.4rem, 6vw, 2rem);
-        border-bottom: 2px solid #ffffff;
-        margin: 20px 0;
-        padding-bottom: 10px;
-        letter-spacing: 3px;
-    }
-
-    /* 2. PANNELLI TRASPARENTI */
-    .profile-card, .stats-panel {
-        display: flex;
-        background: transparent; /* TOTALMENTE TRASPARENTE */
-        padding: 15px;
-        border: 2px solid #ffffff;
-        box-sizing: border-box;
-        /* backdrop-filter: blur(5px); <-- Decommenta questo per l'effetto vetro */
-    }
-
-    .profile-card {
-        flex-wrap: wrap;
-        gap: 20px;
-        align-items: center;
-        justify-content: center;
-    }
-
-    #setupWizImage {
-        width: 100px;
-        height: 100px;
-        border: 2px solid #ffffff;
-        background: rgba(255, 255, 255, 0.1);
-        image-rendering: pixelated;
-    }
-
-    .traits-list {
-        flex: 1;
-        min-width: 160px;
-        font-size: 0.9rem;
-        line-height: 1.6;
-    }
-
-    .trait-val { font-weight: bold; }
-
-    /* 3. TABELLA TRASPARENTE */
-    .stats-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 10px;
-    }
-
-    .stats-table th { 
-        text-align: left; 
-        padding: 10px 5px; 
-        border-bottom: 2px solid #ffffff;
-        font-size: 0.8rem;
-    }
-
-    .stats-table td { 
-        padding: 12px 5px; 
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2); 
-    }
-
-    /* 4. BOTTONE MINIMALISTA */
-    .btn-start {
-        width: 100%;
-        padding: 18px;
-        background: transparent;
-        color: #ffffff;
-        font-weight: bold;
-        font-size: 1.1rem;
-        border: 2px solid #ffffff;
-        cursor: pointer;
-        text-transform: uppercase;
-        transition: all 0.2s ease;
-    }
-
-    .btn-start:hover {
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .btn-start:active {
-        background: #ffffff;
-        color: #000;
-    }
-
-
-/* --- 4. SCHERMATA SKILL TREE (POWER UP) --- */
-#powerUpScreen {
-    position: absolute;    /* Sovrappone al canvas */
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.9); /* Sfondo scuro trasparente */
-    z-index: 100;          /* Sopra a tutto */
-    display: none;         /* Diventa 'flex' via JS */
+/* Schermata Setup (Wizard) */
+#characterSetup {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.7); /* Velo scuro per leggibilità */
+    font-family: 'Courier New', monospace;
+    display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    color: white;
+    padding: 15px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.setup-container {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.wiz-title {
+    width: 100%;
+    text-align: center;
+    font-size: clamp(1.4rem, 6vw, 2rem);
+    border-bottom: 2px solid #ffffff;
+    margin: 20px 0;
+    padding-bottom: 10px;
+    letter-spacing: 3px;
+}
+
+.profile-card, .stats-panel {
+    display: flex;
+    background: transparent;
+    padding: 15px;
+    border: 2px solid #ffffff;
+}
+
+.profile-card {
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+}
+
+#setupWizImage {
+    width: 100px;
+    height: 100px;
+    border: 2px solid #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+    image-rendering: pixelated;
+}
+
+/* Tabelle e Liste */
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.stats-table th, .stats-table td {
+    padding: 10px 5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.stats-table th {
+    text-align: left;
+    border-bottom: 2px solid #ffffff;
+    font-size: 0.8rem;
+}
+
+/* --- 4. SKILL TREE (POWER UP) --- */
+#powerUpScreen {
+    background-color: rgba(0, 0, 0, 0.9);
+    display: none; /* Attivato via JS (flex) */
+    justify-content: center;
     padding: 20px;
     text-align: center;
 }
 
-#powerUpScreen h1 {
-    font-size: 16px;
-    color: #ffd700;
-    margin-bottom: 5px;
-}
+#powerUpScreen h1 { font-size: 16px; color: #ffd700; margin-bottom: 5px; }
+#powerUpScreen h2 { font-size: 10px; margin-bottom: 20px; }
 
-#powerUpScreen h2 {
-    font-size: 10px;
-    margin-bottom: 20px;
-}
-
-/* Contenitore delle 4 colonne */
 .skill-tree-container {
     display: flex;
     justify-content: center;
-    align-items: flex-start;
     gap: 15px;
     width: 100%;
     max-width: 1000px;
-    overflow-x: auto; /* Permette lo scroll orizzontale su schermi piccoli */
+    overflow-x: auto;
     padding: 10px;
     margin-bottom: 20px;
 }
 
-/* Singola colonna (Path) */
 .skill-path {
     display: flex;
     flex-direction: column;
@@ -271,13 +196,6 @@ body {
     min-width: 90px;
 }
 
-.skill-path h3 {
-    font-size: 8px;
-    margin-bottom: 10px;
-    color: #aaa;
-}
-
-/* Singolo Bottone Abilità (Nodo) */
 .skill-node {
     width: 90px;
     height: 45px;
@@ -292,11 +210,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    text-align: center;
-    line-height: 1.2;
 }
 
-/* Stati delle Abilità */
 .skill-node.unlocked {
     background: #ffd700;
     color: black;
@@ -317,27 +232,8 @@ body {
     transform: scale(1.05);
 }
 
-.wizard-stats {
-    background: rgba(0, 0, 0, 0.7);
-    color: #fff;
-    padding: 20px;
-    border: 2px solid #573191; /* Colore viola tipico dei wizard */
-    border-radius: 8px;
-    font-family: 'Courier New', Courier, monospace;
-}
-
-.wizard-stats li {
-    margin-bottom: 8px;
-    border-bottom: 1px solid #444;
-}
-
-.wizard-stats strong {
-    color: #a382ff;
-}
-
-
-/* --- 5. BOTTONI GENERALI (STILE PIXEL) --- */
-button {
+/* --- 5. BOTTONI E UI ELEMENTS --- */
+button, .btn-start {
     font-family: 'Press Start 2P', cursive;
     background-color: #1b0190;
     color: white;
@@ -348,17 +244,23 @@ button {
     font-size: 10px;
     transition: transform 0.1s;
     min-height: 44px;
+    text-transform: uppercase;
 }
 
-button:active:not(:disabled) {
+.btn-start {
+    width: 100%;
+    padding: 18px;
+}
+
+button:active:not(:disabled), .btn-start:active {
     transform: translate(4px, 4px);
     box-shadow: 0px 0px 0px #000;
 }
 
-/* --- 6. RESPONSIVE E CORREZIONI --- */
+/* --- 6. RESPONSIVE --- */
 @media (max-width: 600px) {
     .skill-tree-container {
-        justify-content: flex-start; /* Permette lo scroll orizzontale */
+        justify-content: flex-start;
         padding-left: 20px;
     }
     
@@ -372,7 +274,5 @@ button:active:not(:disabled) {
 }
 
 @media (max-height: 700px) {
-    #startScreen {
-        padding-top: 40px;
-    }
+    #startScreen { padding-top: 40px; }
 }
