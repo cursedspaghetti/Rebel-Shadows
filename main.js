@@ -134,10 +134,10 @@ function getTraitDisplay(traitName) {
         const rarityKey = bonus.rarity.toLowerCase();
         const color = rarityColors[rarityKey] || "#d3d3d3"; 
 
-        return `${traitName} <br> 
-                <small style="color: ${color}; font-size: 10px;">
-                [${bonus.rarity}] ${bonus.attribute}: +${bonus.value}
-                </small>`;
+       return `${traitName} <br> 
+        <span style="color: ${color}; font-size: 13px; font-weight: 500; display: block; margin-top: 2px;">
+        [${bonus.rarity}] ${bonus.attribute}: +${bonus.value}
+        </span>`;
     }
     
     console.warn(`Nessun bonus trovato per il tratto: "${traitName}"`);
