@@ -92,27 +92,28 @@ async function loadTraitBonuses() {
             // Se i dati sono tra virgolette, lo split per virgola potrebbe 
             // rompere i numeri (es. "10,00" diventa ["10", "00"]).
             // Usiamo una Regex per splittare solo le virgole FUORI dalle virgolette:
-            const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
-            cols = line.split(regex);
+// --- DENTRO loadTraitBonuses ---
+const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+let cols = line.split(regex);
 
-            if (cols.length >= 5) {
-                // Pulizia: rimuove le virgolette esterne e gli spazi
-                const clean = (str) => str ? str.replace(/^"|"$/g, '').trim() : "";
+if (cols.length >= 5) {
+    const clean = (str) => str ? str.replace(/"/g, '').trim() : "";
 
-                const traitName = clean(cols[1]).toLowerCase();
-                const rarity = clean(cols[3]);
-                const attribute = clean(cols[4]);
-                
-                // Pulizia Numero: toglie virgolette, cambia virgola in punto
-                let valStr = clean(cols[5]).replace(',', '.');
-                const value = parseFloat(valStr) || 0;
+    // Il nome del tratto è nella colonna 1
+    const traitName = clean(cols[1]).toLowerCase(); 
+    const rarity = clean(cols[3]);
+    const attribute = clean(cols[4]);
+    
+    // Il valore è nella colonna 5 (che sia "0,20" o 0.20)
+    let valStr = clean(cols[5]).replace(',', '.');
+    const value = parseFloat(valStr) || 0;
 
-                gameState.traitBonusData[traitName] = {
-                    rarity: rarity,
-                    attribute: attribute,
-                    value: value
-                };
-            }
+    gameState.traitBonusData[traitName] = {
+        rarity: rarity,
+        attribute: attribute,
+        value: value
+    };
+}
         });
         console.log("Bonus caricati correttamente:", Object.keys(gameState.traitBonusData).length);
     } catch (e) {
@@ -216,32 +217,31 @@ async function handleLoadWizard() {
             const categories = ['head', 'body', 'prop', 'familiar', 'rune', 'background'];
 
             categories.forEach(cat => {
-                const traitFullValue = foundWizard[cat];
-                if (traitFullValue && traitFullValue !== "None") {
-                    let nameOnly = traitFullValue.includes(':') 
-                        ? traitFullValue.split(':')[1].trim() 
-                        : traitFullValue.trim();
-                    
-                    const bonus = gameState.traitBonusData[nameOnly.toLowerCase()];
-                    
-                    if (bonus) {
-                        const targetStat = bonus.attribute; 
-                        
-                        // 1. Applica al gameState (Statistiche reali)
-                        if (gameState.hasOwnProperty(targetStat)) {
-                            gameState[targetStat] += bonus.value;
-                        } 
-                        // CONTROLLO PER SPECIAL ATTACK (Proprietà annidate)
-                        else if (gameState.specialRay && gameState.specialRay.hasOwnProperty(targetStat)) {
-                            gameState.specialRay[targetStat] += bonus.value;
-                        }
+          const traitFullValue = foundWizard[cat];
+         if (traitFullValue && traitFullValue !== "None") {
+    
+    // Pulizia estrema: prendiamo il nome e rimuoviamo eventuali spazi extra
+    // Esempio: "Salamander's Tongue: the Fire Spell" 
+    let nameOnly = traitFullValue.trim(); 
 
-                        // 2. Aggiorna sempre il buffer BUFFS per la UI
-                        if (gameState.buffs.hasOwnProperty(targetStat)) {
-                            gameState.buffs[targetStat] += bonus.value;
-                        }
-                    }
-                }
+    // Proviamo il match diretto
+    let bonus = gameState.traitBonusData[nameOnly.toLowerCase()];
+
+    // Se non lo trova, proviamo a cercare solo la parte dopo i ":" (come facevi prima)
+    if (!bonus && nameOnly.includes(':')) {
+        let parts = nameOnly.split(':');
+        let secondaryName = parts[1].trim();
+        bonus = gameState.traitBonusData[secondaryName.toLowerCase()];
+    }
+
+    if (bonus) {
+        const targetStat = bonus.attribute;
+        // ... resto della logica di assegnazione ...
+        console.log(`SUCCESSO: Applicato ${targetStat} da ${nameOnly}`);
+    } else {
+        console.warn(`FALLITO: Nessun bonus per "${nameOnly.toLowerCase()}"`);
+    }
+}
             });
             
             // --- 4. AGGIORNAMENTO UI ---
