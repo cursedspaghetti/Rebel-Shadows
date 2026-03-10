@@ -280,12 +280,10 @@ function handleError(id, name) {
 
 function renderStatTable() {
     ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-    // 1. SFONDO
+    
+    // 1. SFONDO (Rimosso il colore di fallback, resta solo l'immagine se presente)
     if (bgIntro.complete && bgIntro.naturalWidth !== 0) {
         ctx.drawImage(bgIntro, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-    } else {
-        ctx.fillStyle = '#000033'; 
-        ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
     
     const tbody = document.getElementById('statsBody');
@@ -301,7 +299,6 @@ function renderStatTable() {
     tbody.innerHTML = statsToRender.map(stat => {
         let currentVal;
 
-        // Recupero il valore ATTUALE (già incrementato dai bonus in handleLoadWizard)
         if (stat === 'Special_Duration' || stat === 'Special_Width') {
             currentVal = gameState.specialRay ? gameState.specialRay[stat] : 0;
         } else {
@@ -310,18 +307,19 @@ function renderStatTable() {
 
         const buffVal = (gameState.buffs && gameState.buffs[stat]) ? gameState.buffs[stat] : 0;
         const buffDisplay = buffVal > 0 ? `+${buffVal}` : (buffVal < 0 ? `${buffVal}` : '--');
-        const buffColor = buffVal > 0 ? '#00ff00' : (buffVal < 0 ? '#ff0044' : '#666666');
+        
         const displayName = stat.replace(/_/g, ' ').toUpperCase();
         
+        // Rimosse tutte le proprietà color, text-shadow e background-color
         return `
-            <tr style="image-rendering: pixelated; border-bottom: 2px solid #003366;">
-                <td style="padding: 8px 4px; text-align: left; font-family: 'Courier New', monospace; font-weight: bold; color: #ffffff; font-size: 12px; text-shadow: 2px 2px #000000; letter-spacing: 1px;">
+            <tr style="border-bottom: 1px solid;">
+                <td style="padding: 8px 4px; text-align: left; font-family: monospace;">
                     > ${displayName}
                 </td>
-                <td style="padding: 8px 4px; text-align: right; color: #ffff00; font-family: 'Courier New', monospace; font-size: 14px; font-weight: bold; text-shadow: 2px 2px #554400;">
+                <td style="padding: 8px 4px; text-align: right; font-family: monospace;">
                     ${currentVal.toFixed(1).replace('.0', '')}
                 </td>
-                <td style="padding: 8px 4px; text-align: center; color: ${buffColor}; font-family: 'Courier New', monospace; font-size: 12px; font-weight: bold; text-shadow: 1px 1px #000;">
+                <td style="padding: 8px 4px; text-align: center; font-family: monospace;">
                     ${buffDisplay}
                 </td>
             </tr>
