@@ -129,11 +129,11 @@ html, body {
     text-align: center;
     /* Ridotto per non dominare lo schermo */
     font-size: clamp(1.1rem, 4vw, 1.4rem); 
-    border-bottom: 3px double #ffffff; /* Doppia linea fa molto anni '90 */
+    /* border-bottom: 3px double #ffffff; /* Doppia linea fa molto anni '90 */
     margin: 15px 0;
     padding-bottom: 8px;
     letter-spacing: 2px;
-    text-transform: uppercase;
+    /*  text-transform: uppercase; */
     
     /* Effetto Pixel/Retro: ombra netta senza sfocatura */
     text-shadow: 2px 2px #000, 3px 3px #555;
