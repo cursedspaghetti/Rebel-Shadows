@@ -119,18 +119,27 @@ if (cols.length >= 5) {
 function getTraitDisplay(traitName) {
     if (!traitName || traitName === "-" || traitName === "None") return "-";
     
-    // Pulizia: togliamo spazi e portiamo in minuscolo per il confronto
     const cleanName = traitName.trim().toLowerCase();
     const bonus = gameState.traitBonusData[cleanName];
 
     if (bonus) {
+        // Mappa dei colori
+        const rarityColors = {
+            "common": "#d3d3d3",    // Grigio chiaro
+            "rare": "#1e90ff",      // Azzurro (Dodger Blue per contrasto)
+            "legendary": "#ff8c00"  // Arancione
+        };
+
+        // Identifica il colore: se la rarità non è in lista, usa il Grigio Chiaro (#d3d3d3)
+        const rarityKey = bonus.rarity.toLowerCase();
+        const color = rarityColors[rarityKey] || "#d3d3d3"; 
+
         return `${traitName} <br> 
-                <small style="color: #00ff00; font-size: 10px;">
+                <small style="color: ${color}; font-size: 10px;">
                 [${bonus.rarity}] ${bonus.attribute}: +${bonus.value}
                 </small>`;
     }
     
-    // Se non trova il bonus, stampa un log per aiutarti a capire cosa non combacia
     console.warn(`Nessun bonus trovato per il tratto: "${traitName}"`);
     return traitName;
 }
