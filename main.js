@@ -343,6 +343,7 @@ async function init() {
     });
 
     startButton.addEventListener('click', () => {
+        gameState.currentScreen = 'setup'; // Cambiamo lo stato per fermare il loop precedente
         startScreen.style.display = 'none';
         setupScreen.style.display = 'flex';
         setupWizImage.src = introImage.src;
