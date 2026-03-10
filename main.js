@@ -278,6 +278,7 @@ function handleError(id, name) {
 }
 
 function renderStatTable() {
+    ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     // 1. SFONDO
     if (bgIntro.complete && bgIntro.naturalWidth !== 0) {
         ctx.drawImage(bgIntro, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
