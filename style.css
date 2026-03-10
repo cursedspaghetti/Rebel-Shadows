@@ -105,109 +105,118 @@ body {
 
 /* Shermata wizard */
 
-#characterSetup {
+/* 1. CONTAINER PRINCIPALE - Qui caricherai il tuo sfondo */
+    #characterSetup {
         position: fixed;
         top: 0; left: 0;
         width: 100%; height: 100%;
-        background: #000b1e; /* Sfondo principale scuro */
-        color: #ffffff; /* Testo globale bianco */
+        /* Sostituisci il background scuro con la tua immagine se necessario, 
+           o lascialo trasparente se lo sfondo è nell'elemento padre */
+        background: rgba(0, 0, 0, 0); /* Un velo scuro per far leggere il bianco */
+        color: #ffffff;
         font-family: 'Courier New', monospace;
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 10px;
+        padding: 15px;
         box-sizing: border-box;
         overflow-y: auto;
-        image-rendering: pixelated;
         z-index: 1000;
     }
 
     .setup-container {
         width: 100%;
-        max-width: 500px;
+        max-width: 480px;
         display: flex;
         flex-direction: column;
-        gap: 15px;
+        gap: 20px;
     }
 
     .wiz-title {
         width: 100%;
         text-align: center;
-        color: #ffffff; /* Bianco */
-        font-size: clamp(1.2rem, 5vw, 1.8rem);
+        color: #ffffff;
+        font-size: clamp(1.4rem, 6vw, 2rem);
         border-bottom: 2px solid #ffffff;
-        margin: 10px 0;
-        text-transform: uppercase;
-        padding-bottom: 5px;
+        margin: 20px 0;
+        padding-bottom: 10px;
+        letter-spacing: 3px;
     }
 
+    /* 2. PANNELLI TRASPARENTI */
     .profile-card, .stats-panel {
         display: flex;
-        background: rgba(255, 255, 255, 0.05); /* Trasparenza quasi totale */
+        background: transparent; /* TOTALMENTE TRASPARENTE */
         padding: 15px;
-        border: 2px solid #ffffff; /* Bordo sottile bianco */
+        border: 2px solid #ffffff;
         box-sizing: border-box;
+        /* backdrop-filter: blur(5px); <-- Decommenta questo per l'effetto vetro */
     }
 
     .profile-card {
         flex-wrap: wrap;
-        gap: 15px;
+        gap: 20px;
         align-items: center;
         justify-content: center;
     }
 
     #setupWizImage {
-        width: 80px; 
-        height: 80px;
+        width: 100px;
+        height: 100px;
         border: 2px solid #ffffff;
-        background: transparent;
+        background: rgba(255, 255, 255, 0.1);
+        image-rendering: pixelated;
     }
 
     .traits-list {
         flex: 1;
-        min-width: 150px;
-        font-size: 0.8rem;
+        min-width: 160px;
+        font-size: 0.9rem;
+        line-height: 1.6;
     }
 
-    .trait-val, .rune-val { color: #ffffff !important; font-weight: bold; text-shadow: none; }
+    .trait-val { font-weight: bold; }
 
+    /* 3. TABELLA TRASPARENTE */
     .stats-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.9rem;
-        background: transparent;
+        margin-bottom: 10px;
     }
 
     .stats-table th { 
-        color: #ffffff; 
         text-align: left; 
-        padding: 8px 4px; 
-        border-bottom: 1px solid rgba(255,255,255,0.3); 
+        padding: 10px 5px; 
+        border-bottom: 2px solid #ffffff;
+        font-size: 0.8rem;
     }
 
     .stats-table td { 
-        padding: 8px 4px; 
-        border-bottom: 1px solid rgba(255,255,255,0.1); 
-        color: #ffffff;
+        padding: 12px 5px; 
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2); 
     }
 
+    /* 4. BOTTONE MINIMALISTA */
     .btn-start {
         width: 100%;
-        padding: 15px;
-        margin-top: 10px;
+        padding: 18px;
         background: transparent;
         color: #ffffff;
         font-weight: bold;
-        font-size: 1.2rem;
+        font-size: 1.1rem;
         border: 2px solid #ffffff;
         cursor: pointer;
         text-transform: uppercase;
-        transition: all 0.2s;
+        transition: all 0.2s ease;
+    }
+
+    .btn-start:hover {
+        background: rgba(255, 255, 255, 0.1);
     }
 
     .btn-start:active {
         background: #ffffff;
-        color: #000b1e;
+        color: #000;
     }
 
 
