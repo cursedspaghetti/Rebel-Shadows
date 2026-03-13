@@ -290,7 +290,7 @@ function handleError(id, name) {
 function renderStatTable() {
     ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     
-    // 1. SFONDO (Rimosso il colore di fallback, resta solo l'immagine se presente)
+    // 1. SFONDO
     if (bgIntro.complete && bgIntro.naturalWidth !== 0) {
         ctx.drawImage(bgIntro, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
@@ -319,18 +319,11 @@ function renderStatTable() {
         
         const displayName = stat.replace(/_/g, ' ').toUpperCase();
         
-        // Rimosse tutte le proprietà color, text-shadow e background-color
         return `
-            <tr style="border-bottom: 1px solid;">
-                <td style="padding: 8px 4px; text-align: left; font-family: monospace;">
-                    > ${displayName}
-                </td>
-                <td style="padding: 8px 4px; text-align: right; font-family: monospace;">
-                    ${currentVal.toFixed(1).replace('.0', '')}
-                </td>
-                <td style="padding: 8px 4px; text-align: center; font-family: monospace;">
-                    ${buffDisplay}
-                </td>
+            <tr>
+                <td>> ${displayName}</td>
+                <td>${currentVal.toFixed(1).replace('.0', '')}</td>
+                <td>${buffDisplay}</td>
             </tr>
         `;
     }).join('');
