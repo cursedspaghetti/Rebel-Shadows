@@ -290,7 +290,6 @@ function handleError(id, name) {
 function renderStatTable() {
     ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     
-    // 1. SFONDO
     if (bgIntro.complete && bgIntro.naturalWidth !== 0) {
         ctx.drawImage(bgIntro, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
@@ -307,6 +306,12 @@ function renderStatTable() {
 
     tbody.innerHTML = statsToRender.map(stat => {
         let currentVal;
+        let separator = '';
+
+        // Inserisce una riga di spaziatura prima di Attack_Power
+        if (stat === 'Attack_Power') {
+            separator = `<tr class="stats-separator"><td colspan="3"></td></tr>`;
+        }
 
         if (stat === 'Special_Duration' || stat === 'Special_Width') {
             currentVal = gameState.specialRay ? gameState.specialRay[stat] : 0;
@@ -316,16 +321,17 @@ function renderStatTable() {
 
         const buffVal = (gameState.buffs && gameState.buffs[stat]) ? gameState.buffs[stat] : 0;
         const buffDisplay = buffVal > 0 ? `+${buffVal}` : (buffVal < 0 ? `${buffVal}` : '--');
-        
         const displayName = stat.replace(/_/g, ' ').toUpperCase();
         
-        return `
+        const row = `
             <tr>
                 <td>> ${displayName}</td>
                 <td>${currentVal.toFixed(1).replace('.0', '')}</td>
                 <td>${buffDisplay}</td>
             </tr>
         `;
+
+        return separator + row;
     }).join('');
 }
 
