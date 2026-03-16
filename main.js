@@ -165,10 +165,10 @@ async function handleLoadWizard() {
     gameState.Elusion = 0.05;
     gameState.Speed = 3;
     gameState.Attack_Power = 10;
-    gameState.Attack_Rate = 500;
-    gameState.Shield_CD = 15;
-    gameState.Shield_Duration = 5;
-    gameState.Special_CD = 10;
+    gameState.Attack_Rate = 200;
+    gameState.Shield_CD = 20;
+    gameState.Shield_Duration = 1;
+    gameState.Special_CD = 20;
 
     if(gameState.specialRay) {
         gameState.specialRay.Special_Duration = 0.8;
