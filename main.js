@@ -308,13 +308,14 @@ function renderStatTable() {
         let currentVal;
         let header = ''; 
 
-        // Rimosse le righe vuote, lasciamo solo i titoli di sezione
+        // 1. Intestazione WIZARD (senza linea sopra se è la prima)
         if (stat === 'HP') {
-            header = `<tr><td colspan="3"><strong>WIZARD</strong></td></tr>`;
+            header = `<tr class="section-header first-header"><td colspan="3"><strong>WIZARD</strong></td></tr>`;
         }
 
+        // 2. Intestazione BOOK OF SHADOWS (con linee sopra e sotto)
         if (stat === 'Attack_Power') {
-            header = `<tr><td colspan="3"><strong>BOOK OF SHADOWS</strong></td></tr>`;
+            header = `<tr class="section-header"><td colspan="3"><strong>BOOK OF SHADOWS</strong></td></tr>`;
         }
 
         if (stat === 'Special_Duration' || stat === 'Special_Width') {
@@ -327,17 +328,19 @@ function renderStatTable() {
         const buffDisplay = buffVal > 0 ? `+${buffVal}` : (buffVal < 0 ? `${buffVal}` : '--');
         const displayName = stat.replace(/_/g, ' ').toUpperCase();
         
+        // Ho aggiunto la classe "stat-row" per togliere i bordi alle singole righe
         const row = `
-            <tr>
+            <tr class="stat-row">
                 <td>> ${displayName}</td>
                 <td>${currentVal.toFixed(1).replace('.0', '')}</td>
-                <td>${buffDisplay}</td>
+                <td style="text-align: right;">${buffDisplay}</td>
             </tr>
         `;
 
         return header + row;
     }).join('');
 }
+
 // --- INITIALIZATION ---
 async function init() {
     await loadTraitBonuses(); // Carica prima i bonus
