@@ -22,21 +22,21 @@ const confirmStatsBtn = document.getElementById('confirmStats');
 // --- ASSET LOADING ---
 const introImage = new Image();
 const Wiz1 = new Image();
-Wiz1.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Wiz1.png';
+Wiz1.src = 'https://raw.githubusercontent.com/cursedspaghetti/Rebel-Shadows/main/Wiz1.png';
 const bookImg = new Image();
-bookImg.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/book1.png';
+bookImg.src = 'https://raw.githubusercontent.com/cursedspaghetti/Rebel-Shadows/main/book1.png';
 
 const bgIntro = new Image();
-bgIntro.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpaceVoid.png';
+bgIntro.src = 'https://raw.githubusercontent.com/cursedspaghetti/Rebel-Shadows/main/EmptySpaceVoid.png';
 const bgParallax = new Image();
-bgParallax.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/EmptySpace.png'; 
+bgParallax.src = 'https://raw.githubusercontent.com/cursedspaghetti/Rebel-Shadows/main/EmptySpace.png'; 
 const playerSprite = new Image();
-playerSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/booksprite.png';
+playerSprite.src = 'https://raw.githubusercontent.com/cursedspaghetti/Rebel-Shadows/main/booksprite.png';
 
 export const chargeImg = new Image();
-chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/bookfull.png";
+chargeImg.src = "https://raw.githubusercontent.com/cursedspaghetti/Rebel-Shadows/main/bookfull.png";
 export const shadowImg = new Image();
-shadowImg.src = "https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Shadow.png";
+shadowImg.src = "https://raw.githubusercontent.com/cursedspaghetti/Rebel-Shadows/main/Shadow.png";
 
 // --- UTILS ---
 function resizeCanvas() {
@@ -75,7 +75,7 @@ function makeTransparent(img) {
 
 async function loadTraitBonuses() {
     try {
-        const response = await fetch("https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/Game%20Attributes%20-%20Wiz%20Bonus.csv");
+        const response = await fetch("https://raw.githubusercontent.com/cursedspaghetti/Rebel-Shadows/main/Game%20Attributes%20-%20Wiz%20Bonus.csv");
         if (!response.ok) throw new Error("CSV non trovato");
         
         const csvText = await response.text();
@@ -206,7 +206,7 @@ async function handleLoadWizard() {
 
     // --- 4. LOGICA DATI E APPLICAZIONE BONUS ---
     try {
-        const response = await fetch("https://raw.githubusercontent.com/cursedspaghetti73/Forgotten-Wiz/main/wizzies.json");
+        const response = await fetch("https://raw.githubusercontent.com/cursedspaghetti/Rebel-Shadows/main/wizzies.json");
         if (!response.ok) throw new Error("Database error");
         const wizzies = await response.json();
         const foundWizard = wizzies[wizardId];
