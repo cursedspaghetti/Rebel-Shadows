@@ -306,11 +306,19 @@ function renderStatTable() {
 
     tbody.innerHTML = statsToRender.map(stat => {
         let currentVal;
-        let separator = '';
+        let header = ''; // Sostituito 'separator' con 'header' per chiarezza
 
-        // Inserisce una riga di spaziatura prima di Attack_Power
+        // 1. Aggiunge l'intestazione prima di HP
+        if (stat === 'HP') {
+            header = `<tr class="stats-header"><td colspan="3"><strong>WIZARD</strong></td></tr>`;
+        }
+
+        // 2. Aggiunge l'intestazione prima di Attack_Power
         if (stat === 'Attack_Power') {
-            separator = `<tr class="stats-separator"><td colspan="3"></td></tr>`;
+            header = `
+                <tr class="stats-separator"><td colspan="3"></td></tr>
+                <tr class="stats-header"><td colspan="3"><strong>BOOK OF SHADOWS</strong></td></tr>
+            `;
         }
 
         if (stat === 'Special_Duration' || stat === 'Special_Width') {
@@ -331,7 +339,7 @@ function renderStatTable() {
             </tr>
         `;
 
-        return separator + row;
+        return header + row;
     }).join('');
 }
 
