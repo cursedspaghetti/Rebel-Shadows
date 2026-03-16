@@ -162,6 +162,67 @@ html, body {
     image-rendering: pixelated;
 }
 
+/* --- 4. SCHERMATA SETUP (WIZARD) --- */
+#characterSetup {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.0);
+    color: #ffffff;
+    font-family: 'Courier New', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    overflow-y: auto;
+    z-index: 1000;
+}
+
+.setup-container {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.wiz-title {
+    text-align: center;
+    /* Ridotto per non dominare lo schermo */
+    font-size: clamp(1.1rem, 4vw, 1.4rem); 
+    /* border-bottom: 3px double #ffffff; /* Doppia linea fa molto anni '90 */
+    margin: 15px 0;
+    padding-bottom: 8px;
+    letter-spacing: 2px;
+    /*  text-transform: uppercase; */
+    
+    /* Effetto Pixel/Retro: ombra netta senza sfocatura */
+    text-shadow: 2px 2px #000, 3px 3px #555;
+    
+    /* Forza il rendering nitido */
+    image-rendering: pixelated;
+}
+
+.profile-card, .stats-panel {
+    display: flex;
+    border: 2px solid #ffffff;
+    padding: 15px;
+}
+
+.profile-card {
+    flex-wrap: wrap;
+    gap: 7px;
+    justify-content: center;
+    align-items: center;
+}
+
+#setupWizImage {
+    width: 150px;
+    height: 150px;
+    /* border: 2px solid #ffffff; */
+    image-rendering: pixelated;
+}
+
 .stats-table {
     width: 100%;
     border-collapse: collapse;
@@ -177,6 +238,7 @@ html, body {
     padding: 12px 5px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
+
 
 /* --- 5. SKILL TREE (POWER UP) --- */
 #powerUpScreen {
