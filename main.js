@@ -306,19 +306,15 @@ function renderStatTable() {
 
     tbody.innerHTML = statsToRender.map(stat => {
         let currentVal;
-        let header = ''; // Sostituito 'separator' con 'header' per chiarezza
+        let header = ''; 
 
-        // 1. Aggiunge l'intestazione prima di HP
+        // Rimosse le righe vuote, lasciamo solo i titoli di sezione
         if (stat === 'HP') {
-            header = `<tr class="stats-header"><td colspan="3"><strong>WIZARD</strong></td></tr>`;
+            header = `<tr><td colspan="3"><strong>WIZARD</strong></td></tr>`;
         }
 
-        // 2. Aggiunge l'intestazione prima di Attack_Power
         if (stat === 'Attack_Power') {
-            header = `
-                <tr class="stats-separator"><td colspan="3"></td></tr>
-                <tr class="stats-header"><td colspan="3"><strong>BOOK OF SHADOWS</strong></td></tr>
-            `;
+            header = `<tr><td colspan="3"><strong>BOOK OF SHADOWS</strong></td></tr>`;
         }
 
         if (stat === 'Special_Duration' || stat === 'Special_Width') {
@@ -342,7 +338,6 @@ function renderStatTable() {
         return header + row;
     }).join('');
 }
-
 // --- INITIALIZATION ---
 async function init() {
     await loadTraitBonuses(); // Carica prima i bonus
