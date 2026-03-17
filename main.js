@@ -518,40 +518,64 @@ function gameLoop() {
 }
 
 function updateAndDrawBackgrounds() {
-    // 1. Sfondo base nero fisso
-   //ctx.drawImage(bgImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    // 1. Pulizia base (Sfondo nero)
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
-    const drawX = (CONFIG.CANVAS_WIDTH / 2) - (bgParallax.naturalWidth / 2);
-    const imgHeight = bgParallax.naturalHeight;
+    // --- CONFIGURAZIONE GRIGLIA ---
+    const COLS = 6; // Numero di colonne della mappa
+    const ROWS = 3; // Numero di righe della mappa
 
-    // 2. Disegno ciclico del parallasse
-    for (let i = 0; i < 15; i++) {
-        const currentSegmentY = gameState.cameraY + (i * imgHeight);
-        if (currentSegmentY + imgHeight > 0 && currentSegmentY < CONFIG.CANVAS_HEIGHT) {
-            ctx.drawImage(
-                bgParallax, 
-                drawX, 
-                currentSegmentY, 
-                bgParallax.naturalWidth, 
-                imgHeight
-            );
+    // Dimensioni di OGNI TASSELLO della griglia nel gioco.
+    // Decidi tu quanto deve essere grande una "cella" camminabile.
+    // Esempio: usiamo le dimensioni originali dell'immagine per ogni cella.
+    const tileWidth = bgParallax.naturalWidth; 
+    const tileHeight = bgParallax.naturalHeight;
+
+    // Se invece vuoi che la cella abbia una dimensione fissa (es. 64x64), usa:
+    // const tileWidth = 64;
+    // const tileHeight = 64;
+
+    // Calcoliamo la larghezza totale della mappa per centrarla
+    const totalMapWidth = COLS * tileWidth;
+
+    // Posizione di partenza per centrare la griglia orizzontalmente
+    const startX = (CONFIG.CANVAS_WIDTH - totalMapWidth) / 2;
+    
+    // Usiamo cameraY per far scorrere la mappa verticalmente
+    const startY = gameState.cameraY; 
+
+    // 2. Disegno della Griglia 6x3 (moltiplicando l'immagine)
+    for (let row = 0; row < ROWS; row++) {
+        for (let col = 0; col < COLS; col++) {
+            
+            // Posizione X e Y dove disegnare questa specifica cella
+            const destX = startX + (col * tileWidth);
+            const destY = startY + (row * tileHeight);
+
+            // Ottimizzazione: Disegna solo se la cella è visibile nel canvas
+            if (destY + tileHeight > 0 && destY < CONFIG.CANVAS_HEIGHT) {
+                
+                // Disegniamo L'INTERA immagine sorgente dentro questa cella
+                ctx.drawImage(
+                    bgParallax,
+                    0, 0,                                // Inizio ritaglio (tutta l'immagine)
+                    bgParallax.naturalWidth, bgParallax.naturalHeight, // Dimensioni ritaglio (tutta)
+                    destX, destY,                        // Posizione nella griglia
+                    tileWidth, tileHeight                // Dimensioni della cella nel gioco
+                );
+            }
         }
     }
-// --- LOGICA TRANSIZIONE FASE 2 ---
-    if (gameState.flashActive) {
-        const currentTime = Date.now();
-        const elapsed = currentTime - gameState.flashStartTime;
 
+    // --- LOGICA TRANSIZIONE FASE 2 (Invariata, sopra la mappa) ---
+    if (gameState.flashActive) {
+        const elapsed = Date.now() - gameState.flashStartTime;
         if (elapsed < gameState.flashDuration) {
-            // FASE A: Il flickering dei fulmini
-            const isLightning = Math.random() > 0.8;
-            ctx.fillStyle = isLightning ? 'rgba(255, 255, 255, 0.8)' : 'black';
+            ctx.fillStyle = Math.random() > 0.8 ? 'rgba(255, 255, 255, 0.8)' : 'black';
         } else {
-            // FASE B: I fulmini sono finiti, resta solo il nero
             ctx.fillStyle = 'black';
         }
-
-        // Copriamo tutto
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 }
