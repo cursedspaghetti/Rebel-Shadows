@@ -276,60 +276,48 @@ export function updatePlayerMovement(bgImage) {
     let dy = 0; 
     const speed = gameState.Speed || 4; 
 
-    // --- GESTIONE OPACITÀ PAD ---
+    // Gestione opacità (fade in/out)
     if (gameState.isTouchActive) {
         gameState.padOpacity = Math.min(1, (gameState.padOpacity || 0) + 0.1);
     } else {
         gameState.padOpacity = Math.max(0, (gameState.padOpacity || 0) - 0.1);
     }
 
-    // --- INPUT (Tastiera) ---
-    if (gameState.keys['ArrowUp'] || gameState.keys['w'] || gameState.keys['W']) dy -= speed;
-    if (gameState.keys['ArrowDown'] || gameState.keys['s'] || gameState.keys['S']) dy += speed;
-    if (gameState.keys['ArrowLeft'] || gameState.keys['a'] || gameState.keys['A']) dx -= speed;
-    if (gameState.keys['ArrowRight'] || gameState.keys['d'] || gameState.keys['D']) dx += speed;
+    // Input Touch Floating
+    if (gameState.isTouchActive && gameState.padOriginX !== undefined) {
+        // Calcoliamo la distanza tra dove si trova il dito e dove è iniziato il tocco
+        const targetDx = gameState.touchX - gameState.padOriginX;
+        const targetDy = gameState.touchY - gameState.padOriginY;
 
-    // --- INPUT (Touch) ---
-    if (gameState.isTouchActive) {
-        const playerScreenX = gameState.playerX - (gameState.camera?.x || 0);
-        const playerScreenY = gameState.playerY - (gameState.camera?.y || 0);
-
-        const targetDx = gameState.touchX - playerScreenX;
-        // Rimosso il threshold fisso (140) per rendere il tocco più diretto
-        const targetDy = gameState.touchY - (playerScreenY + 60); 
-
-        if (Math.abs(targetDx) > 10) dx = targetDx * (CONFIG.TOUCH.LERP || 0.15);
-        if (Math.abs(targetDy) > 10) dy = targetDy * (CONFIG.TOUCH.LERP || 0.15);
+        // Deadzone di 10 pixel
+        if (Math.abs(targetDx) > 10) dx = targetDx * 0.15;
+        if (Math.abs(targetDy) > 10) dy = targetDy * 0.15;
         
+        // Clamp della velocità
         const mag = Math.sqrt(dx * dx + dy * dy);
         if (mag > speed) {
             dx = (dx / mag) * speed;
             dy = (dy / mag) * speed;
         }
+    } else {
+        // Fallback Tastiera (opzionale se sei su PC)
+        if (gameState.keys['ArrowUp'] || gameState.keys['w']) dy -= speed;
+        if (gameState.keys['ArrowDown'] || gameState.keys['s']) dy += speed;
+        if (gameState.keys['ArrowLeft'] || gameState.keys['a']) dx -= speed;
+        if (gameState.keys['ArrowRight'] || gameState.keys['d']) dx += speed;
     }
 
-    // --- APPLICAZIONE MOVIMENTO CON LIMITI MAPPA ---
-    // Usiamo le dimensioni reali dell'immagine di sfondo come confini del mondo
+    // Limiti mappa reale
     const mapW = (bgImage && bgImage.naturalWidth > 0) ? bgImage.naturalWidth : CONFIG.CANVAS_WIDTH;
     const mapH = (bgImage && bgImage.naturalHeight > 0) ? bgImage.naturalHeight : CONFIG.CANVAS_HEIGHT;
-    const margin = 40; 
-
-    gameState.playerX += dx;
-    gameState.playerY += dy;
-
-    // Blocca il giocatore dentro i bordi della mappa reale
-    gameState.playerX = Math.max(margin, Math.min(mapW - margin, gameState.playerX));
-    gameState.playerY = Math.max(margin, Math.min(mapH - margin, gameState.playerY));
-
-    // --- DIREZIONE E STATO ANIMAZIONE ---
-    gameState.isMoving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
     
+    gameState.playerX = Math.max(30, Math.min(mapW - 30, gameState.playerX + dx));
+    gameState.playerY = Math.max(30, Math.min(mapH - 30, gameState.playerY + dy));
+
+    gameState.isMoving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
     if (gameState.isMoving) {
-        if (Math.abs(dx) > Math.abs(dy)) {
-            gameState.playerDirection = dx > 0 ? 2 : 1; 
-        } else {
-            gameState.playerDirection = dy > 0 ? 0 : 3; 
-        }
+        if (Math.abs(dx) > Math.abs(dy)) gameState.playerDirection = dx > 0 ? 2 : 1;
+        else gameState.playerDirection = dy > 0 ? 0 : 3;
     }
 }
 
