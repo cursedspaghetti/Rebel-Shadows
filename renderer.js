@@ -326,61 +326,48 @@ export function updatePlayerMovement(bgImage) {
  * @param {CanvasRenderingContext2D} ctx - Il contesto del canvas.
  */
 export function drawTouchPad(ctx) {
-    // Se l'opacità è 0, non disegnare nulla
-    if (!gameState.padOpacity || gameState.padOpacity <= 0) return;
+    if (!gameState.isTouchActive || !gameState.padOpacity || gameState.padOpacity <= 0) return;
+    if (gameState.padOriginX === undefined) return;
 
     ctx.save();
-    
-    // IMPORTANTE: Poiché questa funzione è chiamata DOPO ctx.restore() nel main.js,
-    // siamo in "Screen Space" (coordinate pixel del display).
-    
+    // Non trasliamo con la camera: il pad è fisso sullo schermo nel punto del tocco
     ctx.globalAlpha = gameState.padOpacity;
 
-    // Centro del pad relativo alla posizione del giocatore SULLO SCHERMO
-    // Calcoliamo dove si trova il player rispetto alla visuale attuale
-    const screenPosX = gameState.playerX - (gameState.camera?.x || 0);
-    const screenPosY = gameState.playerY - (gameState.camera?.y || 0);
-
-    const centerX = screenPosX;
-    const centerY = screenPosY + 140; // Rimane 140px sotto il mago a schermo
-    
+    const centerX = gameState.padOriginX;
+    const centerY = gameState.padOriginY;
     const outerRadius = 50;
-    const innerRadius = 15;
+    const innerRadius = 20;
 
-    // 1. DISEGNO CERCHIO ESTERNO
+    // 1. CERCHIO ESTERNO (Fisso nel punto del primo tocco)
     ctx.beginPath();
     ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+    ctx.lineWidth = 2;
     ctx.stroke();
-    
     ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
     ctx.fill();
 
-    // 2. DISEGNO CERCHIO INTERNO (Pomello)
-    if (gameState.isTouchActive) {
-        // Usiamo gameState.touchX/Y che sono già coordinate schermo
-        const dx = gameState.touchX - centerX;
-        const dy = gameState.touchY - centerY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        const angle = Math.atan2(dy, dx);
-        
-        const limitedDist = Math.min(distance, outerRadius);
-        const knobX = centerX + Math.cos(angle) * limitedDist;
-        const knobY = centerY + Math.sin(angle) * limitedDist;
+    // 2. POMELLO (Segue il dito ma resta vincolato al cerchio)
+    const dx = gameState.touchX - centerX;
+    const dy = gameState.touchY - centerY;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    const angle = Math.atan2(dy, dx);
+    const moveDist = Math.min(dist, outerRadius);
 
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = "rgba(138, 43, 226, 0.8)"; // Aumentato contrasto
+    const knobX = centerX + Math.cos(angle) * moveDist;
+    const knobY = centerY + Math.sin(angle) * moveDist;
 
-        ctx.beginPath();
-        ctx.arc(knobX, knobY, innerRadius, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(138, 43, 226, 0.6)"; 
-        ctx.fill();
-        
-        ctx.strokeStyle = "white";
-        ctx.lineWidth = 1;
-        ctx.stroke();
-    }
+    // Bagliore viola magico
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = "blueviolet";
+
+    ctx.beginPath();
+    ctx.arc(knobX, knobY, innerRadius, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(138, 43, 226, 0.5)";
+    ctx.fill();
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 1;
+    ctx.stroke();
 
     ctx.restore();
 }
