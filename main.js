@@ -317,10 +317,14 @@ function gameLoop() {
     collision.handleAllCollisions();
 
     // Disegno entità nel mondo
+ // --- 6. Rendering Giocatore e Feedback ---
     if (!(gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0)) {
-        if (!gameState.isCharging && !gameState.isCharging2) Renderer.drawPlayer(ctx, playerSprite);
+        if (!gameState.isCharging && !gameState.isCharging2) {
+            Renderer.drawPlayer(ctx, playerSprite);
+        }
         Renderer.drawPlayerWiz(ctx);
     }
+    
     Enemies.drawEnemies(ctx);
     Enemies.drawEnemyBullets(ctx);
     SpecialAttacks.drawSpecialRay(ctx);
