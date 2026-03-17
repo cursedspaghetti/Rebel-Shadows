@@ -291,19 +291,16 @@ export function updatePlayerMovement(bgImage) {
 
     // --- INPUT (Touch) ---
     if (gameState.isTouchActive) {
-        // Calcoliamo la differenza tra il tocco e la posizione del player sullo SCHERMO
-        // Per farlo dobbiamo sottrarre la camera dalla posizione reale del player
         const playerScreenX = gameState.playerX - (gameState.camera?.x || 0);
         const playerScreenY = gameState.playerY - (gameState.camera?.y || 0);
 
         const targetDx = gameState.touchX - playerScreenX;
-        const targetDy = gameState.touchY - playerScreenY;
+        // Rimosso il threshold fisso (140) per rendere il tocco più diretto
+        const targetDy = gameState.touchY - (playerScreenY + 60); 
 
-        // Muoviamo solo se la distanza è significativa (deadzone)
         if (Math.abs(targetDx) > 10) dx = targetDx * (CONFIG.TOUCH.LERP || 0.15);
         if (Math.abs(targetDy) > 10) dy = targetDy * (CONFIG.TOUCH.LERP || 0.15);
         
-        // Limitiamo la velocità massima nel touch
         const mag = Math.sqrt(dx * dx + dy * dy);
         if (mag > speed) {
             dx = (dx / mag) * speed;
@@ -312,37 +309,29 @@ export function updatePlayerMovement(bgImage) {
     }
 
     // --- APPLICAZIONE MOVIMENTO CON LIMITI MAPPA ---
-    if (bgImage && bgImage.naturalWidth > 0) {
-        const mapW = bgImage.naturalWidth;
-        const mapH = bgImage.naturalHeight;
-        const margin = 30; // Margine dai bordi della nebulosa
+    // Usiamo le dimensioni reali dell'immagine di sfondo come confini del mondo
+    const mapW = (bgImage && bgImage.naturalWidth > 0) ? bgImage.naturalWidth : CONFIG.CANVAS_WIDTH;
+    const mapH = (bgImage && bgImage.naturalHeight > 0) ? bgImage.naturalHeight : CONFIG.CANVAS_HEIGHT;
+    const margin = 40; 
 
-        // Aggiorna X
-        gameState.playerX += dx;
-        gameState.playerX = Math.max(margin, Math.min(mapW - margin, gameState.playerX));
+    gameState.playerX += dx;
+    gameState.playerY += dy;
 
-        // Aggiorna Y
-        gameState.playerY += dy;
-        gameState.playerY = Math.max(margin, Math.min(mapH - margin, gameState.playerY));
-    } else {
-        // Fallback se l'immagine non è caricata (usa il canvas)
-        gameState.playerX += dx;
-        gameState.playerY += dy;
-    }
+    // Blocca il giocatore dentro i bordi della mappa reale
+    gameState.playerX = Math.max(margin, Math.min(mapW - margin, gameState.playerX));
+    gameState.playerY = Math.max(margin, Math.min(mapH - margin, gameState.playerY));
 
-    // --- DIREZIONE E ANIMAZIONE ---
+    // --- DIREZIONE E STATO ANIMAZIONE ---
     gameState.isMoving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
     
-    // Cambia direzione dello sprite in base al movimento prevalente
     if (gameState.isMoving) {
         if (Math.abs(dx) > Math.abs(dy)) {
-            gameState.playerDirection = dx > 0 ? 2 : 1; // 2: Destra, 1: Sinistra
+            gameState.playerDirection = dx > 0 ? 2 : 1; 
         } else {
-            gameState.playerDirection = dy > 0 ? 0 : 3; // 0: Giù, 3: Su
+            gameState.playerDirection = dy > 0 ? 0 : 3; 
         }
     }
 }
-
 
 /**
  * Disegna il joystick virtuale per il feedback del movimento touch.
