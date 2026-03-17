@@ -219,40 +219,44 @@ export function drawPlayerWiz(ctx) {
     const wizSize = CONFIG.WIZARD_SPRITE.FRAME_SIZE;     // 50
     const wizScale = CONFIG.WIZARD_SPRITE.RENDER_SCALE;  // 1.2
     const wizSpeed = CONFIG.WIZARD_SPRITE.ANIM_SPEED;    // 100ms
-    const animFrames = 4; // Usiamo solo le 4 colonne specificate
+    const animFrames = 4; 
     
     if (!wizardImg || !wizardImg.complete) return;
 
     let wizFrameIdx = 0;
     
+    // Logica animazione basata sulla direzione impostata in updatePlayerMovement
     if (gameState.isMoving) {
-        // Calcolo base del frame (0, 1, 2, 3)
         const frameCycle = Math.floor(Date.now() / wizSpeed) % animFrames;
 
         if (gameState.playerDirection === 3) { 
-            // MOVIMENTO SU: frame da 0 a 3 (0, 1, 2, 3)
+            // MOVIMENTO SU
             wizFrameIdx = frameCycle;
         } else {
-            // MOVIMENTO GIÙ (o dominante giù): frame da 3 a 0 (3, 2, 1, 0)
+            // MOVIMENTO GIÙ
             wizFrameIdx = (animFrames - 1) - frameCycle;
         }
     }
 
-    // Usiamo sempre la RIGA 3 (indice 2 se conti 0,1,2... o indice 3 se è la quarta)
-    // Se intendevi la QUARTA riga fisica, metti 3. Se intendevi la TERZA, metti 2.
+    // Riga fissa della spritesheet (indice 2 = terza riga)
     const wizRow = 2; 
 
     ctx.save();
+    
+    /* IMPORTANTE: gameState.playerX e Y sono coordinate "mondo". 
+       Dato che nel main.js abbiamo già traslato il contesto per la camera,
+       qui basta posizionarsi su playerX e playerY.
+    */
     ctx.translate(gameState.playerX, gameState.playerY);
 
     ctx.drawImage(
         wizardImg,
-        wizFrameIdx * wizSize, // Colonna (0-3)
-        wizRow * wizSize,      // Riga fissa
-        wizSize, wizSize,
+        wizFrameIdx * wizSize,   // Ritaglio X (Colonna)
+        wizRow * wizSize,        // Ritaglio Y (Riga)
+        wizSize, wizSize,        // Dimensioni ritaglio
+        -(wizSize * wizScale) / 2, // Posizione disegno (centrata)
         -(wizSize * wizScale) / 2,
-        -(wizSize * wizScale) / 2,
-        wizSize * wizScale,
+        wizSize * wizScale,      // Dimensione disegno scalata
         wizSize * wizScale
     );
 
@@ -345,59 +349,59 @@ export function updatePlayerMovement(bgImage) {
  * @param {CanvasRenderingContext2D} ctx - Il contesto del canvas.
  */
 export function drawTouchPad(ctx) {
-    // Se l'opacità è 0 (non si tocca da un po'), non disegnare nulla
+    // Se l'opacità è 0, non disegnare nulla
     if (!gameState.padOpacity || gameState.padOpacity <= 0) return;
 
     ctx.save();
     
-    // Applichiamo l'opacità globale per l'effetto fade-in/out
+    // IMPORTANTE: Poiché questa funzione è chiamata DOPO ctx.restore() nel main.js,
+    // siamo in "Screen Space" (coordinate pixel del display).
+    
     ctx.globalAlpha = gameState.padOpacity;
 
-    // Centro del pad: deve corrispondere esattamente al thresholdY usato nel movimento
-    const centerX = gameState.playerX;
-    const centerY = gameState.playerY + 140;
-    const outerRadius = 50; // Raggio del cerchio esterno
-    const innerRadius = 15; // Raggio del pomello mobile
+    // Centro del pad relativo alla posizione del giocatore SULLO SCHERMO
+    // Calcoliamo dove si trova il player rispetto alla visuale attuale
+    const screenPosX = gameState.playerX - (gameState.camera?.x || 0);
+    const screenPosY = gameState.playerY - (gameState.camera?.y || 0);
 
-    // 1. DISEGNO CERCHIO ESTERNO (Base del Joystick)
+    const centerX = screenPosX;
+    const centerY = screenPosY + 140; // Rimane 140px sotto il mago a schermo
+    
+    const outerRadius = 50;
+    const innerRadius = 15;
+
+    // 1. DISEGNO CERCHIO ESTERNO
     ctx.beginPath();
     ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
     ctx.lineWidth = 3;
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)"; // Bianco semitrasparente
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
     ctx.stroke();
     
-    // Un leggero riempimento per renderlo più visibile
     ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
     ctx.fill();
 
-    // 2. DISEGNO CERCHIO INTERNO (Il Pomello)
+    // 2. DISEGNO CERCHIO INTERNO (Pomello)
     if (gameState.isTouchActive) {
-        // Calcoliamo la distanza tra il tocco e il centro del pad
+        // Usiamo gameState.touchX/Y che sono già coordinate schermo
         const dx = gameState.touchX - centerX;
         const dy = gameState.touchY - centerY;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        // Calcoliamo l'angolo del tocco
         const angle = Math.atan2(dy, dx);
         
-        // Vincoliamo il pomello: non deve uscire dal raggio del cerchio esterno
         const limitedDist = Math.min(distance, outerRadius);
-        
         const knobX = centerX + Math.cos(angle) * limitedDist;
         const knobY = centerY + Math.sin(angle) * limitedDist;
 
-        // Ombra/Bagliore viola per il pomello (stile Wizard)
         ctx.shadowBlur = 15;
-        ctx.shadowColor = "rgba(138, 43, 226, 0.3)";
+        ctx.shadowColor = "rgba(138, 43, 226, 0.8)"; // Aumentato contrasto
 
         ctx.beginPath();
         ctx.arc(knobX, knobY, innerRadius, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(138, 43, 226, 0.3)"; // Viola magico
+        ctx.fillStyle = "rgba(138, 43, 226, 0.6)"; 
         ctx.fill();
         
-        // Bordino bianco per il pomello
         ctx.strokeStyle = "white";
-        ctx.lineWidth = 0.5;
+        ctx.lineWidth = 1;
         ctx.stroke();
     }
 
