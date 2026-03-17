@@ -522,53 +522,39 @@ function updateAndDrawBackgrounds() {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
-    // --- CONFIGURAZIONE GRIGLIA ---
-    const COLS = 6; // Numero di colonne della mappa
-    const ROWS = 3; // Numero di righe della mappa
-
-    // Dimensioni di OGNI TASSELLO della griglia nel gioco.
-    // Decidi tu quanto deve essere grande una "cella" camminabile.
-    // Esempio: usiamo le dimensioni originali dell'immagine per ogni cella.
-    const tileWidth = bgParallax.naturalWidth; 
-    const tileHeight = bgParallax.naturalHeight;
-
-    // Se invece vuoi che la cella abbia una dimensione fissa (es. 64x64), usa:
-    // const tileWidth = 64;
-    // const tileHeight = 64;
-
-    // Calcoliamo la larghezza totale della mappa per centrarla
-    const totalMapWidth = COLS * tileWidth;
-
-    // Posizione di partenza per centrare la griglia orizzontalmente
-    const startX = (CONFIG.CANVAS_WIDTH - totalMapWidth) / 2;
+    const COLS = 6;
+    const ROWS = 3;
     
-    // Usiamo cameraY per far scorrere la mappa verticalmente
+    // Dimensioni di un singolo tassello nell'immagine originale
+    const tileWidth = bgParallax.naturalWidth / COLS;
+    const tileHeight = bgParallax.naturalHeight / ROWS;
+
+    // Posizione di partenza per centrare la griglia nel canvas
+    const startX = (CONFIG.CANVAS_WIDTH - bgParallax.naturalWidth) / 2;
+    // Usiamo cameraY per far scorrere la griglia se il gioco è verticale
     const startY = gameState.cameraY; 
 
-    // 2. Disegno della Griglia 6x3 (moltiplicando l'immagine)
+    // 2. Disegno della Griglia 6x3
     for (let row = 0; row < ROWS; row++) {
         for (let col = 0; col < COLS; col++) {
             
-            // Posizione X e Y dove disegnare questa specifica cella
             const destX = startX + (col * tileWidth);
             const destY = startY + (row * tileHeight);
 
-            // Ottimizzazione: Disegna solo se la cella è visibile nel canvas
+            // Ottimizzazione: Disegna solo se il tassello è visibile nel canvas
             if (destY + tileHeight > 0 && destY < CONFIG.CANVAS_HEIGHT) {
-                
-                // Disegniamo L'INTERA immagine sorgente dentro questa cella
                 ctx.drawImage(
                     bgParallax,
-                    0, 0,                                // Inizio ritaglio (tutta l'immagine)
-                    bgParallax.naturalWidth, bgParallax.naturalHeight, // Dimensioni ritaglio (tutta)
-                    destX, destY,                        // Posizione nella griglia
-                    tileWidth, tileHeight                // Dimensioni della cella nel gioco
+                    col * tileWidth, row * tileHeight, // Ritaglio (Sorgente)
+                    tileWidth, tileHeight,             // Dimensioni ritaglio
+                    destX, destY,                      // Posizione (Destinazione)
+                    tileWidth, tileHeight              // Dimensioni nel gioco
                 );
             }
         }
     }
 
-    // --- LOGICA TRANSIZIONE FASE 2 (Invariata, sopra la mappa) ---
+    // --- LOGICA TRANSIZIONE FASE 2 (Invariata ma sopra la griglia) ---
     if (gameState.flashActive) {
         const elapsed = Date.now() - gameState.flashStartTime;
         if (elapsed < gameState.flashDuration) {
