@@ -1,3 +1,4 @@
+
 import { CONFIG, gameState } from './config.js';
 import * as Renderer from './renderer.js';
 import * as Boss1 from './Boss1.js';
@@ -379,17 +380,17 @@ function startGame() {
     gameState.currentScreen = 'playing';
 
      // --- 2. POSIZIONAMENTO INIZIALE (CAMERA E PLAYER) ---
+    // Posizioniamo il mago in basso sul canvas (es. all'80% dell'altezza)
     gameState.playerX = CONFIG.CANVAS_WIDTH / 2;
     gameState.playerY = CONFIG.CANVAS_HEIGHT * 0.65;
 
-    // --- NUOVA LOGICA GRIGLIA 6X3 ---
-    const ROWS = 3;
-    const tileHeight = bgParallax.naturalHeight || 512; // Fallback se non ancora caricata
-    const totalWorldHeight = tileHeight * ROWS;
+    // Calcoliamo l'altezza totale del mondo (15 volte lo sfondo)
+    // Usiamo bgParallax che è l'immagine caricata in main.js
+    const totalWorldHeight = bgParallax.naturalHeight * 15;
     
-    // Impostiamo la camera per inquadrare la griglia
-    // Partiamo dal basso della griglia
-    gameState.cameraY = CONFIG.CANVAS_HEIGHT - totalWorldHeight;
+    // Impostiamo la camera per partire esattamente dal fondo
+    // Il limite massimo di scorrimento verso l'alto è -(AltezzaTotale - AltezzaSchermo)
+    gameState.cameraY = -(totalWorldHeight - CONFIG.CANVAS_HEIGHT);
    
     // --- 3. GESTIONE TIMER E INTERVALLI ---
     gameState.gameTimer = CONFIG.GAME_TIME;
@@ -399,6 +400,7 @@ function startGame() {
             gameState.gameTimer--;
         } else {
             gameState.bossActive = true;
+            // Se vuoi fermare il timer quando arriva il boss
             clearInterval(gameState.timerInterval);
         }
     }, 1000);
@@ -430,19 +432,20 @@ function gameLoop() {
     
     // --- 2. Logica spawn Nemici / Boss ---
     if (!gameState.bossActive) {
-        // Se si arriva in cima alla griglia (cameraY >= 0 o simili a seconda dello scrolling)
+        // UNICA CONDIZIONE DI ATTIVAZIONE: Arrivo in cima alla mappa
         if (gameState.cameraY >= 0) {
             gameState.bossActive = true;
-            gameState.enemies = [];
+            gameState.enemies = []; // Rimuove i nemici piccoli
+            // Opzionale: fermiamo il timer se vuoi che il tempo si congeli durante il boss
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
         } else {
+            // Spawn nemici normale finché non si arriva in cima
             if (now - (gameState.lastEnemySpawn || 0) > 2000) {
                 Enemies.spawnEnemies(3);
                 gameState.lastEnemySpawn = now;
             }
         }
     }
-
     Renderer.updatePlayerMovement(bgParallax);
     updateAndDrawBackgrounds();
     
@@ -459,6 +462,7 @@ function gameLoop() {
     // --- 4. Logica Boss ---
     if (gameState.bossActive) {
         if (!gameState.boss) {
+            // Se il boss è attivo ma non ancora creato, lo spawnamo
             gameState.boss = Boss1.spawnBoss((gameState.bossDefeatedCount || 0) + 1);
         } else {
             Boss1.updateBoss(gameState.boss);
@@ -467,9 +471,9 @@ function gameLoop() {
             if (gameState.boss.hp <= 0) {
                 gameState.bossActive = false;
                 gameState.boss = null;
-                gameState.flashActive = false;
-                gameState.flashStartTime = null;
-                gameState.flashDuration = null;
+                 gameState.flashActive = false,         // Per l'effetto lampo/schermo
+                 gameState.flashStartTime = null,
+                 gameState.flashDuration = null, // Il flickering dura 2 secondi
                 ctx.restore(); 
                 showPowerUpScreen();
                 return; 
@@ -515,57 +519,43 @@ function gameLoop() {
 }
 
 function updateAndDrawBackgrounds() {
-    // Controllo sicurezza caricamento
-    if (!bgParallax.complete || bgParallax.naturalWidth === 0) {
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-        return;
-    }
+    // 1. Sfondo base nero fisso
+   //ctx.drawImage(bgImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
 
-    ctx.fillStyle = 'black';
-    ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    const drawX = (CONFIG.CANVAS_WIDTH / 2) - (bgParallax.naturalWidth / 2);
+    const imgHeight = bgParallax.naturalHeight;
 
-    const COLS = 6;
-    const ROWS = 3;
-    
-    // Ogni cella della griglia è grande quanto l'intera immagine caricata (moltiplicazione)
-    const tileWidth = bgParallax.naturalWidth;
-    const tileHeight = bgParallax.naturalHeight;
-
-    const totalMapWidth = COLS * tileWidth;
-    const startX = (CONFIG.CANVAS_WIDTH - totalMapWidth) / 2;
-    const startY = gameState.cameraY; 
-
-    // Disegno della Griglia 6x3
-    for (let row = 0; row < ROWS; row++) {
-        for (let col = 0; col < COLS; col++) {
-            
-            const destX = startX + (col * tileWidth);
-            const destY = startY + (row * tileHeight);
-
-            // Ottimizzazione visibilità
-            if (destY + tileHeight > 0 && destY < CONFIG.CANVAS_HEIGHT) {
-                ctx.drawImage(
-                    bgParallax,
-                    0, 0, bgParallax.naturalWidth, bgParallax.naturalHeight, // Sorgente intera
-                    destX, destY, tileWidth, tileHeight                     // Destinazione cella
-                );
-            }
+    // 2. Disegno ciclico del parallasse
+    for (let i = 0; i < 15; i++) {
+        const currentSegmentY = gameState.cameraY + (i * imgHeight);
+        if (currentSegmentY + imgHeight > 0 && currentSegmentY < CONFIG.CANVAS_HEIGHT) {
+            ctx.drawImage(
+                bgParallax, 
+                drawX, 
+                currentSegmentY, 
+                bgParallax.naturalWidth, 
+                imgHeight
+            );
         }
     }
-
-    // --- LOGICA TRANSIZIONE FASE 2 ---
+// --- LOGICA TRANSIZIONE FASE 2 ---
     if (gameState.flashActive) {
-        const elapsed = Date.now() - gameState.flashStartTime;
+        const currentTime = Date.now();
+        const elapsed = currentTime - gameState.flashStartTime;
+
         if (elapsed < gameState.flashDuration) {
-            ctx.fillStyle = Math.random() > 0.8 ? 'rgba(255, 255, 255, 0.8)' : 'black';
+            // FASE A: Il flickering dei fulmini
+            const isLightning = Math.random() > 0.8;
+            ctx.fillStyle = isLightning ? 'rgba(255, 255, 255, 0.8)' : 'black';
         } else {
+            // FASE B: I fulmini sono finiti, resta solo il nero
             ctx.fillStyle = 'black';
         }
+
+        // Copriamo tutto
         ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
     }
 }
-
 // --- INPUT LISTENERS ---
 
 let secondFingerTimer = null
@@ -573,37 +563,53 @@ let secondFingerTapCount = 0;
 gameState.isTouchActive = false;
 gameState.touchIdentifier = null;
 
+// 3. INPUT LISTENERS (Mobile & Key)
+
 function updateCoords(touch, rect) {
     gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
     gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
 }
 
+// Touch Start
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
 
+    // GESTIONE PRIMO DITO (Movimento/Puntatore)
     if (e.touches.length === 1) {
         gameState.touchIdentifier = e.touches[0].identifier;
         gameState.isTouchActive = true;
         updateCoords(e.touches[0], rect);
     }
 
+    // GESTIONE SECONDO DITO (Azioni Speciali)
+    // Entriamo qui ogni volta che viene rilevato un tocco aggiuntivo (2, 3, ecc.)
     if (e.touches.length >= 2 && gameState.currentScreen === 'playing') {
+        
         secondFingerTapCount++;
+
+        // Se è il primo tocco del secondo dito, facciamo partire il timer
         if (secondFingerTapCount === 1) {
             secondFingerTimer = setTimeout(() => {
+                
                 if (secondFingerTapCount === 1) {
+                    // È rimasto un tocco singolo -> ATTIVA SCUDO
                     SpecialAttacks.activateShield();
                 } else if (secondFingerTapCount >= 2) {
+                    // Sono avvenuti due o più tocchi -> ATTACCO SPECIALE
                     SpecialAttacks.fireSpecialAttackSequence();
                 }
+
+                // Reset per la prossima sequenza
                 secondFingerTapCount = 0;
                 secondFingerTimer = null;
+                
             }, CONFIG.TOUCH.DOUBLE_TAP_DELAY || 300);
         }
     }
 }, { passive: false });
 
+// Touch Move
 canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
@@ -611,6 +617,7 @@ canvas.addEventListener('touchmove', (e) => {
     if (touch) updateCoords(touch, rect);
 }, { passive: false });
 
+// Touch End
 canvas.addEventListener('touchend', (e) => {
     const stillDragging = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
     if (!stillDragging) {
@@ -620,10 +627,12 @@ canvas.addEventListener('touchend', (e) => {
     }
 });
 
+// Keyboard Listeners
 window.addEventListener('keydown', (e) => {
     gameState.keys[e.key] = true;
     if (e.key === ' ' && gameState.currentScreen === 'playing') {
         SpecialAttacks.fireSpecialAttackSequence();
+        //SpecialAttacks.fireSpecialAttackSequence2();
     }
 });
 
