@@ -348,6 +348,9 @@ canvas.addEventListener('touchstart', (e) => {
         gameState.isTouchActive = true;
         gameState.touchX = (e.touches[0].clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
         gameState.touchY = (e.touches[0].clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
+        // --- NUOVO: Punto di origine FISSO per il Pad ---
+        gameState.padOriginX = gameState.touchX;
+        gameState.padOriginY = gameState.touchY;
     }
 }, { passive: false });
 
