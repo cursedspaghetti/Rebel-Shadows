@@ -280,8 +280,7 @@ export function updatePlayerMovement(bgImage) {
         gameState.padOpacity = Math.max(0, (gameState.padOpacity || 0) - 0.1);
     }
 
-    // --- INPUT (Tastiera e Touch) ---
-    // Usiamo una logica unificata per dx e dy
+    // --- INPUT ---
     if (gameState.keys['ArrowUp'] || gameState.keys['w'] || gameState.keys['W']) dy = speed;
     if (gameState.keys['ArrowDown'] || gameState.keys['s'] || gameState.keys['S']) dy = -speed;
     if (gameState.keys['ArrowLeft'] || gameState.keys['a'] || gameState.keys['A']) dx -= speed;
@@ -300,33 +299,33 @@ export function updatePlayerMovement(bgImage) {
 
     // --- APPLICAZIONE MOVIMENTO ---
     
-    // Asse X: Sempre libero per il giocatore
+    // 1. ASSE X: Ora usiamo i limiti della griglia 6x3
+    // Calcoliamo la larghezza totale (6 colonne)
+    const totalMapWidth = (bgImage.naturalWidth || 512) * 6;
+    const startX = (CONFIG.CANVAS_WIDTH - totalMapWidth) / 2;
+    
     gameState.playerX += dx;
-    gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
+    // Impedisce di uscire dai bordi laterali della griglia
+    gameState.playerX = Math.max(startX + 20, Math.min(startX + totalMapWidth - 20, gameState.playerX));
 
-    // Asse Y: Logica condizionale
+    // 2. ASSE Y: Logica Boss vs Viaggio
     if (gameState.bossActive) {
-        // 1. FASE BOSS: Il giocatore si muove verticalmente sul canvas
-        // Invertiamo dy perché nel gioco dy > 0 significava "avanti" (mappa giù)
-        // Quindi se dy è positivo (voglio andare su), dobbiamo sottrarre da playerY
         gameState.playerY -= dy; 
-        
-        // Limiti verticali per non uscire dallo schermo durante il boss
         gameState.playerY = Math.max(50, Math.min(CONFIG.CANVAS_HEIGHT - 50, gameState.playerY));
-        
-        // La camera rimane bloccata a 0 (cima)
         gameState.cameraY = 0;
     } else {
-        // 2. FASE VIAGGIO: Il giocatore è fermo su Y, la camera scorre
+        // Scrolling basato su 3 righe
         let nextCameraY = (gameState.cameraY || 0) + dy;
+        const tileHeight = bgImage.naturalHeight || 512;
+        const totalWorldHeight = tileHeight * 3; // 3 RIGHE
+        
+        // Il limite massimo di scroll è la differenza tra l'altezza del mondo e lo schermo
+        const maxScroll = totalWorldHeight - CONFIG.CANVAS_HEIGHT;
 
-        if (bgImage && bgImage.naturalHeight > 0) {
-            const totalHeight = bgImage.naturalHeight * 15;
-            const maxScroll = totalHeight - CONFIG.CANVAS_HEIGHT;
-            
-            if (nextCameraY >= 0) nextCameraY = 0;
-            if (nextCameraY < -maxScroll) nextCameraY = -maxScroll;
-        }
+        // Limiti per non mostrare il vuoto
+        if (nextCameraY > 0) nextCameraY = 0;
+        if (nextCameraY < -maxScroll) nextCameraY = -maxScroll;
+        
         gameState.cameraY = nextCameraY;
     }
 
