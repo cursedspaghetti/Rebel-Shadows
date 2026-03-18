@@ -189,29 +189,33 @@ export function drawShield(ctx) {
     if (!gameState.shieldActive) return;
 
     // 1. Pixel Art Settings
-    const pixelSize = 4; // The size of each "pixel" block
-    const baseRadius = 12; // Radius in "pixel units"
-    const pulse = Math.floor(Math.sin(Date.now() * 0.01) * 2); 
-    const radius = baseRadius + pulse;
+    const pixelSize = 4;        // Dimensione del "pixel"
+    const radius = 12;          // Raggio fisso (niente più pulse)
 
     ctx.save();
-    ctx.fillStyle = "#00bfff"; // Primary shield color (Cyan)
     
-    // 2. Iterate through a grid to draw a "pixelated" circle
-    // We use a simple circle equation: x^2 + y^2 <= r^2
+    // 2. Colore grigio molto scuro (quasi nero)
+    const shieldColor = "#1a1a1a"; 
+    const borderColor = "#333333"; // Un grigio leggermente più chiaro per il bordo
+
+    // Iterazione sulla griglia per disegnare il cerchio pixelato
     for (let y = -radius; y <= radius; y++) {
         for (let x = -radius; x <= radius; x++) {
-            if (x * x + y * y <= radius * radius && x * x + y * y > (radius - 1) * (radius - 1)) {
-                // Draw the outer border pixels
-                ctx.fillStyle = "rgba(255, 255, 255, 0.9)"; // White highlight
-                ctx.fillRect(
-                    gameState.playerX + x * pixelSize, 
-                    gameState.playerY + y * pixelSize, 
-                    pixelSize, pixelSize
-                );
-            } else if (x * x + y * y <= (radius - 1) * (radius - 1) && x * x + y * y > (radius - 3) * (radius - 3)) {
-                // Draw the inner glow pixels
-                ctx.fillStyle = "rgba(0, 191, 255, 0.5)"; 
+            const distanceSquared = x * x + y * y;
+            const radiusSquared = radius * radius;
+            
+            // Disegniamo solo se siamo dentro il raggio del cerchio
+            if (distanceSquared <= radiusSquared) {
+                
+                // Logica per differenziare bordo e interno
+                if (distanceSquared > (radius - 1) * (radius - 1)) {
+                    // Bordo esterno (un po' più chiaro)
+                    ctx.fillStyle = borderColor;
+                } else {
+                    // Interno dello scudo (molto scuro)
+                    ctx.fillStyle = shieldColor;
+                }
+
                 ctx.fillRect(
                     gameState.playerX + x * pixelSize, 
                     gameState.playerY + y * pixelSize, 
@@ -223,5 +227,3 @@ export function drawShield(ctx) {
 
     ctx.restore();
 }
-
-
