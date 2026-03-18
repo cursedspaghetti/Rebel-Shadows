@@ -7,8 +7,6 @@ import * as Enemies from './enemies.js';
 
 // --- CONFIGURAZIONE E STATO GLOBALE ---
 let debounceTimer; 
-// Inizializziamo la camera se non presente nel gameState
-gameState.camera = { x: 0, y: 0 };
 
 // --- DOM ELEMENTS ---
 const canvas = document.getElementById('gameCanvas');
@@ -54,10 +52,12 @@ function makeTransparent(img) {
     tmpCanvas.width = img.width;
     tmpCanvas.height = img.height;
     tmpCtx.drawImage(img, 0, 0);
+    
     const imageData = tmpCtx.getImageData(0, 0, tmpCanvas.width, tmpCanvas.height);
     const data = imageData.data;
     const rT = data[0], gT = data[1], bT = data[2];
     const tolerance = 50; 
+
     for (let i = 0; i < data.length; i += 4) {
         const distance = Math.sqrt(
             Math.pow(data[i] - rT, 2) + 
@@ -72,39 +72,75 @@ function makeTransparent(img) {
     return transparentImage;
 }
 
+
 async function loadTraitBonuses() {
     try {
         const response = await fetch("https://raw.githubusercontent.com/cursedspaghetti/Rebel-Shadows/main/Game%20Attributes%20-%20Wiz%20Bonus.csv");
         if (!response.ok) throw new Error("CSV non trovato");
+        
         const csvText = await response.text();
         const lines = csvText.split(/\r?\n/);
+
         gameState.traitBonusData = {};
+
         lines.slice(1).forEach(line => {
             if (!line.trim()) return;
-            const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
-            let cols = line.split(regex);
-            if (cols.length >= 5) {
-                const clean = (str) => str ? str.replace(/"/g, '').trim() : "";
-                const traitName = clean(cols[1]).toLowerCase(); 
-                const rarity = clean(cols[3]);
-                const attribute = clean(cols[4]);
-                let valStr = clean(cols[5]).replace(',', '.');
-                const value = parseFloat(valStr) || 0;
-                gameState.traitBonusData[traitName] = { rarity, attribute, value };
-            }
+
+            
+const regex = /,(?=(?:(?:[^"]*"){2})*[^"]*$)/;
+let cols = line.split(regex);
+
+if (cols.length >= 5) {
+    const clean = (str) => str ? str.replace(/"/g, '').trim() : "";
+
+    // Il nome del tratto è nella colonna 1
+    const traitName = clean(cols[1]).toLowerCase(); 
+    const rarity = clean(cols[3]);
+    const attribute = clean(cols[4]);
+    
+    // Il valore è nella colonna 5 (che sia "0,20" o 0.20)
+    let valStr = clean(cols[5]).replace(',', '.');
+    const value = parseFloat(valStr) || 0;
+
+    gameState.traitBonusData[traitName] = {
+        rarity: rarity,
+        attribute: attribute,
+        value: value
+    };
+}
         });
-    } catch (e) { console.error("Errore CSV:", e); }
+        console.log("Bonus caricati correttamente:", Object.keys(gameState.traitBonusData).length);
+    } catch (e) {
+        console.error("Errore CSV:", e);
+    }
 }
 
+// Funzione helper per formattare la visualizzazione del tratto + bonus
 function getTraitDisplay(traitName) {
     if (!traitName || traitName === "-" || traitName === "None") return "-";
+    
     const cleanName = traitName.trim().toLowerCase();
     const bonus = gameState.traitBonusData[cleanName];
+
     if (bonus) {
-        const rarityColors = { "common": "#d3d3d3", "rare": "#1e90ff", "legendary": "#ff8c00" };
-        const color = rarityColors[bonus.rarity.toLowerCase()] || "#d3d3d3"; 
-        return `${traitName} <br> <span style="color: ${color}; font-size: 13px; font-weight: 500; display: block; margin-top: 2px;">[${bonus.rarity}] ${bonus.attribute}: +${bonus.value}</span>`;
+        // Mappa dei colori
+        const rarityColors = {
+            "common": "#d3d3d3",    // Grigio chiaro
+            "rare": "#1e90ff",      // Azzurro (Dodger Blue per contrasto)
+            "legendary": "#ff8c00"  // Arancione
+        };
+
+        // Identifica il colore: se la rarità non è in lista, usa il Grigio Chiaro (#d3d3d3)
+        const rarityKey = bonus.rarity.toLowerCase();
+        const color = rarityColors[rarityKey] || "#d3d3d3"; 
+
+       return `${traitName} <br> 
+        <span style="color: ${color}; font-size: 13px; font-weight: 500; display: block; margin-top: 2px;">
+        [${bonus.rarity}] ${bonus.attribute}: +${bonus.value}
+        </span>`;
     }
+    
+    console.warn(`Nessun bonus trovato per il tratto: "${traitName}"`);
     return traitName;
 }
 
@@ -114,29 +150,43 @@ async function handleLoadWizard() {
     if (!wizardId || wizardId === gameState.lastLoadedId) return;
     gameState.lastLoadedId = wizardId;
 
+    // Riferimenti agli elementi UI
     const wizardDisplayName = document.getElementById('wizardDisplayName');
-    const traitElements = {
-        head: document.getElementById('trait-head'),
-        body: document.getElementById('trait-body'),
-        prop: document.getElementById('trait-prop'),
-        rune: document.getElementById('trait-rune'),
-        familiar: document.getElementById('trait-familiar'),
-        bg: document.getElementById('trait-bg')
+    const traitHead = document.getElementById('trait-head');
+    const traitBody = document.getElementById('trait-body');
+    const traitProp = document.getElementById('trait-prop');
+    const traitRune = document.getElementById('trait-rune');
+    const traitFamiliar = document.getElementById('trait-familiar');
+    const traitBg = document.getElementById('trait-bg');
+
+    // --- 1. RESET STATISTICHE BASE ---
+    gameState.HP = 100;
+    gameState.Defense = 10;
+    gameState.Elusion = 0.05;
+    gameState.Speed = 3;
+    gameState.Attack_Power = 10;
+    gameState.Attack_Rate = 200;
+    gameState.Shield_CD = 20;
+    gameState.Shield_Duration = 1;
+    gameState.Special_CD = 20;
+
+    if(gameState.specialRay) {
+        gameState.specialRay.Special_Duration = 0.8;
+        gameState.specialRay.Special_Width = 250;
+    }
+
+    // --- 2. RESET BUFFS (IMPORTANTE: Farlo PRIMA del caricamento bonus) ---
+    gameState.buffs = {
+        HP: 0, Defense: 0, Elusion: 0, Speed: 0, 
+        Attack_Power: 0, Attack_Rate: 0, Shield_CD: 0, 
+        Shield_Duration: 0, Special_CD: 0, Special_Duration: 0, Special_Width: 0
     };
 
-    // Reset Statistiche
-    gameState.HP = 100; gameState.Defense = 10; gameState.Elusion = 0.05; gameState.Speed = 3;
-    gameState.Attack_Power = 10; gameState.Attack_Rate = 200; gameState.Shield_CD = 20;
-    gameState.Shield_Duration = 1; gameState.Special_CD = 20;
-
-    gameState.buffs = { 
-        HP: 0, Defense: 0, Elusion: 0, Speed: 0, Attack_Power: 0, Attack_Rate: 0, 
-        Shield_CD: 0, Shield_Duration: 0, Special_CD: 0, Special_Duration: 0, Special_Width: 0 
-    };
-
+    // --- 3. CARICAMENTO IMMAGINI (WIZARD & SPRITESHEET) ---
     const rawImg = new Image();
     rawImg.crossOrigin = "anonymous"; 
     rawImg.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}.png`;
+    
     rawImg.onload = () => {
         const transparentImgObj = makeTransparent(rawImg);
         transparentImgObj.onload = () => {
@@ -146,73 +196,173 @@ async function handleLoadWizard() {
         };
     };
 
+    const spriteSheetRaw = new Image();
+    spriteSheetRaw.crossOrigin = "anonymous";
+    spriteSheetRaw.src = `https://www.forgottenrunes.com/api/art/wizards/${wizardId}/spritesheet.png`;
+    spriteSheetRaw.onload = () => {
+        const transparentSpriteObj = makeTransparent(spriteSheetRaw);
+        transparentSpriteObj.onload = () => { gameState.wizardSpritesheet = transparentSpriteObj; };
+    };
+
+    // --- 4. LOGICA DATI E APPLICAZIONE BONUS ---
     try {
         const response = await fetch("https://raw.githubusercontent.com/cursedspaghetti/Rebel-Shadows/main/wizzies.json");
+        if (!response.ok) throw new Error("Database error");
         const wizzies = await response.json();
         const foundWizard = wizzies[wizardId];
+
         if (foundWizard) {
             gameState.wizardData = { ...foundWizard, id: wizardId };
             const categories = ['head', 'body', 'prop', 'familiar', 'rune', 'background'];
+
             categories.forEach(cat => {
                 const traitFullValue = foundWizard[cat];
                 if (traitFullValue && traitFullValue !== "None") {
+                    
+                    // Normalizzazione nome: proviamo il nome intero o quello dopo i ":"
                     let nameVariants = [traitFullValue.trim().toLowerCase()];
-                    if (traitFullValue.includes(':')) nameVariants.push(traitFullValue.split(':')[1].trim().toLowerCase());
+                    if (traitFullValue.includes(':')) {
+                        nameVariants.push(traitFullValue.split(':')[1].trim().toLowerCase());
+                    }
+
+                    // Cerchiamo se esiste un bonus per una delle varianti
                     let bonus = null;
                     for (let variant of nameVariants) {
-                        if (gameState.traitBonusData[variant]) { bonus = gameState.traitBonusData[variant]; break; }
+                        if (gameState.traitBonusData[variant]) {
+                            bonus = gameState.traitBonusData[variant];
+                            break;
+                        }
                     }
+
                     if (bonus) {
-                        const targetStat = bonus.attribute;
+                        const targetStat = bonus.attribute; // Es: "Shield_Duration"
                         const valueToAdd = parseFloat(bonus.value) || 0;
-                        if (gameState.hasOwnProperty(targetStat)) gameState[targetStat] += valueToAdd;
+
+                        // A. Applica al gameState (Statistica reale)
+                        if (gameState.hasOwnProperty(targetStat)) {
+                            gameState[targetStat] += valueToAdd;
+                        } else if (gameState.specialRay && gameState.specialRay.hasOwnProperty(targetStat)) {
+                            gameState.specialRay[targetStat] += valueToAdd;
+                        }
+
+                        // B. Aggiorna l'oggetto BUFFS (per la colonna verde della UI)
+                        // Usiamo una ricerca case-insensitive per sicurezza
                         const buffKey = Object.keys(gameState.buffs).find(k => k.toLowerCase() === targetStat.toLowerCase());
-                        if (buffKey) gameState.buffs[buffKey] += valueToAdd;
+                        if (buffKey) {
+                            gameState.buffs[buffKey] += valueToAdd;
+                            console.log(`Bonus Applicato: ${buffKey} +${valueToAdd} (Tratto: ${traitFullValue})`);
+                        }
                     }
                 }
             });
+
+            // --- 5. AGGIORNAMENTO UI ---
             if (wizardDisplayName) wizardDisplayName.innerText = `${foundWizard.name.toUpperCase()} (#${wizardId})`;
-            Object.keys(traitElements).forEach(key => {
-                if (traitElements[key]) traitElements[key].innerHTML = getTraitDisplay(foundWizard[key === 'bg' ? 'background' : key]);
-            });
+            if (traitHead) traitHead.innerHTML = getTraitDisplay(foundWizard.head);
+            if (traitBody) traitBody.innerHTML = getTraitDisplay(foundWizard.body);
+            if (traitProp) traitProp.innerHTML = getTraitDisplay(foundWizard.prop);
+            if (traitFamiliar) traitFamiliar.innerHTML = getTraitDisplay(foundWizard.familiar);
+            if (traitRune) traitRune.innerHTML = getTraitDisplay(foundWizard.rune);
+            if (traitBg) traitBg.innerHTML = getTraitDisplay(foundWizard.background);
+
+            console.log("DEBUG FINALE BUFFS:", gameState.buffs);
             renderStatTable();
+            
+        } else {
+            handleError(wizardId, "UNKNOWN WIZARD");
         }
-    } catch (e) { console.error(e); }
+    } catch (e) {
+        console.error("Errore in handleLoadWizard:", e);
+        handleError(wizardId, "CONNECTION ERROR");
+    }
+}
+
+function handleError(id, name) {
+    const wizardDisplayName = document.getElementById('wizardDisplayName');
+    if (wizardDisplayName) wizardDisplayName.innerText = name;
+    ['trait-head', 'trait-body', 'trait-prop', 'trait-familiar', 'trait-rune', 'trait-bg'].forEach(t => {
+        const el = document.getElementById(t);
+        if (el) el.innerText = "-";
+    });
+    gameState.wizardData = { name: `Wizard #${id}`, id: id, prop: "" };
 }
 
 function renderStatTable() {
     ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-    if (bgIntro.complete) ctx.drawImage(bgIntro, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    
+    if (bgIntro.complete && bgIntro.naturalWidth !== 0) {
+        ctx.drawImage(bgIntro, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    }
+    
     const tbody = document.getElementById('statsBody');
     if (!tbody) return;
-    const statsToRender = ['HP', 'Defense', 'Elusion', 'Speed', 'Attack_Power', 'Attack_Rate', 'Shield_CD', 'Shield_Duration', 'Special_CD', 'Special_Duration', 'Special_Width'];
+
+    const statsToRender = [
+        'HP', 'Defense', 'Elusion', 'Speed', 
+        'Attack_Power', 'Attack_Rate', 
+        'Shield_CD', 'Shield_Duration', 
+        'Special_CD', 'Special_Duration', 'Special_Width'
+    ];
+
     tbody.innerHTML = statsToRender.map(stat => {
-        let currentVal = (stat === 'Special_Duration' || stat === 'Special_Width') ? (gameState.specialRay ? gameState.specialRay[stat] : 0) : gameState[stat];
-        let header = stat === 'HP' ? `<tr class="section-header first-header"><td colspan="3"><strong>WIZARD</strong></td></tr>` : (stat === 'Attack_Power' ? `<tr class="section-header"><td colspan="3"><strong>BOOK OF SHADOWS</strong></td></tr>` : '');
-        const buffVal = gameState.buffs[stat] || 0;
+        let currentVal;
+        let header = ''; 
+
+        // 1. Intestazione WIZARD (senza linea sopra se è la prima)
+        if (stat === 'HP') {
+            header = `<tr class="section-header first-header"><td colspan="3"><strong>WIZARD</strong></td></tr>`;
+        }
+
+        // 2. Intestazione BOOK OF SHADOWS (con linee sopra e sotto)
+        if (stat === 'Attack_Power') {
+            header = `<tr class="section-header"><td colspan="3"><strong>BOOK OF SHADOWS</strong></td></tr>`;
+        }
+
+        if (stat === 'Special_Duration' || stat === 'Special_Width') {
+            currentVal = gameState.specialRay ? gameState.specialRay[stat] : 0;
+        } else {
+            currentVal = gameState[stat];
+        }
+
+        const buffVal = (gameState.buffs && gameState.buffs[stat]) ? gameState.buffs[stat] : 0;
         const buffDisplay = buffVal > 0 ? `+${buffVal}` : (buffVal < 0 ? `${buffVal}` : '--');
-        return header + `<tr class="stat-row"><td>> ${stat.replace(/_/g, ' ').toUpperCase()}</td><td>${currentVal.toFixed(1).replace('.0', '')}</td><td style="text-align: right;">${buffDisplay}</td></tr>`;
+        const displayName = stat.replace(/_/g, ' ').toUpperCase();
+        
+        // Ho aggiunto la classe "stat-row" per togliere i bordi alle singole righe
+        const row = `
+            <tr class="stat-row">
+                <td>> ${displayName}</td>
+                <td>${currentVal.toFixed(1).replace('.0', '')}</td>
+                <td style="text-align: right;">${buffDisplay}</td>
+            </tr>
+        `;
+
+        return header + row;
     }).join('');
 }
 
 // --- INITIALIZATION ---
 async function init() {
-    await loadTraitBonuses();
+    await loadTraitBonuses(); // Carica prima i bonus
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
     Boss1.preloadBossAssets();
     initSkillTree();
+
     wizardIdInput.addEventListener('input', () => {
         startButton.classList.remove('visible');
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(handleLoadWizard, 500);
     });
+
     startButton.addEventListener('click', () => {
-        gameState.currentScreen = 'setup';
+        gameState.currentScreen = 'setup'; // Cambiamo lo stato per fermare il loop precedente
         startScreen.style.display = 'none';
         setupScreen.style.display = 'flex';
+        setupWizImage.src = introImage.src;
         renderStatTable();
     });
+
     confirmStatsBtn.addEventListener('click', startGame);
     requestAnimationFrame(startScreenLoop);
 }
@@ -227,68 +377,79 @@ function startScreenLoop() {
 function startGame() {
     setupScreen.style.display = 'none';
     gameState.currentScreen = 'playing';
-    
-    // Posizionamento al centro della mappa reale
-    gameState.playerX = bgParallax.naturalWidth / 2;
-    gameState.playerY = bgParallax.naturalHeight / 2;
 
+     // --- 2. POSIZIONAMENTO INIZIALE (CAMERA E PLAYER) ---
+    // Posizioniamo il mago in basso sul canvas (es. all'80% dell'altezza)
+    gameState.playerX = CONFIG.CANVAS_WIDTH / 2;
+    gameState.playerY = CONFIG.CANVAS_HEIGHT * 0.65;
+
+    // Calcoliamo l'altezza totale del mondo (15 volte lo sfondo)
+    // Usiamo bgParallax che è l'immagine caricata in main.js
+    const totalWorldHeight = bgParallax.naturalHeight * 15;
+    
+    // Impostiamo la camera per partire esattamente dal fondo
+    // Il limite massimo di scorrimento verso l'alto è -(AltezzaTotale - AltezzaSchermo)
+    gameState.cameraY = -(totalWorldHeight - CONFIG.CANVAS_HEIGHT);
+   
+    // --- 3. GESTIONE TIMER E INTERVALLI ---
     gameState.gameTimer = CONFIG.GAME_TIME;
     if (gameState.timerInterval) clearInterval(gameState.timerInterval);
     gameState.timerInterval = setInterval(() => {
-        if (gameState.gameTimer > 0) gameState.gameTimer--;
-        else { gameState.bossActive = true; clearInterval(gameState.timerInterval); }
+        if (gameState.gameTimer > 0) {
+            gameState.gameTimer--;
+        } else {
+            gameState.bossActive = true;
+            // Se vuoi fermare il timer quando arriva il boss
+            clearInterval(gameState.timerInterval);
+        }
     }, 1000);
 
+    // Reset stati di gioco necessari per un nuovo inizio
     gameState.bossActive = false;
     gameState.enemies = [];
+
     gameLoop();
 }
 
-// --- LOGICA TELECAMERA E MAPPA ---
-function updateCameraAndMap() {
-    // 1. Centra la camera sul player
-    gameState.camera.x = gameState.playerX - CONFIG.CANVAS_WIDTH / 2;
-    gameState.camera.y = gameState.playerY - CONFIG.CANVAS_HEIGHT / 2;
-
-    // 2. Limiti della camera (non mostrare fuori dalla mappa)
-    const mapW = bgParallax.naturalWidth;
-    const mapH = bgParallax.naturalHeight;
-    gameState.camera.x = Math.max(0, Math.min(gameState.camera.x, mapW - CONFIG.CANVAS_WIDTH));
-    gameState.camera.y = Math.max(0, Math.min(gameState.camera.y, mapH - CONFIG.CANVAS_HEIGHT));
-
-    // 3. Disegna la mappa traslata
-    ctx.drawImage(bgParallax, -gameState.camera.x, -gameState.camera.y, mapW, mapH);
-
-    // Effetto Flash
-    if (gameState.flashActive) {
-        const elapsed = Date.now() - gameState.flashStartTime;
-        if (elapsed < gameState.flashDuration) {
-            ctx.fillStyle = Math.random() > 0.8 ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.4)';
-            ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
-        }
-    }
-}
-
+// --- GAME LOOP ---
 function gameLoop() {
     if (gameState.currentScreen !== 'playing') return;
     const now = Date.now();
     
-    if (gameState.isInvulnerable && (now - gameState.lastDamageTime > CONFIG.INVULNERABILITY_TIME)) gameState.isInvulnerable = false;
+    // --- Logica Invulnerabilità e Screen Shake ---
+    if (gameState.isInvulnerable && (now - gameState.lastDamageTime > CONFIG.INVULNERABILITY_TIME)) {
+        gameState.isInvulnerable = false;
+    }
     gameState.screenShake = gameState.screenShake > 0.1 ? gameState.screenShake * CONFIG.SHAKE_DECAY : 0;
 
+    // --- Preparazione Canvas ---
     ctx.clearRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    ctx.save(); 
+    if (gameState.screenShake > 0) {
+        ctx.translate((Math.random() - 0.5) * gameState.screenShake, (Math.random() - 0.5) * gameState.screenShake);
+    }
     
-    // --- RENDERING MONDO (TRALATO) ---
-    updateCameraAndMap(); 
-
-    ctx.save();
-    if (gameState.screenShake > 0) ctx.translate((Math.random() - 0.5) * gameState.screenShake, (Math.random() - 0.5) * gameState.screenShake);
+    // --- 2. Logica spawn Nemici / Boss ---
+    if (!gameState.bossActive) {
+        // UNICA CONDIZIONE DI ATTIVAZIONE: Arrivo in cima alla mappa
+        if (gameState.cameraY >= 0) {
+            gameState.bossActive = true;
+            gameState.enemies = []; // Rimuove i nemici piccoli
+            // Opzionale: fermiamo il timer se vuoi che il tempo si congeli durante il boss
+            if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+        } else {
+            // Spawn nemici normale finché non si arriva in cima
+            if (now - (gameState.lastEnemySpawn || 0) > 2000) {
+                Enemies.spawnEnemies(3);
+                gameState.lastEnemySpawn = now;
+            }
+        }
+    }
+    Renderer.updatePlayerMovement(bgParallax);
+    updateAndDrawBackgrounds();
     
-    // Trasliamo tutto il disegno in base alla camera
-    ctx.translate(-gameState.camera.x, -gameState.camera.y);
 
-    // Update logica
-    Renderer.updatePlayerMovement(bgParallax); // Passiamo la mappa per i limiti
+    // --- 3. Update Entità ---
     Renderer.autoFire();
     Renderer.updateBullets();
     Enemies.updateEnemies();
@@ -297,27 +458,32 @@ function gameLoop() {
     SpecialAttacks.updateSpecialRay();
     SpecialAttacks.updateShield();
     
-    if (!gameState.bossActive) {
-        if (now - (gameState.lastEnemySpawn || 0) > 2000) {
-            Enemies.spawnEnemies(3);
-            gameState.lastEnemySpawn = now;
-        }
-    } else {
-        if (!gameState.boss) gameState.boss = Boss1.spawnBoss(1);
-        else {
+    // --- 4. Logica Boss ---
+    if (gameState.bossActive) {
+        if (!gameState.boss) {
+            // Se il boss è attivo ma non ancora creato, lo spawnamo
+            gameState.boss = Boss1.spawnBoss((gameState.bossDefeatedCount || 0) + 1);
+        } else {
             Boss1.updateBoss(gameState.boss);
             Boss1.drawBossShadow(ctx, gameState.boss, shadowImg);
+            
             if (gameState.boss.hp <= 0) {
-                gameState.bossActive = false; gameState.boss = null;
-                ctx.restore(); showPowerUpScreen(); return;
+                gameState.bossActive = false;
+                gameState.boss = null;
+                 gameState.flashActive = false,         // Per l'effetto lampo/schermo
+                 gameState.flashStartTime = null,
+                 gameState.flashDuration = null, // Il flickering dura 2 secondi
+                ctx.restore(); 
+                showPowerUpScreen();
+                return; 
             }
         }
     }
 
+    // --- 5. Collisioni ---
     collision.handleAllCollisions();
 
-    // Disegno entità nel mondo
- // --- 6. Rendering Giocatore e Feedback ---
+    // --- 6. Rendering Giocatore e Feedback ---
     if (!(gameState.isInvulnerable && Math.floor(now / 100) % 2 === 0)) {
         if (!gameState.isCharging && !gameState.isCharging2) {
             Renderer.drawPlayer(ctx, playerSprite);
@@ -325,62 +491,189 @@ function gameLoop() {
         Renderer.drawPlayerWiz(ctx);
     }
     
+    Renderer.drawTouchPad(ctx); // Disegna il pad virtuale
+    
+    // --- 7. Rendering Elementi di Gioco ---
     Enemies.drawEnemies(ctx);
     Enemies.drawEnemyBullets(ctx);
     SpecialAttacks.drawSpecialRay(ctx);
-    if (gameState.isCharging || gameState.isCharging2) SpecialAttacks.drawChargeEffect(ctx, chargeImg);
+    SpecialAttacks.drawShield(ctx);
+    
+    if (gameState.isCharging || gameState.isCharging2) {
+        SpecialAttacks.drawChargeEffect(ctx, chargeImg);
+    }
+    
     Renderer.drawBullets(ctx);
     collision.drawExplosions(ctx);
+    SpecialAttacks.updateShield();
     if (gameState.shieldActive) SpecialAttacks.drawShield(ctx);
 
     ctx.restore(); 
 
-    // --- RENDERING UI (FISSA) ---
-    Renderer.drawTouchPad(ctx);
+    // --- 8. UI ---
     Renderer.drawUI(ctx);
     Renderer.drawHealthBar(ctx, gameState.HP, 100, CONFIG.CANVAS_WIDTH);
 
     requestAnimationFrame(gameLoop);
 }
 
+function updateAndDrawBackgrounds() {
+    // 1. Sfondo base nero fisso
+   //ctx.drawImage(bgImage, 0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+
+    const drawX = (CONFIG.CANVAS_WIDTH / 2) - (bgParallax.naturalWidth / 2);
+    const imgHeight = bgParallax.naturalHeight;
+
+    // 2. Disegno ciclico del parallasse
+    for (let i = 0; i < 15; i++) {
+        const currentSegmentY = gameState.cameraY + (i * imgHeight);
+        if (currentSegmentY + imgHeight > 0 && currentSegmentY < CONFIG.CANVAS_HEIGHT) {
+            ctx.drawImage(
+                bgParallax, 
+                drawX, 
+                currentSegmentY, 
+                bgParallax.naturalWidth, 
+                imgHeight
+            );
+        }
+    }
+// --- LOGICA TRANSIZIONE FASE 2 ---
+    if (gameState.flashActive) {
+        const currentTime = Date.now();
+        const elapsed = currentTime - gameState.flashStartTime;
+
+        if (elapsed < gameState.flashDuration) {
+            // FASE A: Il flickering dei fulmini
+            const isLightning = Math.random() > 0.8;
+            ctx.fillStyle = isLightning ? 'rgba(255, 255, 255, 0.8)' : 'black';
+        } else {
+            // FASE B: I fulmini sono finiti, resta solo il nero
+            ctx.fillStyle = 'black';
+        }
+
+        // Copriamo tutto
+        ctx.fillRect(0, 0, CONFIG.CANVAS_WIDTH, CONFIG.CANVAS_HEIGHT);
+    }
+}
 // --- INPUT LISTENERS ---
+
+let secondFingerTimer = null
+let secondFingerTapCount = 0;
+gameState.isTouchActive = false;
+gameState.touchIdentifier = null;
+
+// 3. INPUT LISTENERS (Mobile & Key)
+
+function updateCoords(touch, rect) {
+    gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
+    gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
+}
+
+// Touch Start
 canvas.addEventListener('touchstart', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
+
+    // GESTIONE PRIMO DITO (Movimento/Puntatore)
     if (e.touches.length === 1) {
         gameState.touchIdentifier = e.touches[0].identifier;
         gameState.isTouchActive = true;
-        gameState.touchX = (e.touches[0].clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
-        gameState.touchY = (e.touches[0].clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
-        // --- NUOVO: Punto di origine FISSO per il Pad ---
-        gameState.padOriginX = gameState.touchX;
-        gameState.padOriginY = gameState.touchY;
+        updateCoords(e.touches[0], rect);
+    }
+
+    // GESTIONE SECONDO DITO (Azioni Speciali)
+    // Entriamo qui ogni volta che viene rilevato un tocco aggiuntivo (2, 3, ecc.)
+    if (e.touches.length >= 2 && gameState.currentScreen === 'playing') {
+        
+        secondFingerTapCount++;
+
+        // Se è il primo tocco del secondo dito, facciamo partire il timer
+        if (secondFingerTapCount === 1) {
+            secondFingerTimer = setTimeout(() => {
+                
+                if (secondFingerTapCount === 1) {
+                    // È rimasto un tocco singolo -> ATTIVA SCUDO
+                    SpecialAttacks.activateShield();
+                } else if (secondFingerTapCount >= 2) {
+                    // Sono avvenuti due o più tocchi -> ATTACCO SPECIALE
+                    SpecialAttacks.fireSpecialAttackSequence();
+                }
+
+                // Reset per la prossima sequenza
+                secondFingerTapCount = 0;
+                secondFingerTimer = null;
+                
+            }, CONFIG.TOUCH.DOUBLE_TAP_DELAY || 300);
+        }
     }
 }, { passive: false });
 
+// Touch Move
 canvas.addEventListener('touchmove', (e) => {
     e.preventDefault();
     const rect = canvas.getBoundingClientRect();
     const touch = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
-    if (touch) {
-        gameState.touchX = (touch.clientX - rect.left) * (CONFIG.CANVAS_WIDTH / rect.width);
-        gameState.touchY = (touch.clientY - rect.top) * (CONFIG.CANVAS_HEIGHT / rect.height);
-    }
+    if (touch) updateCoords(touch, rect);
 }, { passive: false });
 
-// Skill Tree & Screens
+// Touch End
+canvas.addEventListener('touchend', (e) => {
+    const stillDragging = Array.from(e.touches).find(t => t.identifier === gameState.touchIdentifier);
+    if (!stillDragging) {
+        gameState.isTouchActive = false;
+        gameState.isMoving = false;
+        gameState.touchIdentifier = null;
+    }
+});
+
+// Keyboard Listeners
+window.addEventListener('keydown', (e) => {
+    gameState.keys[e.key] = true;
+    if (e.key === ' ' && gameState.currentScreen === 'playing') {
+        SpecialAttacks.fireSpecialAttackSequence();
+        //SpecialAttacks.fireSpecialAttackSequence2();
+    }
+});
+
+window.addEventListener('keyup', (e) => {
+    gameState.keys[e.key] = false;
+});
+
+
+// SKILL TREE
+const playerSkills = { points: 1, offense: 0, defense: 0, speed: 0, magic: 0 };
+function initSkillTree() {
+    document.querySelectorAll('.skill-node').forEach(button => {
+        button.addEventListener('click', () => {
+            const path = button.parentElement.dataset.path;
+            const level = parseInt(button.dataset.level);
+            if (playerSkills.points > 0 && level === playerSkills[path] + 1) {
+                playerSkills[path] = level; playerSkills.points--;
+                button.classList.replace('locked', 'unlocked');
+                const spEl = document.getElementById('skill-points');
+                if (spEl) spEl.innerText = playerSkills.points;
+            }
+        });
+    });
+    const closeBtn = document.getElementById('closeSkills');
+    if (closeBtn) closeBtn.addEventListener('click', resumeGame);
+}
+
 function showPowerUpScreen() {
     gameState.currentScreen = 'powerup';
     powerUpScreen.style.display = 'flex';
+    if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+    playerSkills.points++;
+    const spEl = document.getElementById('skill-points');
+    if (spEl) spEl.innerText = playerSkills.points;
 }
 
-function initSkillTree() {
-    const closeBtn = document.getElementById('closeSkills');
-    if (closeBtn) closeBtn.addEventListener('click', () => {
-        powerUpScreen.style.display = 'none';
-        gameState.currentScreen = 'playing';
-        startGame(); // Ricomincia o riprendi
-    });
+function resumeGame() {
+    powerUpScreen.style.display = 'none';
+    gameState.currentScreen = 'playing';
+    gameState.gameTimer = 60;
+    gameState.timerInterval = setInterval(() => { if (gameState.gameTimer > 0) gameState.gameTimer--; }, 1000);
+    requestAnimationFrame(gameLoop);
 }
 
 init();
