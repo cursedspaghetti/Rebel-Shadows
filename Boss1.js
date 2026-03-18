@@ -50,7 +50,6 @@ export function preloadBossAssets() {
 
 /**
  * CREA UNA NUOVA ISTANZA DEL BOSS
- * @param {number} level - Il numero del boss attuale (1, 2, 3...)
  */
 export function spawnBoss(level = 1) {
     const c = CONFIG.BOSS;
@@ -59,15 +58,13 @@ export function spawnBoss(level = 1) {
 
     return {
         x: CONFIG.CANVAS_WIDTH / 2,
-        y: -150, // Parte fuori
+        y: -150, 
         targetX: CONFIG.CANVAS_WIDTH / 2,
-        targetY: 150, // Destinazione iniziale
+        targetY: 150, 
         hp: scaledMaxHp,
         maxHp: scaledMaxHp,
         phase: 1,
         isDashing: false,
-        isAtCenter: false,
-        // Posticipiamo il primo attacco di 2 secondi (2000ms) dopo lo spawn
         lastRadialBurst: now + 2000, 
         lastTargetBurst: now + 1000, 
         lastDash: now + 3000,
@@ -93,10 +90,10 @@ export function updateBoss(boss) {
     if (boss.phase === 1 && boss.hp <= boss.maxHp * c.PHASE_2_THRESHOLD) {
         boss.phase = 2;
         gameState.screenShake = 15;
-        gameState.bossPhaseTransition = true; // Un flag che il main leggerà una sola volta
-        gameState.flashActive = true;         // Per l'effetto lampo/schermo
+        gameState.bossPhaseTransition = true;
+        gameState.flashActive = true;        
         gameState.flashStartTime = Date.now(); 
-        gameState.flashDuration = 2000; // Il flickering dura 2 secondi
+        gameState.flashDuration = 1000;
     }
 
     const isP2 = boss.phase === 2;
@@ -104,12 +101,10 @@ export function updateBoss(boss) {
 
     // 2. LOGICA MOVIMENTO
     if (boss.isDashing) {
-        // --- DASH ---
         const dashMult = isP2 ? c.DASH.SPEED_P2_MULT : 1;
         boss.x += boss.dashVX * dashMult;
         boss.y += boss.dashVY * dashMult;
 
-        // Reset quando esce dai bordi (area estesa)
         if (boss.y > CONFIG.CANVAS_HEIGHT + 150 || boss.y < -200 || boss.x < -200 || boss.x > CONFIG.CANVAS_WIDTH + 200) {
             boss.isDashing = false;
             boss.y = -150; 
@@ -117,35 +112,15 @@ export function updateBoss(boss) {
             boss.targetY = 150;
         }
     } else {
-        // --- MOVIMENTO DINAMICO ---
-        
-        // A. Se il boss è ancora fuori (Y < 50), forzalo a entrare prima di attaccare
+        // MOVIMENTO DINAMICO SENZA VINCOLO DEL CENTRO
         if (boss.y < 50) {
             boss.y += 3; // Entrata fluida
-            boss.isAtCenter = false;
-        } 
-        // B. Se deve sparare a raggera, vai al centro
-        else if (boss.radialWavesRemaining > 0) {
-            const centerX = CONFIG.CANVAS_WIDTH / 2;
-            const centerY = 150;
-            
-            let dx = centerX - boss.x;
-            let dy = centerY - boss.y;
-            
-            boss.x += dx * 0.1;
-            boss.y += dy * 0.1;
-
-            // Tolleranza aumentata a 30px per garantire l'attivazione della raggera
-            boss.isAtCenter = Math.abs(dx) < 30 && Math.abs(dy) < 30;
-        } 
-        // C. Movimento libero (Idle)
-        else {
-            boss.isAtCenter = false;
+        } else {
             const marginX = 80;
             const minY = 100;
             const maxY = CONFIG.CANVAS_HEIGHT * 0.3;
 
-            // Scelta nuovo target casuale se raggiunto il precedente
+            // Cambia target se raggiunto o se non esiste
             if (!boss.targetX || Math.abs(boss.x - boss.targetX) < 10) {
                 boss.targetX = Math.random() * (CONFIG.CANVAS_WIDTH - marginX * 2) + marginX;
             }
@@ -158,7 +133,7 @@ export function updateBoss(boss) {
             boss.y += (boss.targetY - boss.y) * (lerpSpeed * 0.8);
         }
 
-        // 3. GESTIONE ATTACCHI (Solo se il boss è entrato a schermo, Y > 50)
+        // 3. GESTIONE ATTACCHI (Se a schermo)
         if (boss.y >= 50) {
             // --- Attacco Radiale ---
             const radialInt = c.RADIAL.INTERVAL * cooldownMult;
@@ -185,7 +160,6 @@ export function updateBoss(boss) {
         }
     } 
     
-    // Aggiorna sempre la posizione dei proiettili esistenti
     updateBossBullets();
 }
 
@@ -198,7 +172,8 @@ function startRadialBurst(boss) {
 }
 
 function updateRadialBurst(boss, now) {
-    if (boss.radialWavesRemaining <= 0 || !boss.isAtCenter) return;
+    // Rimosso il controllo boss.isAtCenter
+    if (boss.radialWavesRemaining <= 0) return;
 
     if (now > (boss.nextRadialBulletTime || 0)) {
         const cfg = CONFIG.BOSS.RADIAL;
@@ -215,10 +190,12 @@ function updateRadialBurst(boss, now) {
         const speed = boss.phase === 2 ? cfg.SPEED_P2 : cfg.SPEED_P1;
 
         gameState.bossBullets.push({
-            x: boss.x, y: boss.y,
+            x: boss.x, 
+            y: boss.y,
             vx: Math.cos(angle) * speed,
             vy: Math.sin(angle) * speed,
-            size: cfg.SIZE, color: cfg.COLOR
+            size: cfg.SIZE, 
+            color: cfg.COLOR
         });
 
         boss.radialBulletsRemaining--;
