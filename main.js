@@ -434,7 +434,6 @@ function gameLoop() {
         // UNICA CONDIZIONE DI ATTIVAZIONE: Arrivo in cima alla mappa
         if (gameState.cameraY >= 0) {
             gameState.bossActive = true;
-            gameState.enemies = []; // Rimuove i nemici piccoli
             // Opzionale: fermiamo il timer se vuoi che il tempo si congeli durante il boss
             if (gameState.timerInterval) clearInterval(gameState.timerInterval);
         } else {
