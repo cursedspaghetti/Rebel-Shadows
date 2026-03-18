@@ -126,17 +126,41 @@ function getPixelEnemyBullet(color, size) {
 // --- LOGICA DI GIOCO ---
 
 /**
- * Fa sparare il nemico con una raggera di 3 proiettili
+ * 1. SPAWN DEI NEMICI
+ * Calcola la Y in base alla cameraY per farli apparire subito sopra lo schermo
  */
- export function spawnEnemySpread(enemy) {
+export function spawnEnemies(count) {
+    if (!gameState.enemies) gameState.enemies = [];
+    
+    for (let i = 0; i < count; i++) {
+        gameState.enemies.push({
+            id: Date.now() + Math.random(),
+            x: Math.random() * (CONFIG.CANVAS_WIDTH - 40) + 20,
+            // Posiziona il nemico circa 50px sopra il bordo superiore visibile
+            y: -gameState.cameraY - 60, 
+            size: 40,
+            hp: 2,
+            speed: 2,
+            lastShot: Date.now() + (Math.random() * 1000), // Offset casuale per non farli sparare tutti insieme
+            shootInterval: 2000 // Spara ogni 2 secondi
+        });
+    }
+}
+
+/**
+ * 2. CREAZIONE PROIETTILE (SPREAD)
+ * Aumentata la velocità a 7 per maggiore reattività
+ */
+export function spawnEnemySpread(enemy) {
     if (!gameState.enemyBullets) gameState.enemyBullets = [];
-    const speed = 5; 
+    
+    const speed = 7; // Leggermente più veloce per ridurre il senso di ritardo
     const angles = [-0.4, 0, 0.4]; 
 
     angles.forEach(angle => {
         gameState.enemyBullets.push({
             x: enemy.x,
-            y: enemy.y, // Questa deve essere la Y del mondo del nemico
+            y: enemy.y, // Coordinata mondo
             size: 14,
             color: '#ff00ff',
             vx: Math.sin(angle) * speed,
@@ -146,43 +170,70 @@ function getPixelEnemyBullet(color, size) {
 }
 
 /**
- * Aggiorna la posizione dei proiettili nemici
+ * 3. AGGIORNAMENTO NEMICI E LOGICA SPARO
+ */
+export function updateEnemies() {
+    if (!gameState.enemies) return;
+
+    const now = Date.now();
+
+    gameState.enemies.forEach(enemy => {
+        // Movimento verso il basso
+        enemy.y += enemy.speed;
+
+        // Calcola posizione a schermo
+        const screenY = enemy.y + (gameState.cameraY || 0);
+
+        // LOGICA SPARO: Spara solo se è dentro lo schermo (con margine di 50px)
+        if (screenY > 0 && screenY < CONFIG.CANVAS_HEIGHT * 0.7) {
+            if (now - enemy.lastShot > enemy.shootInterval) {
+                spawnEnemySpread(enemy);
+                enemy.lastShot = now;
+            }
+        }
+    });
+
+    // Rimuovi nemici troppo lontani o morti
+    gameState.enemies = gameState.enemies.filter(e => {
+        const screenY = e.y + (gameState.cameraY || 0);
+        return e.hp > 0 && screenY < CONFIG.CANVAS_HEIGHT + 200;
+    });
+}
+
+/**
+ * 4. AGGIORNAMENTO PROIETTILI
  */
 export function updateEnemyBullets() {
     if (!gameState.enemyBullets) return;
 
     gameState.enemyBullets = gameState.enemyBullets.filter(eb => {
-        // 1. Applica movimento
         eb.x += eb.vx;
         eb.y += eb.vy;
 
-        // 2. Calcola la posizione relativa allo schermo per decidere se eliminarlo
         const screenY = eb.y + (gameState.cameraY || 0);
         
-        // Rimuovi se il proiettile è troppo lontano dallo schermo (sopra o sotto)
-        // Usiamo un margine di 200px per sicurezza
-        const isOut = screenY > CONFIG.CANVAS_HEIGHT + 200 || 
-                      screenY < -200 || 
-                      eb.x < -100 || 
-                      eb.x > CONFIG.CANVAS_WIDTH + 100;
+        // Pulizia proiettili fuori dai bordi
+        const isOut = screenY > CONFIG.CANVAS_HEIGHT + 100 || 
+                      screenY < -100 || 
+                      eb.x < -50 || 
+                      eb.x > CONFIG.CANVAS_WIDTH + 50;
         
         return !isOut;
     });
 }
 
 /**
- * Disegna i proiettili usando la cache ottimizzata
+ * 5. RENDERING
  */
 export function drawEnemyBullets(ctx) {
     if (!gameState.enemyBullets) return;
 
     gameState.enemyBullets.forEach(eb => {
-        // TRASFORMAZIONE: Da coordinata mondo a coordinata schermo
         const screenY = eb.y + (gameState.cameraY || 0);
         const screenX = eb.x;
 
-        // Disegna solo se è nel rettangolo visibile
-        if (screenY > -50 && screenY < CONFIG.CANVAS_HEIGHT + 50) {
+        // Disegna solo se visibile
+        if (screenY > -20 && screenY < CONFIG.CANVAS_HEIGHT + 20) {
             const sprite = getPixelEnemyBullet(eb.color, eb.size);
             ctx.drawImage(
                 sprite, 
