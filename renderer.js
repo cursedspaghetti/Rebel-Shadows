@@ -569,24 +569,24 @@ export function drawUI(ctx) {
         ctx.fillRect(x, y, barWidth, barHeight);
     }
 
-// Barra 2 (Scala di Grigi / Dark Mode)
+// Barra 2 (Stile coordinato con lo scudo: Bianco/Grigio Chiarissimo)
 const y2 = y + barHeight + 3;
 ctx.shadowBlur = 0;
-ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; // Sfondo della barra (nero semitrasparente)
+ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'; // Sfondo barra più "ghostly" (bianco quasi trasparente)
 ctx.fillRect(x, y2, barWidth, barHeight);
 
 if (perc2 < 1) {
-    // Gradiente durante il caricamento/consumo (Grigio scuro -> Grigio medio)
+    // Gradiente durante il caricamento (Grigio neutro -> Grigio Chiaro)
     const grad2 = ctx.createLinearGradient(x, y2, x + barWidth, y2);
-    grad2.addColorStop(0, '#2b2b2b'); // Grigio molto scuro
-    grad2.addColorStop(1, '#7a7a7a'); // Grigio metallico
+    grad2.addColorStop(0, '#7a7a7a'); // Grigio base
+    grad2.addColorStop(1, '#d1d1d1'); // Grigio chiaro in crescita
     ctx.fillStyle = grad2;
     ctx.fillRect(x, y2, barWidth * perc2, barHeight);
 } else {
-    // Stato "Carica/Pronta" (Grigio chiaro con bagliore bianco/argenteo)
-    ctx.shadowBlur = 5;
-    ctx.shadowColor = '#ffffff';      // Bagliore bianco per indicare che è pronta
-    ctx.fillStyle = '#bcbcbc';        // Grigio chiaro (Argento)
+    // STATO PRONTO: Coerente con lo scudo (Bianco quasi puro e bagliore forte)
+    ctx.shadowBlur = 10;               // Aumentato per enfasi "energia pronta"
+    ctx.shadowColor = '#ffffff';       // Bagliore bianco intenso
+    ctx.fillStyle = '#f0f0f0';         // Grigio chiarissimo (stesso dello scudo)
     ctx.fillRect(x, y2, barWidth, barHeight);
 }
 
