@@ -190,38 +190,33 @@ export function drawShield(ctx) {
 
     // 1. Pixel Art Settings
     const pixelSize = 4;        // Dimensione del "pixel"
-    const radius = 12;          // Raggio fisso (niente più pulse)
+    const radius = 12;          // Raggio fisso
 
     ctx.save();
     
-    // 2. Colore grigio molto scuro (quasi nero)
-    const shieldColor = "#1a1a1a"; 
-    const borderColor = "#333333"; // Un grigio leggermente più chiaro per il bordo
+    // 2. Colore del Bordo (Grigio scuro, coerente con lo stile precedente)
+    // Se lo vuoi ancora più scuro, quasi nero, usa #1a1a1a
+    ctx.fillStyle = "#333333"; 
 
-    // Iterazione sulla griglia per disegnare il cerchio pixelato
+    // Iterazione sulla griglia per disegnare SOLO l'anello
     for (let y = -radius; y <= radius; y++) {
         for (let x = -radius; x <= radius; x++) {
             const distanceSquared = x * x + y * y;
             const radiusSquared = radius * radius;
+            const innerRadiusSquared = (radius - 1) * (radius - 1);
             
-            // Disegniamo solo se siamo dentro il raggio del cerchio
-            if (distanceSquared <= radiusSquared) {
+            // CONDIZIONE CAMBIATA:
+            // Disegniamo il pixel SOLO se è dentro il raggio esterno
+            // MA fuori dal raggio interno (creando un anello spesso 1 pixelSize)
+            if (distanceSquared <= radiusSquared && distanceSquared > innerRadiusSquared) {
                 
-                // Logica per differenziare bordo e interno
-                if (distanceSquared > (radius - 1) * (radius - 1)) {
-                    // Bordo esterno (un po' più chiaro)
-                    ctx.fillStyle = borderColor;
-                } else {
-                    // Interno dello scudo (molto scuro)
-                    ctx.fillStyle = shieldColor;
-                }
-
                 ctx.fillRect(
                     gameState.playerX + x * pixelSize, 
                     gameState.playerY + y * pixelSize, 
                     pixelSize, pixelSize
                 );
             }
+            // Altrimenti non disegniamo nulla, lasciando l'interno trasparente.
         }
     }
 
