@@ -374,7 +374,7 @@ function startScreenLoop() {
     }
 }
 
-ffunction startGame() {
+function startGame() {
     setupScreen.style.display = 'none';
     gameState.currentScreen = 'playing';
 
