@@ -374,37 +374,32 @@ function startScreenLoop() {
     }
 }
 
-function startGame() {
+ffunction startGame() {
     setupScreen.style.display = 'none';
     gameState.currentScreen = 'playing';
 
-     // --- 2. POSIZIONAMENTO INIZIALE (CAMERA E PLAYER) ---
-    // Posizioniamo il mago in basso sul canvas (es. all'80% dell'altezza)
     gameState.playerX = CONFIG.CANVAS_WIDTH / 2;
     gameState.playerY = CONFIG.CANVAS_HEIGHT * 0.65;
 
-    // Calcoliamo l'altezza totale del mondo (15 volte lo sfondo)
-    // Usiamo bgParallax che è l'immagine caricata in main.js
     const totalWorldHeight = bgParallax.naturalHeight * 15;
-    
-    // Impostiamo la camera per partire esattamente dal fondo
-    // Il limite massimo di scorrimento verso l'alto è -(AltezzaTotale - AltezzaSchermo)
     gameState.cameraY = -(totalWorldHeight - CONFIG.CANVAS_HEIGHT);
    
-    // --- 3. GESTIONE TIMER E INTERVALLI ---
     gameState.gameTimer = CONFIG.GAME_TIME;
     if (gameState.timerInterval) clearInterval(gameState.timerInterval);
+    
     gameState.timerInterval = setInterval(() => {
         if (gameState.gameTimer > 0) {
             gameState.gameTimer--;
         } else {
-            gameState.bossActive = true;
-            // Se vuoi fermare il timer quando arriva il boss
+            // COMMENTA O RIMUOVI QUESTA RIGA:
+            // gameState.bossActive = true; 
+            
+            // Se il tempo finisce e il boss non è ancora arrivato, 
+            // puoi decidere se far perdere il giocatore o lasciarlo continuare.
             clearInterval(gameState.timerInterval);
         }
     }, 1000);
 
-    // Reset stati di gioco necessari per un nuovo inizio
     gameState.bossActive = false;
     gameState.enemies = [];
 
