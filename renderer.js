@@ -219,44 +219,40 @@ export function drawPlayerWiz(ctx) {
     const wizSize = CONFIG.WIZARD_SPRITE.FRAME_SIZE;     // 50
     const wizScale = CONFIG.WIZARD_SPRITE.RENDER_SCALE;  // 1.2
     const wizSpeed = CONFIG.WIZARD_SPRITE.ANIM_SPEED;    // 100ms
-    const animFrames = 4; 
+    const animFrames = 4; // Usiamo solo le 4 colonne specificate
     
     if (!wizardImg || !wizardImg.complete) return;
 
     let wizFrameIdx = 0;
     
-    // Logica animazione basata sulla direzione impostata in updatePlayerMovement
     if (gameState.isMoving) {
+        // Calcolo base del frame (0, 1, 2, 3)
         const frameCycle = Math.floor(Date.now() / wizSpeed) % animFrames;
 
         if (gameState.playerDirection === 3) { 
-            // MOVIMENTO SU
+            // MOVIMENTO SU: frame da 0 a 3 (0, 1, 2, 3)
             wizFrameIdx = frameCycle;
         } else {
-            // MOVIMENTO GIÙ
+            // MOVIMENTO GIÙ (o dominante giù): frame da 3 a 0 (3, 2, 1, 0)
             wizFrameIdx = (animFrames - 1) - frameCycle;
         }
     }
 
-    // Riga fissa della spritesheet (indice 2 = terza riga)
+    // Usiamo sempre la RIGA 3 (indice 2 se conti 0,1,2... o indice 3 se è la quarta)
+    // Se intendevi la QUARTA riga fisica, metti 3. Se intendevi la TERZA, metti 2.
     const wizRow = 2; 
 
     ctx.save();
-    
-    /* IMPORTANTE: gameState.playerX e Y sono coordinate "mondo". 
-       Dato che nel main.js abbiamo già traslato il contesto per la camera,
-       qui basta posizionarsi su playerX e playerY.
-    */
     ctx.translate(gameState.playerX, gameState.playerY);
 
     ctx.drawImage(
         wizardImg,
-        wizFrameIdx * wizSize,   // Ritaglio X (Colonna)
-        wizRow * wizSize,        // Ritaglio Y (Riga)
-        wizSize, wizSize,        // Dimensioni ritaglio
-        -(wizSize * wizScale) / 2, // Posizione disegno (centrata)
+        wizFrameIdx * wizSize, // Colonna (0-3)
+        wizRow * wizSize,      // Riga fissa
+        wizSize, wizSize,
         -(wizSize * wizScale) / 2,
-        wizSize * wizScale,      // Dimensione disegno scalata
+        -(wizSize * wizScale) / 2,
+        wizSize * wizScale,
         wizSize * wizScale
     );
 
@@ -275,49 +271,69 @@ export function updatePlayerMovement(bgImage) {
     let dx = 0;
     let dy = 0; 
     const speed = gameState.Speed || 4; 
+    const MAX_DY = speed * 0.75; 
 
-    // Gestione opacità (fade in/out)
+    // --- GESTIONE OPACITÀ PAD ---
     if (gameState.isTouchActive) {
         gameState.padOpacity = Math.min(1, (gameState.padOpacity || 0) + 0.1);
     } else {
         gameState.padOpacity = Math.max(0, (gameState.padOpacity || 0) - 0.1);
     }
 
-    // Input Touch Floating
-    if (gameState.isTouchActive && gameState.padOriginX !== undefined) {
-        // Calcoliamo la distanza tra dove si trova il dito e dove è iniziato il tocco
-        const targetDx = gameState.touchX - gameState.padOriginX;
-        const targetDy = gameState.touchY - gameState.padOriginY;
+    // --- INPUT (Tastiera e Touch) ---
+    // Usiamo una logica unificata per dx e dy
+    if (gameState.keys['ArrowUp'] || gameState.keys['w'] || gameState.keys['W']) dy = speed;
+    if (gameState.keys['ArrowDown'] || gameState.keys['s'] || gameState.keys['S']) dy = -speed;
+    if (gameState.keys['ArrowLeft'] || gameState.keys['a'] || gameState.keys['A']) dx -= speed;
+    if (gameState.keys['ArrowRight'] || gameState.keys['d'] || gameState.keys['D']) dx += speed;
 
-        // Deadzone di 10 pixel
-        if (Math.abs(targetDx) > 10) dx = targetDx * 0.15;
-        if (Math.abs(targetDy) > 10) dy = targetDy * 0.15;
-        
-        // Clamp della velocità
-        const mag = Math.sqrt(dx * dx + dy * dy);
-        if (mag > speed) {
-            dx = (dx / mag) * speed;
-            dy = (dy / mag) * speed;
-        }
-    } else {
-        // Fallback Tastiera (opzionale se sei su PC)
-        if (gameState.keys['ArrowUp'] || gameState.keys['w']) dy -= speed;
-        if (gameState.keys['ArrowDown'] || gameState.keys['s']) dy += speed;
-        if (gameState.keys['ArrowLeft'] || gameState.keys['a']) dx -= speed;
-        if (gameState.keys['ArrowRight'] || gameState.keys['d']) dx += speed;
+    if (gameState.isTouchActive) {
+        const targetDx = gameState.touchX - gameState.playerX;
+        const thresholdY = gameState.playerY + 140; 
+        const distY = gameState.touchY - thresholdY;
+
+        dx = Math.abs(targetDx) > 5 ? targetDx * (CONFIG.TOUCH.LERP || 0.1) : 0;
+        let targetDy = -distY * (CONFIG.TOUCH.LERP || 0.1);
+        dy = Math.max(-MAX_DY, Math.min(MAX_DY, targetDy));
+        if (Math.abs(distY) < 15) dy = 0;
     }
 
-    // Limiti mappa reale
-    const mapW = (bgImage && bgImage.naturalWidth > 0) ? bgImage.naturalWidth : CONFIG.CANVAS_WIDTH;
-    const mapH = (bgImage && bgImage.naturalHeight > 0) ? bgImage.naturalHeight : CONFIG.CANVAS_HEIGHT;
+    // --- APPLICAZIONE MOVIMENTO ---
     
-    gameState.playerX = Math.max(30, Math.min(mapW - 30, gameState.playerX + dx));
-    gameState.playerY = Math.max(30, Math.min(mapH - 30, gameState.playerY + dy));
+    // Asse X: Sempre libero per il giocatore
+    gameState.playerX += dx;
+    gameState.playerX = Math.max(20, Math.min(CONFIG.CANVAS_WIDTH - 20, gameState.playerX));
 
+    // Asse Y: Logica condizionale
+    if (gameState.bossActive) {
+        // 1. FASE BOSS: Il giocatore si muove verticalmente sul canvas
+        // Invertiamo dy perché nel gioco dy > 0 significava "avanti" (mappa giù)
+        // Quindi se dy è positivo (voglio andare su), dobbiamo sottrarre da playerY
+        gameState.playerY -= dy; 
+        
+        // Limiti verticali per non uscire dallo schermo durante il boss
+        gameState.playerY = Math.max(50, Math.min(CONFIG.CANVAS_HEIGHT - 50, gameState.playerY));
+        
+        // La camera rimane bloccata a 0 (cima)
+        gameState.cameraY = 0;
+    } else {
+        // 2. FASE VIAGGIO: Il giocatore è fermo su Y, la camera scorre
+        let nextCameraY = (gameState.cameraY || 0) + dy;
+
+        if (bgImage && bgImage.naturalHeight > 0) {
+            const totalHeight = bgImage.naturalHeight * 15;
+            const maxScroll = totalHeight - CONFIG.CANVAS_HEIGHT;
+            
+            if (nextCameraY >= 0) nextCameraY = 0;
+            if (nextCameraY < -maxScroll) nextCameraY = -maxScroll;
+        }
+        gameState.cameraY = nextCameraY;
+    }
+
+    // --- DIREZIONE SPRITE ---
     gameState.isMoving = Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1;
-    if (gameState.isMoving) {
-        if (Math.abs(dx) > Math.abs(dy)) gameState.playerDirection = dx > 0 ? 2 : 1;
-        else gameState.playerDirection = dy > 0 ? 0 : 3;
+    if (Math.abs(dy) > 0.1) {
+        gameState.playerDirection = dy > 0 ? 3 : 0;
     }
 }
 
@@ -326,48 +342,61 @@ export function updatePlayerMovement(bgImage) {
  * @param {CanvasRenderingContext2D} ctx - Il contesto del canvas.
  */
 export function drawTouchPad(ctx) {
-    if (!gameState.isTouchActive || !gameState.padOpacity || gameState.padOpacity <= 0) return;
-    if (gameState.padOriginX === undefined) return;
+    // Se l'opacità è 0 (non si tocca da un po'), non disegnare nulla
+    if (!gameState.padOpacity || gameState.padOpacity <= 0) return;
 
     ctx.save();
-    // Non trasliamo con la camera: il pad è fisso sullo schermo nel punto del tocco
+    
+    // Applichiamo l'opacità globale per l'effetto fade-in/out
     ctx.globalAlpha = gameState.padOpacity;
 
-    const centerX = gameState.padOriginX;
-    const centerY = gameState.padOriginY;
-    const outerRadius = 50;
-    const innerRadius = 20;
+    // Centro del pad: deve corrispondere esattamente al thresholdY usato nel movimento
+    const centerX = gameState.playerX;
+    const centerY = gameState.playerY + 140;
+    const outerRadius = 50; // Raggio del cerchio esterno
+    const innerRadius = 15; // Raggio del pomello mobile
 
-    // 1. CERCHIO ESTERNO (Fisso nel punto del primo tocco)
+    // 1. DISEGNO CERCHIO ESTERNO (Base del Joystick)
     ctx.beginPath();
     ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.4)"; // Bianco semitrasparente
     ctx.stroke();
+    
+    // Un leggero riempimento per renderlo più visibile
     ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
     ctx.fill();
 
-    // 2. POMELLO (Segue il dito ma resta vincolato al cerchio)
-    const dx = gameState.touchX - centerX;
-    const dy = gameState.touchY - centerY;
-    const dist = Math.sqrt(dx * dx + dy * dy);
-    const angle = Math.atan2(dy, dx);
-    const moveDist = Math.min(dist, outerRadius);
+    // 2. DISEGNO CERCHIO INTERNO (Il Pomello)
+    if (gameState.isTouchActive) {
+        // Calcoliamo la distanza tra il tocco e il centro del pad
+        const dx = gameState.touchX - centerX;
+        const dy = gameState.touchY - centerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Calcoliamo l'angolo del tocco
+        const angle = Math.atan2(dy, dx);
+        
+        // Vincoliamo il pomello: non deve uscire dal raggio del cerchio esterno
+        const limitedDist = Math.min(distance, outerRadius);
+        
+        const knobX = centerX + Math.cos(angle) * limitedDist;
+        const knobY = centerY + Math.sin(angle) * limitedDist;
 
-    const knobX = centerX + Math.cos(angle) * moveDist;
-    const knobY = centerY + Math.sin(angle) * moveDist;
+        // Ombra/Bagliore viola per il pomello (stile Wizard)
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = "rgba(138, 43, 226, 0.3)";
 
-    // Bagliore viola magico
-    ctx.shadowBlur = 10;
-    ctx.shadowColor = "blueviolet";
-
-    ctx.beginPath();
-    ctx.arc(knobX, knobY, innerRadius, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(138, 43, 226, 0.5)";
-    ctx.fill();
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 1;
-    ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(knobX, knobY, innerRadius, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(138, 43, 226, 0.3)"; // Viola magico
+        ctx.fill();
+        
+        // Bordino bianco per il pomello
+        ctx.strokeStyle = "white";
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+    }
 
     ctx.restore();
 }
