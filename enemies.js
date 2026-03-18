@@ -90,12 +90,12 @@ export function updateEnemies() {
         if (screenY > 0 && enemy.entryTime === null) {
             enemy.entryTime = now;
             // Impostiamo lastShot in modo che il primo colpo avvenga 
-            // dopo (entryTime + 1000ms)
-            enemy.lastShot = now + 1000 - enemy.shootInterval;
+            // dopo (entryTime + 200ms)
+            enemy.lastShot = now + 200 - enemy.shootInterval;
         }
 
-        // 2. Logica Sparo: Solo se è passato 1 secondo dall'ingresso
-        if (enemy.entryTime !== null && (now - enemy.entryTime > 1000)) {
+        // 2. Logica Sparo: Solo se è passato 0.2 secondo dall'ingresso
+        if (enemy.entryTime !== null && (now - enemy.entryTime > 200)) {
             if (now - enemy.lastShot > enemy.shootInterval) {
                 spawnEnemySpread(enemy);
                 enemy.lastShot = now;
