@@ -194,9 +194,18 @@ export function drawShield(ctx) {
 
     ctx.save();
     
-    // 2. Colore del Bordo (Grigio scuro, coerente con lo stile precedente)
-    // Se lo vuoi ancora più scuro, quasi nero, usa #1a1a1a
-    ctx.fillStyle = "#333333"; 
+    // 2. Colore (Grigio chiarissimo, quasi bianco)
+    // #f0f0f0 o #e0e0e0 sono buone opzioni.
+    ctx.fillStyle = "#f0f0f0"; 
+
+    // 3. EFFETTO BAGLIORE (Glow Effect)
+    // shadowColor: colore del bagliore (stesso dello scudo o leggermente più chiaro)
+    // shadowBlur: quanto è diffuso il bagliore. Regola questo valore per l'intensità.
+    // shadowOffsetX/Y: sposta l'ombra. Tienili a 0 per un bagliore uniforme.
+    ctx.shadowColor = "#ffffff"; // Bagliore bianco puro
+    ctx.shadowBlur = 10;        // Intensità del bagliore
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
 
     // Iterazione sulla griglia per disegnare SOLO l'anello
     for (let y = -radius; y <= radius; y++) {
@@ -205,11 +214,13 @@ export function drawShield(ctx) {
             const radiusSquared = radius * radius;
             const innerRadiusSquared = (radius - 1) * (radius - 1);
             
-            // CONDIZIONE CAMBIATA:
+            // CONDIZIONE:
             // Disegniamo il pixel SOLO se è dentro il raggio esterno
             // MA fuori dal raggio interno (creando un anello spesso 1 pixelSize)
             if (distanceSquared <= radiusSquared && distanceSquared > innerRadiusSquared) {
                 
+                // ctx.fillRect disegnerà il pixel e l'effetto bagliore
+                // impostato precedentemente verrà applicato automaticamente.
                 ctx.fillRect(
                     gameState.playerX + x * pixelSize, 
                     gameState.playerY + y * pixelSize, 
@@ -220,5 +231,5 @@ export function drawShield(ctx) {
         }
     }
 
-    ctx.restore();
+    ctx.restore(); // Ripristina il contesto (rimuove l'effetto bagliore per i disegni successivi)
 }
