@@ -525,18 +525,17 @@ function updateAndDrawBackgrounds() {
     const imgHeight = bgParallax.naturalHeight;
 
     // 2. Disegno ciclico del parallasse
-    for (let i = 0; i < 15; i++) {
-        const currentSegmentY = gameState.cameraY + (i * imgHeight);
-        if (currentSegmentY + imgHeight > 0 && currentSegmentY < CONFIG.CANVAS_HEIGHT) {
-            ctx.drawImage(
-                bgParallax, 
-                drawX, 
-                currentSegmentY, 
-                bgParallax.naturalWidth, 
-                imgHeight
-            );
-        }
+for (let i = 0; i < 15; i++) {
+    const currentSegmentY = gameState.cameraY + (i * imgHeight);
+    if (currentSegmentY + imgHeight > 0 && currentSegmentY < CONFIG.CANVAS_HEIGHT) {
+        // Disegno l'immagine
+        ctx.drawImage(bgParallax, drawX, currentSegmentY, bgParallax.naturalWidth, imgHeight);
+        
+        // Applico lo strato scuro sopra l'immagine appena disegnata
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)'; // 0.5 è l'intensità del buio (da 0 a 1)
+        ctx.fillRect(drawX, currentSegmentY, bgParallax.naturalWidth, imgHeight);
     }
+}
 // --- LOGICA TRANSIZIONE FASE 2 ---
     if (gameState.flashActive) {
         const currentTime = Date.now();
