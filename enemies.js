@@ -53,7 +53,6 @@ export function spawnEnemies(count) {
     
     for (let i = 0; i < count; i++) {
         const size = 60 + Math.random() * 20;
-        // Nasce tra 50 e 150 pixel sopra il bordo superiore attuale
         const spawnYWorld = (-gameState.cameraY) - 50 - (Math.random() * 100);
 
         gameState.enemies.push({
@@ -63,8 +62,11 @@ export function spawnEnemies(count) {
             size: size,
             hp: 100,
             speed: 2 + Math.random() * 2,
-            lastShot: Date.now() + (Math.random() * 1000), // Offset per non sparare tutti insieme
-            shootInterval: 1500 + Math.random() * 1500,
+            // --- NUOVE PROPRIETÀ ---
+            entryTime: null,   // Verrà settato quando screenY > 0
+            lastShot: 0,       // Inizializzato a 0
+            shootInterval: 2000, 
+            // -----------------------
             frame: 0,
             frameSpeed: 0.15
         });
@@ -79,24 +81,29 @@ export function updateEnemies() {
     const now = Date.now();
 
     gameState.enemies = gameState.enemies.filter(enemy => {
-        // Movimento e Animazione
         enemy.y += enemy.speed;
         enemy.frame += enemy.frameSpeed;
 
         const screenY = enemy.y + (gameState.cameraY || 0);
 
-        // Logica Sparo: Solo se visibile a schermo
-        if (screenY > 0 && screenY < CONFIG.CANVAS_HEIGHT * 0.8) {
+        // 1. Rileva l'ingresso in scena
+        if (screenY > 0 && enemy.entryTime === null) {
+            enemy.entryTime = now;
+            // Impostiamo lastShot in modo che il primo colpo avvenga 
+            // dopo (entryTime + 1000ms)
+            enemy.lastShot = now + 1000 - enemy.shootInterval;
+        }
+
+        // 2. Logica Sparo: Solo se è passato 1 secondo dall'ingresso
+        if (enemy.entryTime !== null && (now - enemy.entryTime > 1000)) {
             if (now - enemy.lastShot > enemy.shootInterval) {
                 spawnEnemySpread(enemy);
                 enemy.lastShot = now;
             }
         }
 
-        // Rimozione se troppo in basso o morto
         const isDead = enemy.hp <= 0;
         const isPastBottom = screenY > CONFIG.CANVAS_HEIGHT + 200;
-        
         return !isDead && !isPastBottom;
     });
 }
