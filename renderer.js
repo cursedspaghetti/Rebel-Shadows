@@ -569,24 +569,26 @@ export function drawUI(ctx) {
         ctx.fillRect(x, y, barWidth, barHeight);
     }
 
-    // Barra 2 (Verdino/Turchese)
-    const y2 = y + barHeight + 3;
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+// Barra 2 (Scala di Grigi / Dark Mode)
+const y2 = y + barHeight + 3;
+ctx.shadowBlur = 0;
+ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'; // Sfondo della barra (nero semitrasparente)
+ctx.fillRect(x, y2, barWidth, barHeight);
+
+if (perc2 < 1) {
+    // Gradiente durante il caricamento/consumo (Grigio scuro -> Grigio medio)
+    const grad2 = ctx.createLinearGradient(x, y2, x + barWidth, y2);
+    grad2.addColorStop(0, '#2b2b2b'); // Grigio molto scuro
+    grad2.addColorStop(1, '#7a7a7a'); // Grigio metallico
+    ctx.fillStyle = grad2;
+    ctx.fillRect(x, y2, barWidth * perc2, barHeight);
+} else {
+    // Stato "Carica/Pronta" (Grigio chiaro con bagliore bianco/argenteo)
+    ctx.shadowBlur = 5;
+    ctx.shadowColor = '#ffffff';      // Bagliore bianco per indicare che è pronta
+    ctx.fillStyle = '#bcbcbc';        // Grigio chiaro (Argento)
     ctx.fillRect(x, y2, barWidth, barHeight);
+}
 
-    if (perc2 < 1) {
-        const grad2 = ctx.createLinearGradient(x, y2, x + barWidth, y2);
-        grad2.addColorStop(0, '#008b8b');
-        grad2.addColorStop(1, '#00ffcc');
-        ctx.fillStyle = grad2;
-        ctx.fillRect(x, y2, barWidth * perc2, barHeight);
-    } else {
-        ctx.shadowBlur = 5;
-        ctx.shadowColor = '#33ff33';
-        ctx.fillStyle = '#33ff33'; 
-        ctx.fillRect(x, y2, barWidth, barHeight);
-    }
-
-    ctx.restore();
+ctx.restore();
 }
