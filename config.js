@@ -57,8 +57,8 @@ export const CONFIG = {
             SPEED_P2: 9,
             DELAY_P1: 180,
             DELAY_P2: 100,
-            COLOR: '##8b008b',
-            SIZE: 40          
+            COLOR: '#8b008b',
+            SIZE: 35         
         },
 
         DASH: {
